@@ -12,6 +12,11 @@ describe("guessFromUrl", () => {
     const g = guessFromUrl("https://suitsupply.com/en-us/men/jackets/navy-tailored-fit-havana-blazer/C25216.html");
     expect(g).toMatchObject({ cat: "layer", style: "blazer", color: "#1f2a45" });
   });
+  it("files undershirts, socks and wallets apart", () => {
+    expect(guessFromUrl("https://www.uniqlo.com/us/en/products/E465187-000/airism-cotton-crew-neck-undershirt")).toMatchObject({ cat: "undershirt" });
+    expect(guessFromUrl("https://darntough.com/products/mens-merino-wool-crew-socks")).toMatchObject({ cat: "basics", style: "socks" });
+    expect(guessFromUrl("https://www.redwingshoes.com/accessories/leathergoods/wallets/bifold-wallet-96582.html")).toMatchObject({ cat: "other" });
+  });
 });
 
 describe("parseProductHtml", () => {

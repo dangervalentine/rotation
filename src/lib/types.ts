@@ -1,5 +1,6 @@
-export type Category = "layer" | "shirt" | "belt" | "pants" | "shoes" | "other";
-export type Slot = "layer" | "shirt" | "belt" | "pants" | "shoes";
+export type Category = "layer" | "shirt" | "undershirt" | "belt" | "pants" | "basics" | "shoes" | "other";
+/** The categories an outfit is built from. Socks & underwear (basics) and other accessories are tracked for cost only. */
+export type Slot = "layer" | "shirt" | "undershirt" | "belt" | "pants" | "shoes";
 
 export interface Item {
   id: string;
@@ -15,6 +16,8 @@ export interface Item {
   image?: string;
   brand?: string;
   notes?: string;
+  /** Set while the item is a sketch made in the outfit builder. Missing on every other item, and removed on promotion. Always owned: false while set. */
+  sketch?: true;
 }
 
 /** One outfit: an item id (or null) per slot. */

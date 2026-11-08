@@ -33,8 +33,8 @@ The app is styled by **Rotation**, an editorial menswear design system: ink on n
 
 The views run in the order you use them, and the app opens on the first one.
 
-1. **Wardrobe and costs**: items, costs, owned vs. to buy, and how many days each item is worn. **Add from link** fills in an item from a product URL.
-2. **Outfits**: a mix-and-match workspace. Shuffle the pieces you didn't mark "keep", or use "Try every" to see one slot swapped through every item. Save looks to a library, then wear them on any rotation day.
+1. **Wardrobe and costs**: items, costs, owned vs. to buy, and how many days each item is worn. **Add from link** fills in an item from a product URL. Pieces sketched in the outfit builder are listed last, under **Sketches**: they don't count toward costs and Generate rotation never picks them. **Move to To buy** or **I own this** turns one into a real item.
+2. **Outfits**: a mix-and-match workspace. Pick a piece for each slot (the figure previews each option as you move through the list), shuffle the pieces you didn't mark "keep", or use "Try every" to see one slot swapped through every item. Undo and redo (Ctrl/⌘+Z, Ctrl/⌘+Shift+Z) cover every change. **Create a piece…** at the end of any slot's list sketches something you don't own: pick a style and colour (or take the colour from a photo) and it goes straight into the look. The same builder edits rotation days. Save looks to a library, then wear them on any rotation day.
 3. **Rotation**: any days per week (comma-separated names) and 1–8 weeks. It flags same pants, shirt or leather shoes on back-to-back days. **Generate rotation** fills every day, spreading wear evenly and avoiding those repeats. Select a day to edit it in a side panel (a bottom sheet on phones) while the rest of the rotation stays in view. Each open day has its own address (`#rotation/day/3`), and Back closes the panel.
 4. **Print**: the rotation as cartoon figures on an editorial sheet, one landscape page per week. You can set skin tone, hair color and hair style.
 
@@ -47,6 +47,7 @@ The views run in the order you use them, and the app opens on the first one.
 ## Data shape
 
 See `src/lib/types.ts`. `items[]`, `outfits[]` (named looks), `rotation { days, weeks, looks[] }`, `figure` (print character).
+An item with `sketch: true` is a sketch (never `owned`); photo sketches keep a small JPEG data URL in `image`.
 A look is `{ layer, shirt, belt, pants, shoes }`, each an item id or null.
 
 ## Scripts

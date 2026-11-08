@@ -2,7 +2,7 @@ import { useEffect, useRef, useState, type RefObject } from "react";
 import { Button, ConfirmDialog, Field, Kicker, Notice, RotationDay, SectionHead, Select, Sheet } from "../design-system/index.ts";
 import { clone, dayLabel, dayWarnings, generateRotation, resizeRotation, same, uniqueId } from "../lib/model.ts";
 import type { Route } from "../lib/route.ts";
-import type { Look, WardrobeData } from "../lib/types.ts";
+import type { Item, Look, WardrobeData } from "../lib/types.ts";
 import { lookPieces, OutfitFigure } from "./common.tsx";
 import { LookEditor } from "./LookEditor.tsx";
 
@@ -37,6 +37,7 @@ export function RotationView({ data, setData, day, navigate, exitDay, closeGuard
   const dirty = open && !same(draft, rot.looks[cur]);
   const [pending, setPending] = useState<Pending | null>(null);
   const [notice, setNotice] = useState("");
+  const [creating, setCreating] = useState(false);
   const [daysText, setDaysText] = useState(rot.days.join(", "));
   const dayRefs = useRef(new Map<number, HTMLButtonElement>());
   const returnFocus = useRef<HTMLElement | null>(null);
@@ -119,6 +120,11 @@ export function RotationView({ data, setData, day, navigate, exitDay, closeGuard
     else if (p.kind === "leave") exitDay(p.hash);
     else if (p.kind === "go") navigate({ view: "rotation", day: p.index }, "replace");
     else doGenerate();
+  }
+  function createItem(it: Omit<Item, "id">) {
+    const id = uniqueId(it.name, items);
+    setData({ ...data, items: [...items, { id, ...it }] });
+    return id;
   }
   function saveAsOutfit() {
     const name = dayLabel(rot, cur);
@@ -211,7 +217,7 @@ export function RotationView({ data, setData, day, navigate, exitDay, closeGuard
         }
         footer={
           <>
-            <Button variant="primary" onClick={apply} disabled={!dirty}>
+            <Button variant={creating ? "secondary" : "primary"} onClick={apply} disabled={!dirty}>
               Apply to {rot.days[cur % per]}
             </Button>
             <Button onClick={discard} disabled={!dirty}>Discard</Button>
@@ -236,7 +242,7 @@ export function RotationView({ data, setData, day, navigate, exitDay, closeGuard
             />
           </div>
         ) : null}
-        <LookEditor items={items} look={draft} onChange={setDraft} />
+        <LookEditor items={items} look={draft} onChange={setDraft} onCreateItem={createItem} historyKey={String(cur)} onCreatingChange={setCreating} compact />
         {notice ? <Notice>{notice}</Notice> : null}
         <div className="actions">
           <Button onClick={() => setDraft(clone(rot.looks[prev]))}>Copy previous day</Button>

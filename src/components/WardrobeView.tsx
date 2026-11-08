@@ -1,7 +1,8 @@
 import React, { useMemo, useRef, useState } from "react";
-import { Button, Check, Checkbox, Field, GarmentCard, Kicker, Notice, Segmented, SectionHead, Select, Stat, TextArea } from "../design-system/index.ts";
-import { CATEGORIES, clone, daysWorn, migrate, money, shortName, SLOTS, STYLES, uniqueId, wardrobeTotals } from "../lib/model.ts";
+import { Button, Check, Checkbox, Field, GarmentCard, Kicker, Notice, Segmented, SectionHead, Select, Stat, Tag, TextArea } from "../design-system/index.ts";
+import { CATEGORIES, clone, daysWorn, EMPTY_LOOK, isSlot, migrate, money, shortName, SLOTS, STYLES, uniqueId, wardrobeTotals } from "../lib/model.ts";
 import type { ProductGuess } from "../lib/productParse.ts";
+import { itemStatus, promote, STATUS_LABEL, type ItemStatus } from "../lib/sketch.ts";
 import type { Backend } from "../lib/storage.ts";
 import { downloadJson, sampleData } from "../lib/storage.ts";
 import type { Category, Item, WardrobeData } from "../lib/types.ts";
@@ -21,6 +22,8 @@ const BLANK: Partial<Item> = { cat: "shirt", name: "", style: "oxford", color: "
 function ItemForm({ initial, isNew, note, onSave, onCancel, onDelete }: { initial: Partial<Item>; isNew: boolean; note?: string; onSave: (i: Omit<Item, "id">) => void; onCancel: () => void; onDelete: () => void }) {
   const [f, setF] = useState<Draft>(() => ({ ...(BLANK as Item), ...initial, stripeOn: !!initial.stripe, stripe: initial.stripe || "#7d9bc6" }));
   const [err, setErr] = useState("");
+  const [status, setStatus] = useState<ItemStatus>(() => itemStatus({ owned: false, ...initial } as Item));
+  const statuses: ItemStatus[] = initial.sketch ? ["sketch", "tobuy", "owned"] : ["tobuy", "owned"];
   const set = <K extends keyof Draft>(k: K, v: Draft[K]) => setF((p) => ({ ...p, [k]: v }));
 
   function submit(e: React.FormEvent) {
@@ -33,8 +36,9 @@ function ItemForm({ initial, isNew, note, onSave, onCancel, onDelete }: { initia
       color: f.color,
       price: parseFloat(String(f.price)) || 0,
       qty: Math.max(1, parseInt(String(f.qty), 10) || 1),
-      owned: !!f.owned,
+      owned: status === "owned",
     };
+    if (status === "sketch") out.sketch = true;
     if (f.stripeOn) out.stripe = f.stripe;
     for (const k of ["link", "image", "brand", "notes"] as const) {
       const v = (f[k] || "").trim();
@@ -75,7 +79,7 @@ function ItemForm({ initial, isNew, note, onSave, onCancel, onDelete }: { initia
       <Field id="f-qty" label="Qty" type="number" min="1" step="1" value={f.qty} onChange={(e) => set("qty", e.target.value as unknown as number)} />
       <div className="rt-field">
         <span className="rt-field-label">Status</span>
-        <Check label="I own this" checked={!!f.owned} onCheckedChange={(v) => set("owned", v)} />
+        <Segmented label="Status" options={statuses.map((s) => [s, STATUS_LABEL[s]] as [ItemStatus, string])} value={status} onChange={setStatus} />
       </div>
       <Field className="full" id="f-link" label="Link" type="url" value={f.link || ""} onChange={(e) => set("link", e.target.value)} />
       <Field className="full" id="f-image" label="Image URL" type="url" value={f.image || ""} onChange={(e) => set("image", e.target.value)} />
@@ -157,14 +161,22 @@ export function WardrobeView({ data, setData, backend }: { data: WardrobeData; s
   }
 
   const editItem = (it: Item) => { setNote(""); setEditing({ isNew: false, item: clone(it) }); };
+  const promoteItem = (id: string, to: "tobuy" | "owned") => setData({ ...data, items: items.map((x) => (x.id === id ? promote(x, to) : x)) });
   const toBuy = totals.all - totals.own;
+  const sketches = items.filter((i) => i.sketch);
+  const promoteButtons = (it: Item) => (
+    <>
+      <Button variant="ghost" size="sm" onClick={() => promoteItem(it.id, "tobuy")}>Move to To buy</Button>
+      <Button size="sm" onClick={() => promoteItem(it.id, "owned")}>I own this</Button>
+    </>
+  );
 
   return (
     <div className="view">
       <div className="stats">
         <Stat value={dollars(totals.all)} label="Whole wardrobe" note={`${totals.pieces} pieces`} />
         <Stat value={dollars(totals.own)} label="Already owned" note={totals.all ? `${Math.round((totals.own / totals.all) * 100)}% of the total` : undefined} />
-        <Stat value={dollars(toBuy)} label="Left to buy" note={toBuy ? `${items.filter((i) => !i.owned).length} items on the list` : "Nothing left to buy"} />
+        <Stat value={dollars(toBuy)} label="Left to buy" note={toBuy ? `${items.filter((i) => !i.owned && !i.sketch).length} items on the list` : "Nothing left to buy"} />
       </div>
 
       <section aria-labelledby="w-h">
@@ -188,8 +200,9 @@ export function WardrobeView({ data, setData, backend }: { data: WardrobeData; s
           <ItemForm key={editing.item.id || "new:" + (editing.item.link || "")} initial={editing.item} isNew={editing.isNew} note={note} onSave={save} onCancel={() => setEditing(null)} onDelete={remove} />
         ) : null}
         {layout === "cards" ? (
-          CATEGORIES.map(([cat, label]) => {
-            const rows = items.filter((i) => i.cat === cat);
+          <>
+          {CATEGORIES.map(([cat, label]) => {
+            const rows = items.filter((i) => i.cat === cat && !i.sketch);
             if (!rows.length) return null;
             return (
               <div className="card-group" key={cat}>
@@ -208,14 +221,41 @@ export function WardrobeView({ data, setData, backend }: { data: WardrobeData; s
                       price={money(it.price)}
                       qty={it.qty}
                       owned={!!it.owned}
-                      worn={cat === "other" ? undefined : daysWorn(rot, it.id)}
+                      worn={isSlot(cat) ? daysWorn(rot, it.id) : undefined}
                       onSelect={() => editItem(it)}
                     />
                   ))}
                 </div>
               </div>
             );
-          })
+          })}
+          {sketches.length ? (
+            <div className="card-group">
+              <Kicker tone="ink">Sketches · {sketches.length}</Kicker>
+              <p className="lede">Ideas from the outfit builder. They don't count toward costs or get picked by Generate rotation.</p>
+              <div className="garment-grid">
+                {sketches.map((it) => (
+                  <div className="sketch-card" key={it.id}>
+                    <GarmentCard
+                      category={it.cat}
+                      name={shortName(it)}
+                      style={it.style}
+                      color={it.color}
+                      stripe={it.stripe}
+                      image={it.image}
+                      price={money(it.price)}
+                      owned={false}
+                      status="sketch"
+                      worn={daysWorn(rot, it.id)}
+                      onSelect={() => editItem(it)}
+                    />
+                    <div className="actions">{promoteButtons(it)}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ) : null}
+          </>
         ) : (
           <div className="tablewrap">
             <table>
@@ -227,7 +267,7 @@ export function WardrobeView({ data, setData, backend }: { data: WardrobeData; s
               </thead>
               <tbody>
                 {CATEGORIES.map(([cat, label]) => {
-                  const rows = items.filter((i) => i.cat === cat);
+                  const rows = items.filter((i) => i.cat === cat && !i.sketch);
                   const t = totals.by[cat] || { t: 0, o: 0, n: 0 };
                   return (
                     <React.Fragment key={cat}>
@@ -245,7 +285,7 @@ export function WardrobeView({ data, setData, backend }: { data: WardrobeData; s
                           <td className="num">{money(it.price)}</td>
                           <td className="num">{it.qty}</td>
                           <td className="num">{money(it.price * it.qty)}</td>
-                          <td className="num">{cat === "other" ? "" : daysWorn(rot, it.id)}</td>
+                          <td className="num">{isSlot(cat) ? daysWorn(rot, it.id) : ""}</td>
                           <td>
                             <Checkbox checked={!!it.owned} aria-label={"Owned: " + it.name} onCheckedChange={(v) => setData({ ...data, items: items.map((x) => (x.id === it.id ? { ...x, owned: v } : x)) })} />
                           </td>
@@ -262,6 +302,29 @@ export function WardrobeView({ data, setData, backend }: { data: WardrobeData; s
                     </React.Fragment>
                   );
                 })}
+                {sketches.length ? (
+                  <>
+                    <tr className="cat"><td colSpan={8}>Sketches · {sketches.length} <span className="cat-note">Not counted in costs</span></td></tr>
+                    {sketches.map((it) => (
+                      <tr key={it.id} className="is-sketch">
+                        <td>
+                          <span className="namecell">
+                            {it.image ? <img className="thumb" src={it.image} alt="" referrerPolicy="no-referrer" /> : null}
+                            <Swatch it={it} />
+                            {it.name}
+                          </span>
+                        </td>
+                        <td className="muted">{it.style}</td>
+                        <td className="num muted">{money(it.price)}</td>
+                        <td className="num muted">{it.qty}</td>
+                        <td className="num muted">{money(it.price * it.qty)}</td>
+                        <td className="num">{daysWorn(rot, it.id)}</td>
+                        <td><Tag tone="sketch">Sketch</Tag></td>
+                        <td className="num"><span className="row-actions">{promoteButtons(it)}<Button variant="ghost" size="sm" onClick={() => editItem(it)}>Edit</Button></span></td>
+                      </tr>
+                    ))}
+                  </>
+                ) : null}
               </tbody>
             </table>
           </div>
@@ -285,7 +348,7 @@ export function WardrobeView({ data, setData, backend }: { data: WardrobeData; s
           <Button onClick={() => fileRef.current?.click()}>Import JSON</Button>
           <input ref={fileRef} type="file" accept="application/json,.json" hidden onChange={(e) => { const f = e.target.files?.[0]; if (f) importFile(f); e.target.value = ""; }} />
           <Button variant="ghost" onClick={() => { setData({ ...sampleData(), savedAt: data.savedAt }); setMsg("Loaded the sample wardrobe. Save to keep it."); }}>Load sample wardrobe</Button>
-          <Button variant="danger" onClick={() => { setData({ ...data, items: [], outfits: [], rotation: { ...rot, looks: rot.looks.map(() => ({ layer: null, shirt: null, belt: null, pants: null, shoes: null })) } }); setMsg("Cleared. Save to keep the empty wardrobe, or discard to undo."); }}>Start empty</Button>
+          <Button variant="danger" onClick={() => { setData({ ...data, items: [], outfits: [], rotation: { ...rot, looks: rot.looks.map(() => clone(EMPTY_LOOK)) } }); setMsg("Cleared. Save to keep the empty wardrobe, or discard to undo."); }}>Start empty</Button>
         </div>
         {msg ? <Notice tone="neutral">{msg}</Notice> : null}
       </section>

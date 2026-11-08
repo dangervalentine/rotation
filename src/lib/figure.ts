@@ -1,5 +1,5 @@
-import { findItem } from "./model.ts";
-import type { Figure, Item, Look } from "./types.ts";
+import { EMPTY_LOOK, findItem } from "./model.ts";
+import type { Figure, Item, Look, Slot } from "./types.ts";
 
 let patternSeq = 0;
 
@@ -12,6 +12,26 @@ export interface FigureOptions {
 /** viewBox for each mode: the cartoon adds a head above the plain mannequin. */
 export const VIEWBOX = { plain: "0 0 120 200", cartoon: "0 -30 120 230" };
 
+/** Crops of the plain mannequin that frame one slot, for style tiles. */
+export const PIECE_VIEWBOX: Record<Slot, string> = {
+  layer: "12 18 96 98",
+  shirt: "12 18 96 98",
+  undershirt: "12 18 96 98",
+  belt: "28 98 64 26",
+  pants: "14 104 92 82",
+  shoes: "14 164 92 32",
+};
+
+/** A single garment, drawn by the figure renderer and cropped to its slot. */
+export function pieceSvg(item: Item, slot: Slot): { svg: string; viewBox: string } {
+  const empty = EMPTY_LOOK;
+  // Keep only what this garment adds to the bare mannequin, so the tile shows the piece alone.
+  const parts = (svg: string) => svg.match(/<defs>.*?<\/defs>|<[^>]+\/>/g) || [];
+  const bare = new Set(parts(figureSvg([], empty)));
+  const svg = parts(figureSvg([item], { ...empty, [slot]: item.id })).filter((p) => !bare.has(p)).join("");
+  return { svg, viewBox: PIECE_VIEWBOX[slot] };
+}
+
 /**
  * SVG markup (inner content only) for an outfit on a simple figure.
  * Coordinates are a 120x200 mannequin: shoulders at y=30, waist at 108,
@@ -19,7 +39,9 @@ export const VIEWBOX = { plain: "0 0 120 200", cartoon: "0 -30 120 230" };
  */
 export function figureSvg(items: Item[], look: Look, opts: FigureOptions = {}): string {
   const get = (id: string | null) => findItem(items, id);
-  const layer = get(look.layer), shirt = get(look.shirt), belt = get(look.belt), pants = get(look.pants), shoes = get(look.shoes);
+  const layer = get(look.layer), undershirt = get(look.undershirt), belt = get(look.belt), pants = get(look.pants), shoes = get(look.shoes);
+  // With no shirt, the undershirt is what shows: drawn as a tee in its own colour.
+  const shirt = get(look.shirt) ?? (undershirt && { ...undershirt, style: "tee" });
   const cartoon = !!opts.cartoon;
   const ink = cartoon ? "#3a3340" : "#55585e";
   const sw = cartoon ? 1.6 : 0.6;
@@ -47,8 +69,12 @@ export function figureSvg(items: Item[], look: Look, opts: FigureOptions = {}): 
   if (shirt?.style === "polo") {
     s += `<path d="M52 30 L60 40 L68 30 Z" fill="${shirt.color}" ${line(sw + 0.2)}/><line x1="60" y1="40" x2="60" y2="52" ${line()}/>`;
   } else if (tee) {
-    s += `<path d="M50 30 Q60 38 70 30" fill="none" ${line(sw + 0.2)}/>`;
+    s += !look.shirt && undershirt?.style === "v-neck"
+      ? `<path d="M52 30 L60 40 L68 30" fill="none" ${line(sw + 0.2)}/>`
+      : `<path d="M50 30 Q60 38 70 30" fill="none" ${line(sw + 0.2)}/>`;
   } else {
+    // A crew undershirt fills the open collar; a v-neck stays hidden under it.
+    if (undershirt?.style === "crew") s += `<path d="M52 30 L60 42 L68 30 Z" fill="${undershirt.color}"/><path d="M53 30 Q60 35 67 30" fill="none" ${line(sw * 0.8)}/>`;
     s += `<path d="M52 30 L60 42 L68 30" fill="none" ${line(sw + 0.2)}/>`;
   }
 

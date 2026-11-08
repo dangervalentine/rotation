@@ -28,6 +28,8 @@ const COLOR_WORDS: [RegExp, string][] = [
 ];
 
 const KIND_WORDS: [RegExp, Category, string][] = [
+  // Before "shirt", which would otherwise claim undershirts.
+  [/\bundershirt/, "undershirt", "crew"],
   [/\bblazer|sport ?coat|suit jacket\b/, "layer", "blazer"],
   [/\bcardigan\b/, "layer", "cardigan"],
   [/\bsweater|jumper|pullover|crew ?neck knit|crewneck|hoodie|sweatshirt\b/, "layer", "sweater"],
@@ -42,7 +44,9 @@ const KIND_WORDS: [RegExp, Category, string][] = [
   [/\bsneakers?|trainers?|runners?\b/, "shoes", "sneakers"],
   [/\bloafers?|moccasins?|derby|oxfords? shoe\b/, "shoes", "loafers"],
   [/\bboots?|chukka|chelsea\b/, "shoes", "boots"],
-  [/\bsocks?|undershirt|wallet|watch|tie\b/, "other", "other"],
+  [/\bsocks?\b/, "basics", "socks"],
+  [/\bunderwear|boxers?|briefs?|trunks\b/, "basics", "underwear"],
+  [/\bwallet|watch|tie\b/, "other", "other"],
 ];
 
 export function guessColor(text: string): string | undefined {

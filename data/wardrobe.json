@@ -1,8 +1,8 @@
 {
   "version": 1,
-  "savedAt": 1794108608080,
+  "savedAt": 1794169509574,
   "title": "Workweek Wardrobe",
-  "subtitle": "Two-week business casual rotation. Pants repeat every five workdays, with no pants or leather shoes two days running.",
+  "subtitle": "",
   "items": [
     {
       "id": "blazer",
@@ -388,8 +388,8 @@
     ]
   },
   "figure": {
-    "skin": "#f1c7a3",
-    "hair": "#4a3426",
+    "skin": "#f8d9c0",
+    "hair": "#ea732a",
     "hairStyle": "short"
   }
 }

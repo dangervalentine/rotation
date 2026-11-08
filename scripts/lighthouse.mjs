@@ -1,6 +1,6 @@
 // Lighthouse audit of every view, in both themes, desktop and mobile.
-// Usage: npm run build && npm run preview, then `npm run audit -- --phase before|after [--base http://localhost:4173/]`.
-// Writes JSON + HTML reports and REPORT.md to specs/001-page-flow-refinement/lighthouse/.
+// Usage: npm run build && npm run preview, then `npm run audit -- --phase before|after [--base http://localhost:4173/] [--feature 002-outfit-builder-polish]`.
+// Writes JSON + HTML reports and REPORT.md to specs/<feature>/lighthouse/ (default: 001-page-flow-refinement).
 import { existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import lighthouse from "lighthouse";
@@ -15,7 +15,8 @@ const phase = arg("phase", "after");
 const base = arg("base", "http://localhost:4173/");
 if (!["before", "after"].includes(phase)) throw new Error("--phase must be before or after");
 
-const OUT = path.resolve(import.meta.dirname, "../specs/001-page-flow-refinement/lighthouse");
+const feature = arg("feature", "001-page-flow-refinement");
+const OUT = path.resolve(import.meta.dirname, "../specs", feature, "lighthouse");
 const ROUTES = ["#wardrobe", "#outfits", "#rotation", "#rotation/day/0", "#print"];
 const THEMES = ["light", "dark"];
 const FORMS = ["desktop", "mobile"];

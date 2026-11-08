@@ -10,6 +10,7 @@ A small stamped label for state: owned, to buy, a rotation conflict, a kept slot
 | `tobuy` | `tobacco` on `camel-soft` | items on the shopping list |
 | `flag` | `tobacco` on `camel-soft`, with a "!" | repeats: same pants, shirt or leather shoes on back-to-back days |
 | `accent` | `oxblood` on `oxblood-soft` | a slot marked "keep" while shuffling |
+| `sketch` | `ink`, dashed `ink` hairline | a piece sketched in the outfit builder: an idea, not owned or on the shopping list |
 | `neutral` | `ink-muted`, hairline | style, fabric, any descriptor |
 
 - Flags name the conflict concretely: "Same pants as Mon", not "Warning".

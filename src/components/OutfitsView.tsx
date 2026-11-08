@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Button, Field, LookCard, Notice, SectionHead } from "../design-system/index.ts";
 import { clone, EMPTY_LOOK, same, shuffleLook, uniqueId } from "../lib/model.ts";
-import type { Look, Outfit, WardrobeData } from "../lib/types.ts";
+import type { Item, Look, Outfit, WardrobeData } from "../lib/types.ts";
 import { lookPieces, OutfitFigure } from "./common.tsx";
 import { LookEditor } from "./LookEditor.tsx";
 
@@ -11,6 +11,7 @@ export function OutfitsView({ data, setData }: { data: WardrobeData; setData: (d
   const [editing, setEditing] = useState<string | null>(null);
   const [look, setLook] = useState<Look>(() => shuffleLook(items, clone(EMPTY_LOOK)));
   const [name, setName] = useState("");
+  const [creating, setCreating] = useState(false);
   const base = outfits.find((o) => o.id === editing) || null;
   const dirty = base ? !same(base.look, look) || base.name !== name : true;
 
@@ -19,6 +20,11 @@ export function OutfitsView({ data, setData }: { data: WardrobeData; setData: (d
     setLook(clone(o.look));
     setName(o.name);
     window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+  function createItem(it: Omit<Item, "id">) {
+    const id = uniqueId(it.name, items);
+    setData({ ...data, items: [...items, { id, ...it }] });
+    return id;
   }
   function saveNew() {
     const n = name.trim() || `Outfit ${outfits.length + 1}`;
@@ -57,13 +63,13 @@ export function OutfitsView({ data, setData }: { data: WardrobeData; setData: (d
             No pieces yet. Start in <a href="#wardrobe">Wardrobe &amp; costs</a>.
           </Notice>
         )}
-        <LookEditor items={items} look={look} onChange={setLook} />
+        <LookEditor items={items} look={look} onChange={setLook} onCreateItem={createItem} historyKey={editing ?? "new"} onCreatingChange={setCreating} />
         <div className="actions">
           <Field className="f-name" label="Name" value={name} placeholder="Rainy Monday" onChange={(e) => setName(e.target.value)} />
           {base ? (
-            <Button variant="primary" onClick={saveExisting} disabled={!dirty}>Save changes to {base.name}</Button>
+            <Button variant={creating ? "secondary" : "primary"} onClick={saveExisting} disabled={!dirty}>Save changes to {base.name}</Button>
           ) : null}
-          <Button variant={base ? "secondary" : "primary"} onClick={saveNew}>Save as new outfit</Button>
+          <Button variant={base || creating ? "secondary" : "primary"} onClick={saveNew}>Save as new outfit</Button>
           {base ? (
             <Button variant="ghost" onClick={() => { setEditing(null); setName(""); }}>Stop editing</Button>
           ) : null}

@@ -1,19 +1,24 @@
 import type { Category, Figure, Item, Look, Outfit, Rotation, Slot, WardrobeData } from "./types.ts";
 
+/** Categories in the order they're worn, top to bottom (outer before inner where they overlap). */
 export const CATEGORIES: [Category, string][] = [
   ["layer", "Top layers"],
   ["shirt", "Shirts"],
+  ["undershirt", "Undershirts"],
   ["belt", "Belts"],
   ["pants", "Pants"],
+  ["basics", "Socks & underwear"],
   ["shoes", "Shoes"],
-  ["other", "Socks, undershirts and other"],
+  ["other", "Other"],
 ];
 
 export const STYLES: Record<Category, string[]> = {
   layer: ["blazer", "sweater", "cardigan", "jacket"],
   shirt: ["oxford", "polo", "tee"],
+  undershirt: ["crew", "v-neck"],
   belt: ["belt"],
   pants: ["pants", "shorts", "skirt"],
+  basics: ["socks", "underwear"],
   shoes: ["boots", "sneakers", "loafers"],
   other: ["other"],
 };
@@ -21,15 +26,19 @@ export const STYLES: Record<Category, string[]> = {
 export const SLOTS: [Slot, string][] = [
   ["layer", "Top layer"],
   ["shirt", "Shirt"],
+  ["undershirt", "Undershirt"],
   ["belt", "Belt"],
   ["pants", "Pants"],
   ["shoes", "Shoes"],
 ];
 
 /** Slots an outfit may leave empty. */
-export const OPTIONAL_SLOTS: Partial<Record<Slot, true>> = { layer: true, belt: true };
+export const OPTIONAL_SLOTS: Partial<Record<Slot, true>> = { layer: true, undershirt: true, belt: true };
 
-export const EMPTY_LOOK: Look = { layer: null, shirt: null, belt: null, pants: null, shoes: null };
+export const EMPTY_LOOK: Look = { layer: null, shirt: null, undershirt: null, belt: null, pants: null, shoes: null };
+
+/** Whether items of this category go into outfits (and so count days worn). */
+export const isSlot = (cat: Category): cat is Slot => SLOTS.some(([s]) => s === cat);
 
 export const DEFAULT_FIGURE: Figure = { skin: "#f1c7a3", hair: "#4a3426", hairStyle: "short" };
 
@@ -89,6 +98,16 @@ export function resizeRotation(rot: Rotation, days: string[], weeks: number): Ro
   return { days, weeks, looks };
 }
 
+/** Older files put socks, underwear and undershirts in "other". Sort them into their own categories by name. */
+function splitOther(i: any): Partial<Item> {
+  if (i.cat !== "other") return {};
+  const name = String(i.name || "").toLowerCase();
+  if (/undershirt/.test(name)) return { cat: "undershirt", style: /v-?neck/.test(name) ? "v-neck" : "crew" };
+  if (/\bsocks?\b/.test(name)) return { cat: "basics", style: "socks" };
+  if (/underwear|boxers?|briefs?|trunks?/.test(name)) return { cat: "basics", style: "underwear" };
+  return {};
+}
+
 /**
  * Accept the current format, or the original single-file format
  * ({ items, rotation: Look[] }), and return a complete WardrobeData.
@@ -105,12 +124,12 @@ export function migrate(raw: any): WardrobeData {
   } else {
     rotation = resizeRotation({ days: [], weeks: 0, looks: [] }, ["Mon", "Tue", "Wed", "Thu", "Fri"], 2);
   }
-  const items: Item[] = raw.items.map((i: any) => ({
-    ...i,
-    price: Number(i.price) || 0,
-    qty: Math.max(1, parseInt(i.qty, 10) || 1),
-    owned: !!i.owned,
-  }));
+  const items: Item[] = raw.items.map((i: any) => {
+    const it: Item = { ...i, ...splitOther(i), price: Number(i.price) || 0, qty: Math.max(1, parseInt(i.qty, 10) || 1), owned: !!i.owned };
+    // A sketch is never owned; anything else in the field is dropped.
+    if (i.sketch !== true || it.owned) delete it.sketch;
+    return it;
+  });
   const outfits: Outfit[] = Array.isArray(raw.outfits)
     ? raw.outfits.map((o: any) => ({ id: String(o.id), name: String(o.name || "Outfit"), look: normalizeLook(o.look) }))
     : [];
@@ -170,16 +189,38 @@ export function matchingBelt(items: Item[], shoesId: string | null): string | nu
 }
 
 /** Randomise every unlocked slot. Optional slots get "none" some of the time. */
+function shufflePool(items: Item[], slot: Slot) {
+  const pool = items.filter((i) => i.cat === slot).map((i) => i.id as string | null);
+  if (OPTIONAL_SLOTS[slot]) pool.push(null);
+  return pool;
+}
+
+/** Whether shuffling could change anything: some unkept slot (the belt follows the shoes) has a choice. */
+export function canShuffle(items: Item[], locked: Partial<Record<Slot, boolean>> = {}) {
+  return SLOTS.some(([slot]) => slot !== "belt" && !locked[slot] && shufflePool(items, slot).length > 1);
+}
+
+/** Randomise every unlocked slot. Returns a different look whenever one is possible. */
 export function shuffleLook(items: Item[], look: Look, locked: Partial<Record<Slot, boolean>> = {}, rng: Rng = Math.random): Look {
-  const next = clone(look);
-  for (const [slot] of SLOTS) {
-    if (locked[slot] || slot === "belt") continue;
-    const pool = items.filter((i) => i.cat === slot).map((i) => i.id as string | null);
-    if (OPTIONAL_SLOTS[slot]) pool.push(null);
-    if (pool.length) next[slot] = pick(pool, rng);
-  }
-  if (!locked.belt) next.belt = matchingBelt(items, next.shoes);
+  const once = () => {
+    const next = clone(look);
+    for (const [slot] of SLOTS) {
+      if (locked[slot] || slot === "belt") continue;
+      const pool = shufflePool(items, slot);
+      if (pool.length) next[slot] = pick(pool, rng);
+    }
+    if (!locked.belt) next.belt = matchingBelt(items, next.shoes);
+    return next;
+  };
+  let next = once();
+  for (let tries = 0; tries < 8 && same(next, look) && canShuffle(items, locked); tries++) next = once();
   return next;
+}
+
+/** Picker order: owned, then to buy, then sketches; wardrobe order within each. */
+export function sortForPicker(items: Item[]): Item[] {
+  const rank = (i: Item) => (i.sketch ? 2 : i.owned ? 0 : 1);
+  return items.map((it, n) => ({ it, n })).sort((a, b) => rank(a.it) - rank(b.it) || a.n - b.n).map((x) => x.it);
 }
 
 /** The look with one slot swapped for each item of that category. */
@@ -198,7 +239,9 @@ export function variations(items: Item[], look: Look, slot: Slot): { id: string 
  * repeats that dayWarnings flags. Leather shoes and pants never repeat on
  * consecutive days when there's an alternative.
  */
-export function generateRotation(items: Item[], days: string[], weeks: number, rng: Rng = Math.random, layerChance = 0.4): Look[] {
+export function generateRotation(all: Item[], days: string[], weeks: number, rng: Rng = Math.random, layerChance = 0.4): Look[] {
+  // Sketches are only placed by hand, never generated (including through belt matching).
+  const items = all.filter((i) => !i.sketch);
   const per = days.length;
   const total = per * weeks;
   const used = new Map<string, number>();
@@ -218,6 +261,7 @@ export function generateRotation(items: Item[], days: string[], weeks: number, r
     const look: Look = {
       layer: rng() < layerChance ? choose("layer", []) : null,
       shirt: choose("shirt", prev ? [prev.shirt] : []),
+      undershirt: choose("undershirt", []),
       pants: choose("pants", prev ? [prev.pants] : []),
       shoes: choose("shoes", prevShoes && prevShoes.style !== "sneakers" ? [prevShoes.id] : []),
       belt: null,
@@ -233,6 +277,7 @@ export function wardrobeTotals(items: Item[]) {
   const by: Record<string, { t: number; o: number; n: number }> = {};
   let all = 0, own = 0, pieces = 0;
   for (const it of items) {
+    if (it.sketch) continue; // sketches are ideas, not costs
     const sub = (+it.price || 0) * (+it.qty || 0);
     const c = (by[it.cat] ||= { t: 0, o: 0, n: 0 });
     c.t += sub;

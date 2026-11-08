@@ -203,7 +203,7 @@ export function App({ backend, initial }: { backend: Backend; initial: WardrobeD
         className="no-print"
         meta={meta}
         title={<input className="title-input" value={data.title} aria-label="Wardrobe name" onChange={(e) => setData({ ...data, title: e.target.value })} />}
-        dek={data.subtitle || undefined}
+        dek={<textarea className="dek-input" rows={1} value={data.subtitle} placeholder="Add a note: what this wardrobe is for, or rules you dress by" aria-label="Wardrobe description" onChange={(e) => setData({ ...data, subtitle: e.target.value.replace(/\n/g, " ") })} />}
         tools={<Segmented label="Theme" options={[["system", "Auto"], ["light", "Light"], ["dark", "Dark"]]} value={theme} onChange={setTheme} />}
       >
         <Tabs label="Views" value={view} items={VIEW_ORDER.map((id, i) => ({ id, label: LABELS[id], href: "#" + id, step: (i + 1) as 1 | 2 | 3 | 4 }))} />

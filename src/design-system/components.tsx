@@ -9,16 +9,18 @@ import * as RSelect from "@radix-ui/react-select";
 import * as RToggleGroup from "@radix-ui/react-toggle-group";
 import { forwardRef, useEffect, useId, useLayoutEffect, useRef, useSyncExternalStore, type ButtonHTMLAttributes, type InputHTMLAttributes, type ReactNode, type RefObject, type TextareaHTMLAttributes } from "react";
 
-export type Category = "layer" | "shirt" | "belt" | "pants" | "shoes" | "other";
-export type Slot = "layer" | "shirt" | "belt" | "pants" | "shoes";
+export type Category = "layer" | "shirt" | "undershirt" | "belt" | "pants" | "basics" | "shoes" | "other";
+export type Slot = "layer" | "shirt" | "undershirt" | "belt" | "pants" | "shoes";
 export interface Piece {
   slot: Slot;
   name: string | null;
   color: string | null;
   stripe?: string;
+  /** Owned, to buy or a sketch. Only sketches are marked in a look. */
+  status?: "owned" | "tobuy" | "sketch";
 }
 
-const SLOT_LABEL: Record<Category, string> = { layer: "Layer", shirt: "Shirt", belt: "Belt", pants: "Pants", shoes: "Shoes", other: "Other" };
+const SLOT_LABEL: Record<Category, string> = { layer: "Layer", shirt: "Shirt", undershirt: "Undershirt", belt: "Belt", pants: "Pants", basics: "Socks & underwear", shoes: "Shoes", other: "Other" };
 const cx = (...c: (string | false | null | undefined)[]) => c.filter(Boolean).join(" ");
 const pad2 = (n: number) => String(n).padStart(2, "0");
 
@@ -41,7 +43,7 @@ export function Button({ variant = "secondary", size = "md", className, type = "
 
 /* ---------- Tag ---------- */
 
-export function Tag({ tone = "neutral", className, children }: { tone?: "neutral" | "owned" | "tobuy" | "flag" | "accent"; className?: string; children: ReactNode }) {
+export function Tag({ tone = "neutral", className, children }: { tone?: "neutral" | "owned" | "tobuy" | "flag" | "accent" | "sketch"; className?: string; children: ReactNode }) {
   return <span className={cx("rt-tag", tone !== "neutral" && "rt-tag-" + tone, className)}>{children}</span>;
 }
 
@@ -179,6 +181,8 @@ export interface GarmentCardProps {
   price: ReactNode;
   qty?: number;
   owned: boolean;
+  /** Overrides `owned` for the tag: a sketch is neither owned nor on the shopping list. */
+  status?: "owned" | "tobuy" | "sketch";
   worn?: number;
   onSelect?: () => void;
   className?: string;
@@ -189,7 +193,10 @@ export function GarmentCard(p: GarmentCardProps) {
     <>
       <div className="rt-garment-plate" style={{ background: p.color ? swatchBackground(p.color, p.stripe, 10) : "var(--paper-sunk)" }}>
         {p.image ? <img src={p.image} alt="" referrerPolicy="no-referrer" /> : null}
-        <Tag tone={p.owned ? "owned" : "tobuy"}>{p.owned ? "Owned" : "To buy"}</Tag>
+        {(() => {
+          const st = p.status ?? (p.owned ? "owned" : "tobuy");
+          return <Tag tone={st}>{st === "owned" ? "Owned" : st === "sketch" ? "Sketch" : "To buy"}</Tag>;
+        })()}
       </div>
       <div className="rt-garment-body">
         <Kicker>{SLOT_LABEL[p.category] + (p.style ? " · " + p.style : "")}</Kicker>
@@ -252,6 +259,7 @@ export function LookCard(p: LookCardProps) {
               <Kicker>{SLOT_LABEL[pc.slot]}</Kicker>
               <Swatch color={pc.color} stripe={pc.stripe} />
               {pc.name ? <span>{pc.name}</span> : <span className="rt-piece-empty">None</span>}
+              {pc.status === "sketch" ? <Tag tone="sketch">Sketch</Tag> : null}
             </li>
           ))}
         </ul>
@@ -376,12 +384,42 @@ export interface SelectOption {
   label: string;
   /** Show a swatch before the label; null draws the empty-slot ring. */
   swatch?: { color: string; stripe?: string } | null;
+  /** A status shown in the menu row (not in the trigger). */
+  tag?: { label: string; tone: "owned" | "tobuy" | "sketch" };
+  /** An action ("Create a piece…"): listed after a separator, calls onAction, never becomes the value. */
+  action?: true;
 }
 
-export function Select({ id, label, value, onChange, options, extra, hint, className }: FieldBase & { id: string; value: string; onChange: (v: string) => void; options: SelectOption[] }) {
+export function Select({ id, label, value, onChange, options, extra, hint, className, onHighlight, onAction }: FieldBase & {
+  id: string;
+  value: string;
+  onChange: (v: string) => void;
+  options: SelectOption[];
+  /** The option under the pointer or keyboard focus (null for actions, and when the menu closes). For previews. */
+  onHighlight?: (value: string | null) => void;
+  onAction?: (value: string) => void;
+}) {
+  const values = options.filter((o) => !o.action);
+  const actions = options.filter((o) => o.action);
+  const item = (o: SelectOption) => (
+    <RSelect.Item key={o.value} value={o.value} className={cx("rt-select-item", o.action && "rt-select-action")} onFocus={() => onHighlight?.(o.action ? null : o.value)}>
+      <RSelect.ItemText>
+        <span className="rt-select-row">
+          {o.swatch !== undefined ? <Swatch color={o.swatch?.color} stripe={o.swatch?.stripe} /> : null}
+          {o.label}
+        </span>
+      </RSelect.ItemText>
+      {o.tag ? <Tag tone={o.tag.tone} className="rt-select-tag">{o.tag.label}</Tag> : null}
+      <RSelect.ItemIndicator className="rt-select-check">●</RSelect.ItemIndicator>
+    </RSelect.Item>
+  );
   return (
     <FieldShell id={id} label={label} hint={hint} extra={extra} className={className}>
-      <RSelect.Root value={value} onValueChange={onChange}>
+      <RSelect.Root
+        value={value}
+        onValueChange={(v) => (actions.some((a) => a.value === v) ? onAction?.(v) : onChange(v))}
+        onOpenChange={(o) => { if (!o) onHighlight?.(null); }}
+      >
         <RSelect.Trigger id={id} className="rt-input rt-select-trigger">
           <RSelect.Value />
           <RSelect.Icon className="rt-select-icon" aria-hidden="true">
@@ -391,17 +429,9 @@ export function Select({ id, label, value, onChange, options, extra, hint, class
         <RSelect.Portal>
           <RSelect.Content className="rt-select-menu" position="popper" sideOffset={4}>
             <RSelect.Viewport>
-              {options.map((o) => (
-                <RSelect.Item key={o.value} value={o.value} className="rt-select-item">
-                  <RSelect.ItemText>
-                    <span className="rt-select-row">
-                      {o.swatch !== undefined ? <Swatch color={o.swatch?.color} stripe={o.swatch?.stripe} /> : null}
-                      {o.label}
-                    </span>
-                  </RSelect.ItemText>
-                  <RSelect.ItemIndicator className="rt-select-check">●</RSelect.ItemIndicator>
-                </RSelect.Item>
-              ))}
+              {values.map(item)}
+              {actions.length ? <RSelect.Separator className="rt-select-sep" /> : null}
+              {actions.map(item)}
             </RSelect.Viewport>
           </RSelect.Content>
         </RSelect.Portal>
@@ -450,6 +480,30 @@ export function Segmented<T extends string>({ options, value, onChange, label }:
       {options.map(([v, l]) => (
         <RToggleGroup.Item key={v} value={v} className="rt-seg-item">
           {l}
+        </RToggleGroup.Item>
+      ))}
+    </RToggleGroup.Root>
+  );
+}
+
+/* ---------- Tiles (pick one, as pictures) ---------- */
+
+export interface TileOption<T extends string> {
+  value: T;
+  /** Accessible name, and the caption under a picture tile. */
+  label: string;
+  /** The picture: a garment silhouette, a swatch. */
+  content: ReactNode;
+}
+
+/** Pick one of several options shown as pictures: style tiles, a colour palette. Arrow keys move between them. */
+export function Tiles<T extends string>({ label, options, value, onChange, variant = "tile", className }: { label: string; options: TileOption<T>[]; value: T | ""; onChange: (v: T) => void; variant?: "tile" | "swatch"; className?: string }) {
+  return (
+    <RToggleGroup.Root type="single" aria-label={label} className={cx("rt-tiles", "rt-tiles-" + variant, className)} value={value} onValueChange={(v) => { if (v) onChange(v as T); }}>
+      {options.map((o) => (
+        <RToggleGroup.Item key={o.value} value={o.value} className="rt-tile" aria-label={o.label} title={o.label}>
+          <span className="rt-tile-art" aria-hidden="true">{o.content}</span>
+          {variant === "tile" ? <span className="rt-tile-label" aria-hidden="true">{o.label}</span> : null}
         </RToggleGroup.Item>
       ))}
     </RToggleGroup.Root>
@@ -538,6 +592,8 @@ export function Sheet(p: SheetProps) {
           onOpenAutoFocus={(e) => { e.preventDefault(); titleRef.current?.focus(); }}
           onCloseAutoFocus={(e) => { if (p.returnFocusRef?.current) { e.preventDefault(); p.returnFocusRef.current.focus(); } }}
           onInteractOutside={keepOpen}
+          // A region marked data-escape-local (the piece creator) handles Escape itself, so the panel stays open.
+          onEscapeKeyDown={(e) => { if ((e.target as Element | null)?.closest?.("[data-escape-local]")) e.preventDefault(); }}
         >
           <div className="rt-sheet-head">
             <div className="rt-sheet-titles">

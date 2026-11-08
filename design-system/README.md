@@ -45,10 +45,12 @@ Rules for changing it:
 | [`Select`](components/Select.md) | Dropdown styled as a Field, with optional swatches. |
 | [`Check`](components/Check.md) | Square checkbox with a label. |
 | [`Segmented`](components/Segmented.md) | Pick one of a few (Table / Cards, Try every…). |
+| `Tiles` | Pick one of several shown as pictures: style silhouettes, a colour palette. See [`SketchCreator`](components/SketchCreator.md). |
 | [`Notice`](components/Notice.md) | One-line status or warning under an action. |
 | [`Sheet`](components/Sheet.md) | Editing panel for one item: docked right on wide screens, bottom sheet on phones. |
 | [`ConfirmDialog`](components/ConfirmDialog.md) | "Apply or discard?" before an action would drop unapplied changes. |
 | [`SaveBar`](components/SaveBar.md) | Sticky unsaved-changes bar. |
+| [`SketchCreator`](components/SketchCreator.md) | App-level: the outfit builder's in-place piece creator, built from `Tiles`, `Field` and `Check`. |
 
 ---
 

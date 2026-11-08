@@ -8,3 +8,5 @@ dist
 specs/*/lighthouse/before/
 specs/*/lighthouse/after/
 .playwright-mcp/
+*.log
+.env*
