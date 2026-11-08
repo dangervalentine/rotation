@@ -7,3 +7,4 @@ Section navigation set like a magazine's contents line: numbered, tracked upperc
 - Use for the app's top-level views only (Rotation, Outfits, Wardrobe & costs, Print). Inside a view, use headings, not more tabs.
 - Labels are nouns in title case; the component uppercases them.
 - No pill or filled background on the active tab — the underline is the state.
+- Give each tab its `step` (1–4) in the app's view nav: the number sits on a chip of the step colour and the active underline takes it.

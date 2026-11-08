@@ -1,6 +1,6 @@
 # Stat
 
-A figure set in Bodoni numerals under a heavy rule, with a kicker label and an optional note — the "by the numbers" box of a feature.
+A figure set in display-face numerals under a heavy rule, with a kicker label and an optional note — the "by the numbers" box of a feature.
 
 **Consumer provides:** `value` (pre-formatted: "$2,749", "22"), `label` (one or two words), optional `note` (one short line of context).
 
