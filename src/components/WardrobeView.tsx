@@ -170,6 +170,7 @@ export function WardrobeView({ data, setData, backend }: { data: WardrobeData; s
       <section aria-labelledby="w-h">
         <SectionHead
           id="w-h"
+          number={1}
           kicker="Inventory"
           title="Wardrobe & costs"
           aside={

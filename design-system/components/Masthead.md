@@ -1,11 +1,11 @@
 # Masthead
 
-The magazine cover line for every screen: section kicker and issue meta over a hairline, the title in Bodoni at `masthead` size, an italic `dek`, then a double rule and the view nav.
+The magazine cover line for every screen: section kicker and issue meta over a hairline, the title in Playfair Display at `masthead` size, an italic `dek`, then a double rule and the view nav.
 
-**Consumer provides:** `title` (the wardrobe's name — a string, or an element such as the app's editable title `<input>`, which inherits the masthead type), optional `section` (kicker, default "The Wardrobe"), `meta` (a mono line: issue, cycle, piece count — uppercase, separated by ` · `), `dek` (the wardrobe's `subtitle`: one sentence), and `children` (normally a `Tabs`).
+**Consumer provides:** `title` (the wardrobe's name — a string, or an element such as the app's editable title `<input>`, which inherits the masthead type), optional `section` (kicker, default "The Wardrobe"), `meta` (a mono line: issue, cycle, piece count — uppercase, separated by ` · `), `dek` (the wardrobe's `subtitle`: one sentence), optional `tools` (small controls at the end of the top line, such as the Auto / Light / Dark `Segmented`), and `children` (normally a `Tabs`).
 
 - One per screen, at the top. Never inside a card.
 - Keep `title` short — one or two words reads like a masthead; four reads like a form.
 - The dek is a sentence, not a list. End it with a period.
-- The dek is set in `ink` (not `ink-muted`) at Bodoni's text optical size (`opsz` 14), weight 450, 20px (18px on phones). The display cut's hairlines in `ink-muted` read poorly at that size; the test suite holds `ink` at 7:1 or better on `paper` and `paper-raised`. Hierarchy comes from size and italic, not a lighter colour.
+- The dek is set in `ink` (not `ink-muted`), italic, 20px (18px on phones). Muted grey italic read poorly at that size; the test suite holds `ink` at 7:1 or better on `paper` and `paper-raised`. Hierarchy comes from size and italic, not a lighter colour.
 - Don't recolour the title. It is always `ink`; oxblood belongs to actions.

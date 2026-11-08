@@ -19,12 +19,15 @@ npm run dev        # http://localhost:5173
 | **Published** | `npm run build`, then host `dist/` anywhere static | This browser's `localStorage`, seeded from the bundled `data/wardrobe.json` |
 
 Both modes have the same save bar. Unsaved edits are kept as a draft in the browser until you save or discard them.
+If the saved wardrobe changes underneath a draft (you edit `data/wardrobe.json` by hand, a script updates it, or another tab saves), the app notices: on load, when you come back to the tab, as soon as the file changes in local mode, and again right before saving. With no unsaved edits it just loads the newer version; with unsaved edits it asks whether to keep them or load the newer version, so nothing is overwritten silently.
+
+The masthead has an **Auto / Light / Dark** theme switch. Auto follows the OS; the choice is remembered in this browser. Print is always light.
 On the Wardrobe tab, **Export / Import JSON** moves data between modes and devices. Files in the original single-file format import too.
 `npm run preview` serves the built site, so you can try the published (browser) mode locally.
 
 ## Design system
 
-The app is styled by **Rotation**, an editorial menswear design system: ink on newsprint, Bodoni headlines, tracked uppercase labels, hairline rules and one oxblood accent, with light and dark themes. Tokens live in `design-system/tokens.json`; components and styles in `src/design-system/`. See [`design-system/README.md`](design-system/README.md) for the rules, and run `npm run tokens` after editing tokens.
+The app is styled by **Rotation**, an editorial menswear design system: ink on newsprint, Playfair Display headlines, tracked uppercase labels, hairline rules, an oxblood accent for actions and a colour for each step (navy, camel, oxblood, ink), with light and dark themes. Tokens live in `design-system/tokens.json`; components and styles in `src/design-system/`. See [`design-system/README.md`](design-system/README.md) for the rules, and run `npm run tokens` after editing tokens.
 
 ## Views
 

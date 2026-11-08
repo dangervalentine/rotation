@@ -18,7 +18,7 @@ export function PrintView({ data, setData }: { data: WardrobeData; setData: (d: 
   return (
     <div className="view">
       <section className="no-print" aria-labelledby="pr-h">
-        <SectionHead id="pr-h" kicker="Print edition" title="Print your rotation" aside={<Button variant="primary" onClick={() => window.print()}>Print</Button>} />
+        <SectionHead id="pr-h" number={4} kicker="Print edition" title="Print your rotation" aside={<Button variant="primary" onClick={() => window.print()}>Print</Button>} />
         <div className="print-controls">
           <div className="rt-field">
             <span className="rt-field-label">Skin</span>

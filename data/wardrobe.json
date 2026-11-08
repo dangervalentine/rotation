@@ -13,7 +13,8 @@
       "price": 399,
       "qty": 1,
       "owned": false,
-      "link": "https://suitsupply.com/en-us/men/jackets/navy-tailored-fit-havana-blazer/C25216.html"
+      "link": "https://suitsupply.com/en-us/men/jackets/navy-tailored-fit-havana-blazer/C25216.html",
+      "image": "https://cdn.suitsupply.com/image/upload/f_auto,q_auto,w_1200/products/jackets/default/c25216_25"
     },
     {
       "id": "sweater",
@@ -24,7 +25,8 @@
       "price": 49.9,
       "qty": 2,
       "owned": false,
-      "link": "https://www.uniqlo.com/us/en/products/E450535-000/00"
+      "link": "https://www.uniqlo.com/us/en/products/E450535-000/00",
+      "image": "https://image.uniqlo.com/UQ/ST3/us/imagesgoods/450535/item/usgoods_07_450535_3x4.jpg"
     },
     {
       "id": "white-ox",
@@ -35,7 +37,8 @@
       "price": 49.9,
       "qty": 1,
       "owned": false,
-      "link": "https://www.uniqlo.com/us/en/products/E456630-000/00?colorDisplayCode=01&sizeDisplayCode=004"
+      "link": "https://www.uniqlo.com/us/en/products/E456630-000/00?colorDisplayCode=01&sizeDisplayCode=004",
+      "image": "https://image.uniqlo.com/UQ/ST3/us/imagesgoods/456630/item/usgoods_01_456630_3x4.jpg"
     },
     {
       "id": "blue-ox",
@@ -46,7 +49,8 @@
       "price": 49.9,
       "qty": 1,
       "owned": false,
-      "link": "https://www.uniqlo.com/us/en/products/E456630-000/00?colorDisplayCode=64&sizeDisplayCode=004"
+      "link": "https://www.uniqlo.com/us/en/products/E456630-000/00?colorDisplayCode=64&sizeDisplayCode=004",
+      "image": "https://image.uniqlo.com/UQ/ST3/us/imagesgoods/456630/item/usgoods_64_456630_3x4.jpg"
     },
     {
       "id": "pink-ox",
@@ -58,7 +62,8 @@
       "price": 49.9,
       "qty": 1,
       "owned": false,
-      "link": "https://www.uniqlo.com/us/en/products/E486579-000/00?colorDisplayCode=11&sizeDisplayCode=004"
+      "link": "https://www.uniqlo.com/us/en/products/E486579-000/00?colorDisplayCode=11&sizeDisplayCode=004",
+      "image": "https://image.uniqlo.com/UQ/ST3/us/imagesgoods/486579/item/usgoods_11_486579_3x4.jpg"
     },
     {
       "id": "bstripe-ox",
@@ -70,7 +75,8 @@
       "price": 49.9,
       "qty": 1,
       "owned": false,
-      "link": "https://www.uniqlo.com/us/en/products/E486579-000/00?colorDisplayCode=65&sizeDisplayCode=004"
+      "link": "https://www.uniqlo.com/us/en/products/E486579-000/00?colorDisplayCode=65&sizeDisplayCode=004",
+      "image": "https://image.uniqlo.com/UQ/ST3/us/imagesgoods/486579/item/usgoods_65_486579_3x4.jpg"
     },
     {
       "id": "polo",
@@ -81,7 +87,8 @@
       "price": 39.9,
       "qty": 1,
       "owned": false,
-      "link": "https://www.uniqlo.com/us/en/products/E460939-000/00?colorDisplayCode=69&sizeDisplayCode=004"
+      "link": "https://www.uniqlo.com/us/en/products/E460939-000/00?colorDisplayCode=69&sizeDisplayCode=004",
+      "image": "https://image.uniqlo.com/UQ/ST3/us/imagesgoods/460939/item/usgoods_69_460939_3x4.jpg"
     },
     {
       "id": "chambray",
@@ -92,7 +99,8 @@
       "price": 37.5,
       "qty": 1,
       "owned": false,
-      "link": "https://bananarepublicfactory.gapfactory.com/browse/product.do?pid=1174510001&vid=1"
+      "link": "https://bananarepublicfactory.gapfactory.com/browse/product.do?pid=1174510001&vid=1",
+      "image": "https://bananarepublicfactory.gapfactory.com/webcontent/0063/348/540/cn63348540.jpg"
     },
     {
       "id": "jeans",
@@ -103,7 +111,8 @@
       "price": 98,
       "qty": 1,
       "owned": false,
-      "link": "https://www.levi.com/US/en_US/clothing/men/jeans/straight/501-original-mens-jeans/p/005010101"
+      "link": "https://www.levi.com/US/en_US/clothing/men/jeans/straight/501-original-mens-jeans/p/005010101",
+      "image": "https://lsco.scene7.com/is/image/lsco/005010101-front-pdp"
     },
     {
       "id": "stone",
@@ -114,7 +123,8 @@
       "price": 98,
       "qty": 1,
       "owned": false,
-      "link": "https://www.jcrew.com/p/mens/categories/clothing/pants-and-chinos/chino/classic-chino-pant/BE611?color_name=stone&colorProductCode=BE611"
+      "link": "https://www.jcrew.com/p/mens/categories/clothing/pants-and-chinos/chino/classic-chino-pant/BE611?color_name=stone&colorProductCode=BE611",
+      "image": "https://www.jcrew.com/s7-img-facade/BE611_NA0965"
     },
     {
       "id": "navy-chino",
@@ -125,7 +135,8 @@
       "price": 98,
       "qty": 1,
       "owned": false,
-      "link": "https://www.jcrew.com/p/mens/categories/clothing/pants-and-chinos/chino/classic-chino-pant/BE611?color_name=storm-navy&colorProductCode=BE611"
+      "link": "https://www.jcrew.com/p/mens/categories/clothing/pants-and-chinos/chino/classic-chino-pant/BE611?color_name=storm-navy&colorProductCode=BE611",
+      "image": "https://www.jcrew.com/s7-img-facade/BE611_BL9205"
     },
     {
       "id": "olive",
@@ -136,7 +147,8 @@
       "price": 98,
       "qty": 1,
       "owned": false,
-      "link": "https://www.jcrew.com/p/mens/categories/clothing/pants-and-chinos/chino/classic-chino-pant/BE611?color_name=dill&colorProductCode=BE611"
+      "link": "https://www.jcrew.com/p/mens/categories/clothing/pants-and-chinos/chino/classic-chino-pant/BE611?color_name=dill&colorProductCode=BE611",
+      "image": "https://www.jcrew.com/s7-img-facade/BE611_GR7195"
     },
     {
       "id": "wool",
@@ -158,7 +170,8 @@
       "price": 79.99,
       "qty": 1,
       "owned": false,
-      "link": "https://www.redwingshoes.com/accessories/leathergoods/belts/basic-work-leather-belt-96523.html?currency=USD"
+      "link": "https://www.redwingshoes.com/accessories/leathergoods/belts/basic-work-leather-belt-96523.html?currency=USD",
+      "image": "https://embed.widencdn.net/img/redwing/5xjhqdgqaa/300x300px/RW96523C_MUL_N1_1024.jpeg?position=c&crop=no&color=ffffffff&quality=80&u=mztfl2"
     },
     {
       "id": "belt-brown",
@@ -169,7 +182,8 @@
       "price": 99.99,
       "qty": 1,
       "owned": true,
-      "link": "https://www.redwingshoes.com/accessories/leathergoods/belts/classic-heritage-leather-belt-96550.html?currency=USD"
+      "link": "https://www.redwingshoes.com/accessories/leathergoods/belts/classic-heritage-leather-belt-96550.html?currency=USD",
+      "image": "https://embed.widencdn.net/img/redwing/nwlitk0nix/300x300px/RWH_96550_MUL_N1_03012026.jpeg?position=c&crop=no&color=ffffffff&quality=80&u=mztfl2"
     },
     {
       "id": "beckman",
@@ -180,7 +194,8 @@
       "price": 400,
       "qty": 1,
       "owned": false,
-      "link": "https://www.guiltyparty.co/products/red-wing-9423-beckman-black-excalibur?variant=51721615474998"
+      "link": "https://www.guiltyparty.co/products/red-wing-9423-beckman-black-excalibur?variant=51721615474998",
+      "image": "https://cdn.shopify.com/s/files/1/0745/1561/1958/files/RWH_09423_MUL_N1_1023.png?v=1762915968"
     },
     {
       "id": "iron-ranger",
@@ -191,7 +206,8 @@
       "price": 349.99,
       "qty": 1,
       "owned": true,
-      "link": "https://www.redwingshoes.com/mens/heritage/iron-ranger/iron-ranger-08111.html?currency=USD"
+      "link": "https://www.redwingshoes.com/mens/heritage/iron-ranger/iron-ranger-08111.html?currency=USD",
+      "image": "https://embed.widencdn.net/img/redwing/vhngyoup5h/300x300px/RW08111C_MUL_N1_0418.jpeg?position=c&crop=no&color=ffffffff&quality=80&u=mztfl2"
     },
     {
       "id": "sneakers",
@@ -202,7 +218,8 @@
       "price": 175,
       "qty": 1,
       "owned": false,
-      "link": "https://www.colehaan.com/products/mens-grandpro-luxe-slip-on-sneakers-c41964"
+      "link": "https://www.colehaan.com/products/mens-grandpro-luxe-slip-on-sneakers-c41964",
+      "image": "https://cdn.shopify.com/s/files/1/0710/9938/3948/files/GP-LUXE-SLIP-ON-SNK_e_A_C41964-psd.jpg?v=1767671516"
     },
     {
       "id": "socks-white",
@@ -213,7 +230,8 @@
       "price": 24,
       "qty": 5,
       "owned": false,
-      "link": "https://darntough.com/products/mens-merino-wool-solid-crew-no-cushion-lightweight-lifestyle-socks?variant=45481251340474"
+      "link": "https://darntough.com/products/mens-merino-wool-solid-crew-no-cushion-lightweight-lifestyle-socks?variant=45481251340474",
+      "image": "https://cdn.shopify.com/s/files/1/1354/8177/files/6032_SolidWhitenew.png?v=1793378140"
     },
     {
       "id": "socks-black",
@@ -224,7 +242,8 @@
       "price": 24,
       "qty": 5,
       "owned": false,
-      "link": "https://darntough.com/products/mens-merino-wool-solid-crew-no-cushion-lightweight-lifestyle-socks?variant=45481251569850"
+      "link": "https://darntough.com/products/mens-merino-wool-solid-crew-no-cushion-lightweight-lifestyle-socks?variant=45481251569850",
+      "image": "https://cdn.shopify.com/s/files/1/1354/8177/files/6032_SolidBlack.png?v=1767201693"
     },
     {
       "id": "undershirt",
@@ -235,7 +254,8 @@
       "price": 14.9,
       "qty": 5,
       "owned": false,
-      "link": "https://www.uniqlo.com/us/en/products/E482514-000/00?colorDisplayCode=00&sizeDisplayCode=004"
+      "link": "https://www.uniqlo.com/us/en/products/E482514-000/00?colorDisplayCode=00&sizeDisplayCode=004",
+      "image": "https://image.uniqlo.com/UQ/ST3/us/imagesgoods/482514/item/usgoods_00_482514_3x4.jpg"
     },
     {
       "id": "wallet",
@@ -246,7 +266,8 @@
       "price": 99.99,
       "qty": 1,
       "owned": false,
-      "link": "https://www.redwingshoes.com/accessories/leathergoods/wallets/bifold-wallet-96582.html?currency=USD"
+      "link": "https://www.redwingshoes.com/accessories/leathergoods/wallets/bifold-wallet-96582.html?currency=USD",
+      "image": "https://embed.widencdn.net/img/redwing/mhcueeihoq/300x300px/RW96582C_MUL_N1_0825.jpeg?position=c&crop=no&color=ffffffff&quality=80&u=mztfl2"
     }
   ],
   "outfits": [

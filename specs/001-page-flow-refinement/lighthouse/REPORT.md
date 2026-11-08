@@ -6,31 +6,38 @@ Cells show before → **after** once both phases exist.
 
 | Route | Theme | Form | Accessibility | Best practices | Performance | SEO |
 |---|---|---|---|---|---|---|
-| `#wardrobe` | light | desktop | 100 → **100** | 100 → **100** | 100 → **100** | 82 → **100** |
-| `#wardrobe` | light | mobile | 100 → **100** | 100 → **100** | 88 → **88** | 82 → **100** |
-| `#wardrobe` | dark | desktop | 100 → **100** | 100 → **100** | 100 → **100** | 82 → **100** |
-| `#wardrobe` | dark | mobile | 100 → **100** | 100 → **100** | 89 → **99** | 82 → **100** |
+| `#wardrobe` | light | desktop | 100 → **100** | 100 → **96** | 100 → **100** | 82 → **100** |
+| `#wardrobe` | light | mobile | 100 → **100** | 100 → **96** | 88 → **90** | 82 → **100** |
+| `#wardrobe` | dark | desktop | 100 → **100** | 100 → **96** | 100 → **100** | 82 → **100** |
+| `#wardrobe` | dark | mobile | 100 → **100** | 100 → **96** | 89 → **90** | 82 → **100** |
 | `#outfits` | light | desktop | 100 → **100** | 100 → **100** | 100 → **100** | 82 → **100** |
-| `#outfits` | light | mobile | 100 → **100** | 100 → **100** | 87 → **87** | 82 → **100** |
+| `#outfits` | light | mobile | 100 → **100** | 100 → **100** | 87 → **98** | 82 → **100** |
 | `#outfits` | dark | desktop | 100 → **100** | 100 → **100** | 100 → **100** | 82 → **100** |
-| `#outfits` | dark | mobile | 100 → **100** | 100 → **100** | 98 → **87** | 82 → **100** |
-| `#rotation` | light | desktop | 100 → **100** | 100 → **100** | 100 → **100** | 82 → **100** |
-| `#rotation` | light | mobile | 100 → **100** | 100 → **100** | 87 → **87** | 82 → **100** |
-| `#rotation` | dark | desktop | 100 → **100** | 100 → **100** | 100 → **100** | 82 → **100** |
-| `#rotation` | dark | mobile | 100 → **100** | 100 → **100** | 98 → **87** | 82 → **100** |
+| `#outfits` | dark | mobile | 100 → **100** | 100 → **100** | 98 → **98** | 82 → **100** |
+| `#rotation` | light | desktop | 100 → **100** | 100 → **100** | 100 → **86** | 82 → **100** |
+| `#rotation` | light | mobile | 100 → **100** | 100 → **100** | 87 → **89** | 82 → **100** |
+| `#rotation` | dark | desktop | 100 → **100** | 100 → **100** | 100 → **86** | 82 → **100** |
+| `#rotation` | dark | mobile | 100 → **100** | 100 → **100** | 98 → **98** | 82 → **100** |
 | `#rotation/day/0` | light | desktop | 100 → **100** | 100 → **100** | 100 → **100** | 82 → **100** |
-| `#rotation/day/0` | light | mobile | 100 → **100** | 100 → **100** | 98 → **87** | 82 → **100** |
+| `#rotation/day/0` | light | mobile | 100 → **100** | 100 → **100** | 98 → **89** | 82 → **100** |
 | `#rotation/day/0` | dark | desktop | 100 → **100** | 100 → **100** | 100 → **100** | 82 → **100** |
-| `#rotation/day/0` | dark | mobile | 100 → **100** | 100 → **100** | 87 → **87** | 82 → **100** |
+| `#rotation/day/0` | dark | mobile | 100 → **100** | 100 → **100** | 87 → **98** | 82 → **100** |
 | `#print` | light | desktop | 100 → **100** | 100 → **100** | 100 → **100** | 82 → **100** |
-| `#print` | light | mobile | 100 → **100** | 100 → **100** | 87 → **98** | 82 → **100** |
+| `#print` | light | mobile | 100 → **100** | 100 → **100** | 87 → **89** | 82 → **100** |
 | `#print` | dark | desktop | 100 → **100** | 100 → **100** | 100 → **100** | 82 → **100** |
-| `#print` | dark | mobile | 100 → **100** | 100 → **100** | 87 → **87** | 82 → **100** |
+| `#print` | dark | mobile | 100 → **100** | 100 → **100** | 87 → **98** | 82 → **100** |
 
 ## Failing audits (after)
 
-None.
+| Run | Category | Audit | Title | Items |
+|---|---|---|---|---|
+| wardrobe.dark.desktop | best-practices | `inspector-issues` | Issues were logged in the `Issues` panel in Chrome Devtools | 1 |
+| wardrobe.dark.mobile | best-practices | `inspector-issues` | Issues were logged in the `Issues` panel in Chrome Devtools | 1 |
+| wardrobe.light.desktop | best-practices | `inspector-issues` | Issues were logged in the `Issues` panel in Chrome Devtools | 1 |
+| wardrobe.light.mobile | best-practices | `inspector-issues` | Issues were logged in the `Issues` panel in Chrome Devtools | 1 |
 
 ## Exceptions
 
-None.
+| Audit | Routes | Reason |
+|---|---|---|
+| `inspector-issues` (best practices, 96) | `#wardrobe`, all themes and form factors | The garment photos are hot-linked from the stores' own image servers. Some of them (Banana Republic Factory, J.Crew) send `Set-Cookie` with their images, and Chrome logs that as a third-party cookie issue. The app sets no cookies, and those servers' headers are outside its control. Adding `crossorigin="anonymous"` would drop the cookies, but only works if every store sends CORS headers, and several don't, so the images would break. Still within the target (≥ 95). |

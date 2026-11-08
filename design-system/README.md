@@ -22,7 +22,7 @@ Rules for changing it:
 
 - **New value?** Add a token to `tokens.json` with a `usage` note, run `npm run tokens`, then use `var(--name)`. App CSS (`src/styles.css`) and components never hard-code colours, spacing or radii.
 - `npm test` fails if `tokens.css` is stale, if two tokens share a name, or if any text pair promised below drops under 4.5:1 in either theme.
-- **Themes:** Newsprint (light) is the default. Evening (dark) follows the OS setting on screen; set `data-theme="light"` or `"dark"` on `<html>` to force one. Print always uses Newsprint.
+- **Themes:** Newsprint (light) is the default. Evening (dark) follows the OS setting on screen; set `data-theme="light"` or `"dark"` on `<html>` to force one (the app's Auto / Light / Dark switch in the masthead does this and remembers the choice per browser). Forced themes apply on screen only: print always uses Newsprint.
 - **Fonts** load from Google Fonts in `index.html`. Keep that link in step with `type.families` in `tokens.json`.
 - A browsable copy of this system (cover, token tables, live component previews) lives as a claude.ai Design System artifact. The repo wins if they disagree.
 
@@ -32,7 +32,7 @@ Rules for changing it:
 |---|---|
 | [`Masthead`](components/Masthead.md) | App title, issue meta, dek, nav. Once per screen. |
 | [`Tabs`](components/Tabs.md) | Top-level view navigation. |
-| [`SectionHead`](components/SectionHead.md) | Kicker + Bodoni title over a heavy rule, with an aside for controls. |
+| [`SectionHead`](components/SectionHead.md) | Kicker + display title over a heavy rule, with an aside for controls and, once per view, the step's numeral block. |
 | [`Button`](components/Button.md) | Primary (one per view), secondary, ghost, danger. |
 | [`Kicker`](components/Kicker.md) | Small tracked uppercase label above a title. |
 | [`Tag`](components/Tag.md) | Owned, to buy, rotation flags, kept. |
@@ -52,15 +52,15 @@ Rules for changing it:
 
 ---
 
-Rotation is a wardrobe planner set like a menswear magazine: ink on newsprint, a Didone masthead, tracked uppercase kickers, hairline rules, and one oxblood accent. The clothes provide the colour; the interface stays in black, paper and type.
+Rotation is a wardrobe planner set like a menswear magazine: ink on newsprint, a high-contrast serif masthead, tracked uppercase kickers, hairline rules, an oxblood accent for actions, and a colour for each step of the work. The clothes provide the colour; the interface stays in black, paper and type.
 
 ## Principles
 
 1. **The garments are the pictures.** Item colours (`color`, `stripe` in the data) are the only saturated colour on screen. Never tint, theme or replace them with tokens.
 2. **Rules, not boxes.** Separate with hairlines (`rule`) and heavy rules (`rule-strong`), and with paper tone (`paper`, `paper-raised`, `paper-sunk`). No drop shadows except `shadow-float` on the save bar.
 3. **Square corners.** `radius-none` everywhere. `radius-xs` for tags only; `radius-full` for swatches only.
-4. **One accent.** `oxblood` marks the primary action, the active tab, the selected look and focus. If two things on a screen are oxblood, one of them is wrong.
-5. **Type does the hierarchy.** Kicker → Bodoni title → italic dek → body. Not colour, not weight alone.
+4. **One action accent, four step colours.** `oxblood` marks the primary action, the selected look and focus. Each step of the work also has a colour (`step-1` navy for Wardrobe, `step-2` camel for Outfits, `step-3` oxblood for Rotation, `step-4` ink for Print). It shows on the tab-number chip, the active-tab underline, the view's section kickers and heavy rules, and the cropped numeral block beside its main section head. Step colours never colour buttons, inputs or the garments.
+5. **Type does the hierarchy.** Kicker → display title → italic dek → body. Colour says *where* you are (the step), not *how important* something is.
 
 ## Voice
 
@@ -97,16 +97,16 @@ Two themes: **Newsprint** (light, default) and **Evening** (dark). Every text pa
 
 Three families, all on Google Fonts:
 
-- **Bodoni Moda** (`display`) — masthead, headlines, titles, look numbers, stat figures, garment names, field values, deks in italic. Use its optical size axis: high contrast at display sizes, the text cut (`opsz` 14) for the dek, whose display hairlines break up at 20px.
+- **Playfair Display** (`display`) — masthead, headlines, titles, step numerals, look numbers, stat figures, garment names, field values, deks in italic. Titles at 600. It replaced Bodoni Moda, whose display cut was too narrow and hairline-thin to read comfortably at title sizes.
 - **Hanken Grotesk** (`sans`) — interface: kickers, buttons, tabs, body, captions.
 - **IBM Plex Mono** (`mono`) — specs: prices, quantities, colour codes, week numbers, issue meta. Think photo credits.
 
 | Style | Size / leading | Use |
 |---|---|---|
-| `masthead` | 88 / 0.9, Bodoni 500 | App title, once per screen |
+| `masthead` | 88 / 0.95, Playfair 600 | App title, once per screen |
 | `headline` | 48 / 1.0 | View titles |
 | `title` | 28 / 1.1 | Look names, panel titles |
-| `dek` | 20 / 1.45 italic 450, `opsz` 14, `ink` | Standfirst under a headline |
+| `dek` | 20 / 1.5 italic, `ink` | Standfirst under a headline |
 | `numeral` | 44 / 1.0 | Stats, "No. 04" |
 | `kicker` | 11 / 16, 600, +0.16em, uppercase | Category, day, section labels |
 | `body` | 15 / 24 | Running text, rows |
@@ -114,7 +114,7 @@ Three families, all on Google Fonts:
 | `caption` | 12 / 18 | Hints, secondary lines |
 | `spec` | 12 / 18 mono | Prices, codes, counts |
 
-Never set body copy in Bodoni below 14px; its hairlines break up. Never set a kicker in sentence case.
+Never set body copy in the display face below 14px; its hairlines break up. Never set a kicker in sentence case.
 
 ## Layout and spacing
 
@@ -132,7 +132,7 @@ Never set body copy in Bodoni below 14px; its hairlines break up. Never set a ki
 
 ## Iconography
 
-No icon set. Labels are words, set as kickers or buttons. The one glyph is the "!" on a flag tag, set in Bodoni. If an icon is ever unavoidable (close, menu), use a 1.5px stroke, square caps, in `ink`, at 16px — and keep a text label for screen readers.
+No icon set. Labels are words, set as kickers or buttons. The one glyph is the "!" on a flag tag, set in the display face. If an icon is ever unavoidable (close, menu), use a 1.5px stroke, square caps, in `ink`, at 16px — and keep a text label for screen readers.
 
 There is no logo: the wordmark is the word "Rotation" (or the wardrobe's own title) set in `masthead`.
 

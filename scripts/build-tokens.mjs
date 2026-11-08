@@ -22,7 +22,8 @@ export function buildTokensCss(tokens) {
 
   out.push(`:root,\n[data-theme="${first}"] {\n  color-scheme: light;\n${block(first)}\n}`);
   for (const theme of rest) {
-    out.push(`[data-theme="${theme}"] {\n  color-scheme: dark;\n${block(theme)}\n}`);
+    // Forced themes are for the screen; print always uses the first (Newsprint).
+    out.push(`@media screen {\n  [data-theme="${theme}"] {\n    color-scheme: dark;\n${block(theme).replace(/^/gm, "  ")}\n  }\n}`);
     out.push(`@media screen and (prefers-color-scheme: dark) {\n  :root:not([data-theme="${first}"]) {\n    color-scheme: dark;\n${block(theme).replace(/^/gm, "  ")}\n  }\n}`);
   }
 

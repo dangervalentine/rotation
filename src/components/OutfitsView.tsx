@@ -47,6 +47,7 @@ export function OutfitsView({ data, setData }: { data: WardrobeData; setData: (d
       <section aria-labelledby="mm-h">
         <SectionHead
           id="mm-h"
+          number={2}
           kicker={base ? <>Editing {base.name}</> : "Workspace"}
           title="Mix and match"
           aside={<span className="lede">{base ? "Change the pieces, then save." : "Build a look, then save it to your outfits."}</span>}

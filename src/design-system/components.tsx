@@ -70,6 +70,8 @@ export interface TabItem {
   label: string;
   /** When set, the tab is a link (use for hash or route navigation). */
   href?: string;
+  /** A step colour (1–4): the tab number gets a chip of that colour. */
+  step?: 1 | 2 | 3 | 4;
 }
 
 export function Tabs({ items, value, onChange, numbered = true, label = "Sections", className }: { items: TabItem[]; value: string; onChange?: (id: string) => void; numbered?: boolean; label?: string; className?: string }) {
@@ -91,7 +93,7 @@ export function Tabs({ items, value, onChange, numbered = true, label = "Section
     return (
       <nav ref={navRef} className={cx("rt-tabs", className)} aria-label={label}>
         {items.map((it, i) => (
-          <a key={it.id} href={it.href} className="rt-tab" aria-current={it.id === value ? "page" : undefined} onClick={() => onChange?.(it.id)}>
+          <a key={it.id} href={it.href} className={cx("rt-tab", it.step && "rt-step-" + it.step)} data-step={it.step} aria-current={it.id === value ? "page" : undefined} onClick={() => onChange?.(it.id)}>
             {body(it, i)}
           </a>
         ))}
@@ -111,12 +113,15 @@ export function Tabs({ items, value, onChange, numbered = true, label = "Section
 
 /* ---------- Masthead ---------- */
 
-export function Masthead({ title, section = "The Wardrobe", meta, dek, children, className }: { title: ReactNode; section?: ReactNode; meta?: ReactNode; dek?: ReactNode; children?: ReactNode; className?: string }) {
+export function Masthead({ title, section = "The Wardrobe", meta, tools, dek, children, className }: { title: ReactNode; section?: ReactNode; meta?: ReactNode; /** Small controls at the end of the top line (e.g. the theme switch). */ tools?: ReactNode; dek?: ReactNode; children?: ReactNode; className?: string }) {
   return (
     <header className={cx("rt-mast", className)}>
       <div className="rt-mast-top">
         <Kicker tone="ink">{section}</Kicker>
-        {meta ? <span className="rt-mast-meta">{meta}</span> : null}
+        <span className="rt-mast-end">
+          {meta ? <span className="rt-mast-meta">{meta}</span> : null}
+          {tools}
+        </span>
       </div>
       {typeof title === "string" ? <h1 className="rt-mast-title">{title}</h1> : <div className="rt-mast-title">{title}</div>}
       {dek ? <p className="rt-mast-dek">{dek}</p> : null}
@@ -128,14 +133,22 @@ export function Masthead({ title, section = "The Wardrobe", meta, dek, children,
 
 /* ---------- Section head (view and panel titles) ---------- */
 
-export function SectionHead({ kicker, title, id, aside, level = 2, className }: { kicker?: ReactNode; title: ReactNode; id?: string; aside?: ReactNode; level?: 2 | 3; className?: string }) {
+export function SectionHead({ kicker, title, id, aside, level = 2, number, className }: { kicker?: ReactNode; title: ReactNode; id?: string; aside?: ReactNode; level?: 2 | 3; /** The view's step number, shown as a numeral block in the step colour. Once per view. */ number?: number; className?: string }) {
   const H = level === 2 ? "h2" : "h3";
+  const titles = (
+    <div className="rt-shead-titles">
+      {kicker ? <Kicker>{kicker}</Kicker> : null}
+      <H id={id} className={level === 2 ? "rt-shead-title" : "rt-shead-title rt-shead-title-sm"}>{title}</H>
+    </div>
+  );
   return (
     <div className={cx("rt-shead", className)}>
-      <div className="rt-shead-titles">
-        {kicker ? <Kicker>{kicker}</Kicker> : null}
-        <H id={id} className={level === 2 ? "rt-shead-title" : "rt-shead-title rt-shead-title-sm"}>{title}</H>
-      </div>
+      {number ? (
+        <div className="rt-shead-lead">
+          <div className="rt-shead-num" aria-hidden="true"><span>{pad2(number)}</span></div>
+          {titles}
+        </div>
+      ) : titles}
       {aside ? <div className="rt-shead-aside">{aside}</div> : null}
     </div>
   );

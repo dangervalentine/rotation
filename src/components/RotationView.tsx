@@ -137,6 +137,7 @@ export function RotationView({ data, setData, day, navigate, exitDay, closeGuard
       <section aria-labelledby="rot-h">
         <SectionHead
           id="rot-h"
+          number={3}
           kicker={`${per} days × ${rot.weeks} ${rot.weeks === 1 ? "week" : "weeks"}`}
           title={`The ${span.toLowerCase()} rotation`}
           aside={

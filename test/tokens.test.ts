@@ -33,6 +33,8 @@ describe("design tokens", () => {
     ["oxblood", "paper"], ["oxblood", "paper-raised"], ["oxblood", "oxblood-soft"], ["on-oxblood", "oxblood"],
     ["tobacco", "paper"], ["tobacco", "camel-soft"], ["loden", "paper"], ["loden", "loden-soft"],
     ["on-camel", "camel"], ["on-navy", "navy"],
+    // Step colours: numbers on their fills, and step text on paper.
+    ...["1", "2", "3", "4"].flatMap((n) => [[`on-step-${n}`, `step-${n}`], [`step-${n}-ink`, "paper"], [`step-${n}-ink`, "paper-raised"]] as [string, string][]),
   ];
   const color = (name: string, theme: string) => {
     const v = tokens.color.tokens.find((t: any) => t.name === name).value;

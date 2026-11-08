@@ -22,6 +22,10 @@ const DRAFT_KEY = "wardrobe-rotation:draft";
 
 export const sampleData = (): WardrobeData => migrate(clone(seed));
 
+/** Fired when the data file changes on disk during development. The app re-checks it instead of reloading the page. */
+export const DATA_CHANGED = "wardrobe:changed";
+if (import.meta.hot) import.meta.hot.accept("../../data/wardrobe.json", () => window.dispatchEvent(new Event(DATA_CHANGED)));
+
 const fileBackend: Backend = {
   kind: "file",
   async load() {
@@ -72,16 +76,33 @@ export async function pickBackend(): Promise<Backend> {
   return browserBackend;
 }
 
-// Unsaved edits survive a reload, tied to the version they were made against.
-export function loadDraft(base: number): WardrobeData | null {
+/**
+ * A short fingerprint of the wardrobe's content (savedAt and key order ignored).
+ * Drafts record the fingerprint of the version they were made against, so a file changed on disk
+ * (by hand, by a script, by another tab) is noticed even when its savedAt didn't move.
+ */
+export function fingerprint(data: WardrobeData): string {
+  const stable = (v: unknown): string =>
+    Array.isArray(v) ? "[" + v.map(stable).join(",") + "]"
+    : v && typeof v === "object" ? "{" + Object.keys(v).filter((k) => (v as Record<string, unknown>)[k] !== undefined).sort().map((k) => JSON.stringify(k) + ":" + stable((v as Record<string, unknown>)[k])).join(",") + "}"
+    : JSON.stringify(v);
+  const text = stable({ ...data, savedAt: 0 });
+  let h = 0x811c9dc5; // FNV-1a, 32-bit
+  for (let i = 0; i < text.length; i++) h = Math.imul(h ^ text.charCodeAt(i), 0x01000193);
+  return (h >>> 0).toString(36) + "-" + text.length.toString(36);
+}
+
+/** Unsaved edits survive a reload. `base` is the fingerprint of the saved version they were made against
+ *  (older drafts stored the saved version's savedAt number instead). */
+export function loadDraft(): { base: string | number; data: WardrobeData } | null {
   try {
     const d = JSON.parse(localStorage.getItem(DRAFT_KEY) || "null");
-    if (d && d.base === base && d.data) return migrate(d.data);
+    if (d && d.data) return { base: d.base, data: migrate(d.data) };
   } catch {}
   return null;
 }
 
-export function saveDraft(base: number, data: WardrobeData | null) {
+export function saveDraft(base: string, data: WardrobeData | null) {
   try {
     if (data) localStorage.setItem(DRAFT_KEY, JSON.stringify({ base, data }));
     else localStorage.removeItem(DRAFT_KEY);
