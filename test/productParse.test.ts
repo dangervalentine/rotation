@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { guessFromUrl, parseProductHtml } from "../src/lib/productParse.ts";
+import { guessFromUrl, guessKind, parseProductHtml } from "../src/lib/productParse.ts";
 
 describe("guessFromUrl", () => {
   it("reads the slug and color query", () => {
@@ -31,5 +31,39 @@ describe("parseProductHtml", () => {
     const html = `<meta property="og:title" content="White Leather Sneakers | Shop"><meta property="og:image" content="https://img/s.jpg"><meta property="product:price:amount" content="175.00"><meta property="og:site_name" content="Cole Haan">`;
     const g = parseProductHtml(html, "https://www.colehaan.com/products/c41964");
     expect(g).toMatchObject({ name: "Cole Haan White Leather Sneakers", price: 175, image: "https://img/s.jpg", cat: "shoes", style: "sneakers", color: "#f5f3ee" });
+  });
+});
+
+describe("guessKind", () => {
+  it("knows the newer styles", () => {
+    const cases: [string, string, string][] = [
+      ["Levi's 501 jeans", "pants", "jeans"],
+      ["Slim chinos", "pants", "chinos"],
+      ["Wool flannel trousers", "pants", "trousers"],
+      ["Fleece joggers", "pants", "joggers"],
+      ["Hooded sweatshirt", "layer", "hoodie"],
+      ["Loopback crewneck sweatshirt", "layer", "crewneck"],
+      ["Merino quarter-zip", "layer", "quarter-zip"],
+      ["MA-1 bomber", "layer", "bomber"],
+      ["Camel overcoat", "layer", "overcoat"],
+      ["Canvas chore coat", "layer", "chore coat"],
+      ["Merino henley", "shirt", "henley"],
+      ["Brushed flannel shirt", "shirt", "flannel"],
+      ["Linen camp collar shirt", "shirt", "camp collar"],
+      ["Poplin dress shirt", "shirt", "dress shirt"],
+      ["Suede chelsea boot", "shoes", "chelsea boot"],
+      ["Leather derby", "shoes", "derby"],
+      ["Leather sandals", "shoes", "sandal"],
+      ["Reading glasses", "other", "glasses"],
+      ["Polarised sunglasses", "other", "sunglasses"],
+      ["Field watch", "other", "watch"],
+      ["Silk tie", "other", "tie"],
+      ["Lambswool scarf", "other", "scarf"],
+      ["Wool beanie", "other", "hat"],
+      ["Cotton boxer briefs", "basics", "boxer-briefs"],
+      ["Woven boxers", "basics", "boxers"],
+      ["Bifold wallet", "other", "other"],
+    ];
+    for (const [text, cat, style] of cases) expect(guessKind(text), text).toEqual({ cat, style });
   });
 });

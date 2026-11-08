@@ -1,29 +1,32 @@
 import { useEffect, useRef, useState } from "react";
-import { Button, Check, Field, Kicker, Notice, Swatch, Tiles } from "../design-system/index.ts";
+import { Button, Field, Kicker, Notice, Swatch, Tiles } from "../design-system/index.ts";
 import { dominantColour, sampleAt } from "../lib/colour.ts";
 import { pieceSvg } from "../lib/figure.ts";
-import { SLOTS, STYLES } from "../lib/model.ts";
+import { SLOTS } from "../lib/model.ts";
 import { PALETTE } from "../lib/palette.ts";
-import { makeSketch, SKETCH_DEFAULTS, sketchName } from "../lib/sketch.ts";
-import type { Item, Slot } from "../lib/types.ts";
+import { makeSketch, SKETCH_DEFAULTS, sketchName, type SketchPart } from "../lib/sketch.ts";
+import { cleanDetails, detailOptions, detailsOf, sketchStyles } from "../lib/styles.ts";
+import type { Figure, Item } from "../lib/types.ts";
+import { DetailFields, type DetailValue } from "./DetailFields.tsx";
 import { loadPhoto, type LoadedPhoto } from "./photo.ts";
 
 interface Draft {
   style: string;
   color: string;
-  stripeOn: boolean;
-  stripe: string;
+  /** Sleeve, pattern and its second colour, hardware, length, buckle: kept across style changes, saved only where they apply. */
+  details: DetailValue;
   name: string;
   image?: string;
 }
 
-const slotLabel = (slot: Slot) => SLOTS.find(([s]) => s === slot)![1];
-const A_PIECE: Record<Slot, string> = { layer: "a top layer", shirt: "a shirt", undershirt: "an undershirt", belt: "a belt", pants: "a pair of pants", shoes: "a pair of shoes" };
+const catOf = (part: SketchPart) => (part === "acc" ? "other" : part);
+const partLabel = (part: SketchPart) => (part === "acc" ? "Accessory" : SLOTS.find(([s]) => s === part)![1]);
+const A_PIECE: Record<SketchPart, string> = { layer: "a top layer", shirt: "a shirt", undershirt: "an undershirt", belt: "a belt", pants: "a pair of pants", shoes: "a pair of shoes", acc: "an accessory" };
 
-/** A garment silhouette for a style tile, in the draft's colour. */
-function StyleArt({ slot, style, color, stripe }: { slot: Slot; style: string; color: string; stripe?: string }) {
-  const item: Item = { id: "__tile", cat: slot, name: style, style, color, stripe, price: 0, qty: 1, owned: false };
-  const { svg, viewBox } = pieceSvg(item, slot);
+/** A garment drawing for a style tile, in the draft's colour and details. */
+function StyleArt({ part, style, color, details, figure }: { part: SketchPart; style: string; color: string; details: DetailValue; figure?: Figure }) {
+  const item: Item = { id: "__tile", cat: catOf(part), name: style, style, color, price: 0, qty: 1, owned: false, ...details };
+  const { svg, viewBox } = pieceSvg(item, undefined, figure);
   return <svg viewBox={viewBox} dangerouslySetInnerHTML={{ __html: svg }} />;
 }
 
@@ -31,27 +34,33 @@ function StyleArt({ slot, style, color, stripe }: { slot: Slot; style: string; c
  * Sketch a piece the person doesn't own, in place inside the outfit builder.
  * Defaults are chosen so "Add to look" works straight away.
  */
-export function SketchCreator({ slot, items, onDraftChange, onConfirm, onCancel }: {
-  slot: Slot;
+export function SketchCreator({ part, items, figure, onDraftChange, onConfirm, onCancel }: {
+  part: SketchPart;
   items: Item[];
+  /** The person's figure, so head-worn accessory tiles show on their own head. */
+  figure?: Figure;
   /** Fired on mount and on every change, for the builder's live figure. */
   onDraftChange: (draft: Omit<Item, "id">) => void;
   onConfirm: (draft: Omit<Item, "id">) => void;
   onCancel: () => void;
 }) {
-  const [d, setD] = useState<Draft>(() => ({ ...SKETCH_DEFAULTS[slot], stripeOn: false, stripe: "#7d9bc6", name: "" }));
+  const cat = catOf(part);
+  const [d, setD] = useState<Draft>(() => ({ ...SKETCH_DEFAULTS[part], details: {}, name: "" }));
   const [photo, setPhoto] = useState<LoadedPhoto | null>(null);
   const [err, setErr] = useState("");
   const headRef = useRef<HTMLHeadingElement>(null);
   const fileRef = useRef<HTMLInputElement>(null);
   const set = (p: Partial<Draft>) => setD((x) => ({ ...x, ...p }));
-  const build = () => makeSketch({ cat: slot, style: d.style, color: d.color, stripe: d.stripeOn ? d.stripe : undefined, name: d.name, image: d.image }, items);
+  const build = () => makeSketch({ cat, style: d.style, color: d.color, ...d.details, name: d.name, image: d.image }, items);
 
   useEffect(() => { headRef.current?.focus(); }, []);
   useEffect(() => { onDraftChange(build()); }, [d]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const label = slotLabel(slot);
+  const label = partLabel(part);
   const palette = PALETTE.find((p) => p.hex === d.color.toLowerCase());
+  // What the colour swatch shows: the pattern only if this style can have one.
+  const kept = cleanDetails({ cat, style: d.style, ...d.details });
+  const shownPattern = detailsOf(kept).pattern;
 
   async function pickPhoto(file: File) {
     try {
@@ -87,7 +96,7 @@ export function SketchCreator({ slot, items, onDraftChange, onConfirm, onCancel 
     >
       <div className="rt-creator-head">
         <Kicker tone="accent">New piece · {label}</Kicker>
-        <h3 id="creator-h" ref={headRef} tabIndex={-1} className="rt-creator-title">Sketch {A_PIECE[slot]}</h3>
+        <h3 id="creator-h" ref={headRef} tabIndex={-1} className="rt-creator-title">Sketch {A_PIECE[part]}</h3>
         <p className="lede">It goes in your Sketches to mix and match. It doesn't count toward costs.</p>
       </div>
 
@@ -97,14 +106,21 @@ export function SketchCreator({ slot, items, onDraftChange, onConfirm, onCancel 
           label="Style"
           value={d.style}
           onChange={(style) => set({ style })}
-          options={STYLES[slot].map((s) => ({ value: s, label: s, content: <StyleArt slot={slot} style={s} color={d.color} stripe={d.stripeOn ? d.stripe : undefined} /> }))}
+          options={sketchStyles(cat).map((s) => ({ value: s, label: s, content: <StyleArt part={part} style={s} color={d.color} details={d.details} figure={figure} /> }))}
         />
       </div>
+
+      {detailOptions(cat, d.style).length ? (
+        <div className="rt-creator-section">
+          <Kicker>Details</Kicker>
+          <DetailFields cat={cat} style={d.style} value={d.details} color={d.color} variant="tiles" idPrefix="creator" onChange={(patch) => set({ details: { ...d.details, ...patch } })} />
+        </div>
+      ) : null}
 
       <div className="rt-creator-section">
         <div className="rt-creator-row">
           <Kicker>Colour</Kicker>
-          <span className="rt-creator-colour"><Swatch color={d.color} stripe={d.stripeOn ? d.stripe : undefined} />{palette ? palette.name : "Custom"}</span>
+          <span className="rt-creator-colour"><Swatch color={d.color} stripe={kept.stripe} pattern={shownPattern} />{palette ? palette.name : "Custom"}</span>
         </div>
         <Tiles
           label="Colour"
@@ -115,15 +131,6 @@ export function SketchCreator({ slot, items, onDraftChange, onConfirm, onCancel 
         />
         <div className="rt-creator-extras">
           <Field id="creator-custom" type="color" label="Custom colour" value={d.color} onChange={(e) => set({ color: e.target.value })} />
-          <Field
-            id="creator-stripe"
-            type="color"
-            label="Stripe"
-            value={d.stripe}
-            disabled={!d.stripeOn}
-            onChange={(e) => set({ stripe: e.target.value })}
-            extra={<Check className="rt-check-sm" label="On" checked={d.stripeOn} onCheckedChange={(v) => set({ stripeOn: v })} />}
-          />
         </div>
       </div>
 

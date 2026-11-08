@@ -1,7 +1,18 @@
+import { ACC_VIEWBOX, eyewearSvg, HEAD_WORN, hatSvg, lookAccessories, scarfSvg, tieSvg, watchSvg } from "./figure/accessories.ts";
+import { beltSvg } from "./figure/belts.ts";
+import { arms, hands, legs, torso } from "./figure/body.ts";
+import { beltLoops, bottomSvg } from "./figure/bottoms.ts";
+import { head } from "./figure/head.ts";
+import { layerSvg } from "./figure/layers.ts";
+import { fabric, makePaint } from "./figure/paint.ts";
+import { shoesSvg } from "./figure/shoes.ts";
+import { collarSvg, isCollared, topSvg } from "./figure/tops.ts";
 import { EMPTY_LOOK, findItem } from "./model.ts";
+import { styleSpec } from "./styles.ts";
 import type { Figure, Item, Look, Slot } from "./types.ts";
 
-let patternSeq = 0;
+export { BODY } from "./figure/body.ts";
+export { basicsIconSvg } from "./figure/icons.ts";
 
 export interface FigureOptions {
   /** Add a head, face, hair and hands, with chunky rounded outlines. */
@@ -9,157 +20,98 @@ export interface FigureOptions {
   figure?: Figure;
 }
 
+/** What a layer of the drawing belongs to: a garment slot, accessories, or the figure itself. */
+export type Part = Slot | "acc" | "body" | "head";
+export interface Layer {
+  part: Part;
+  svg: string;
+}
+
 /** viewBox for each mode: the cartoon adds a head above the plain mannequin. */
 export const VIEWBOX = { plain: "0 0 120 200", cartoon: "0 -30 120 230" };
 
-/** Crops of the plain mannequin that frame one slot, for style tiles. */
+/** Crops of the plain figure that frame one slot, with a little room around the piece, for style tiles. */
 export const PIECE_VIEWBOX: Record<Slot, string> = {
-  layer: "12 18 96 98",
-  shirt: "12 18 96 98",
-  undershirt: "12 18 96 98",
-  belt: "28 98 64 26",
-  pants: "14 104 92 82",
-  shoes: "14 164 92 32",
+  layer: "10 12 100 112",
+  shirt: "10 20 100 100",
+  undershirt: "10 20 100 100",
+  belt: "30 101 60 20",
+  pants: "16 104 88 82",
+  shoes: "14 164 92 34",
 };
 
-/** A single garment, drawn by the figure renderer and cropped to its slot. */
-export function pieceSvg(item: Item, slot: Slot): { svg: string; viewBox: string } {
-  const empty = EMPTY_LOOK;
-  // Keep only what this garment adds to the bare mannequin, so the tile shows the piece alone.
-  const parts = (svg: string) => svg.match(/<defs>.*?<\/defs>|<[^>]+\/>/g) || [];
-  const bare = new Set(parts(figureSvg([], empty)));
-  const svg = parts(figureSvg([item], { ...empty, [slot]: item.id })).filter((p) => !bare.has(p)).join("");
-  return { svg, viewBox: PIECE_VIEWBOX[slot] };
+/** Styles that reach past their slot's usual crop. */
+const STYLE_VIEWBOX: Record<string, string> = { overcoat: "4 12 112 136" };
+
+/**
+ * A single garment exactly as drawn on the figure, with nothing else, cropped to where it's worn.
+ * Head-worn accessories sit on a faint head (the person's `figure`, if given) so they read.
+ */
+export function pieceSvg(item: Item, part?: Slot | "acc", figure?: Figure): { svg: string; viewBox: string } {
+  const where = part ?? (styleSpec(item.cat, item.style).art || (item.cat as Slot));
+  if (where === "acc") {
+    const onHead = HEAD_WORN.has(item.style);
+    const layers = figureLayers([item], { ...EMPTY_LOOK, acc: [item.id] }, { cartoon: onHead, figure });
+    const own = layers.filter((l) => l.part === "acc").map((l) => l.svg).join("");
+    const head = onHead ? `<g opacity="0.35">${layers.filter((l) => l.part === "head").map((l) => l.svg).join("")}</g>` : "";
+    return { svg: head + own, viewBox: ACC_VIEWBOX[item.style] ?? VIEWBOX.plain };
+  }
+  const svg = figureLayers([item], { ...EMPTY_LOOK, [where]: item.id })
+    .filter((l) => l.part === where)
+    .map((l) => l.svg)
+    .join("");
+  return { svg, viewBox: STYLE_VIEWBOX[item.style] ?? PIECE_VIEWBOX[where] ?? VIEWBOX.plain };
 }
 
 /**
  * SVG markup (inner content only) for an outfit on a simple figure.
- * Coordinates are a 120x200 mannequin: shoulders at y=30, waist at 108,
- * hem at 180, shoe soles at 192.
+ * Coordinates are a 120x200 figure: neck at y=28, waist at 110,
+ * knee at 150, ankle at 180, shoe soles at 192 (see BODY).
  */
 export function figureSvg(items: Item[], look: Look, opts: FigureOptions = {}): string {
-  const get = (id: string | null) => findItem(items, id);
-  const layer = get(look.layer), undershirt = get(look.undershirt), belt = get(look.belt), pants = get(look.pants), shoes = get(look.shoes);
+  return figureLayers(items, look, opts).map((l) => l.svg).join("");
+}
+
+/** The figure as layers in painting order, each tagged with what it belongs to. */
+export function figureLayers(items: Item[], look: Look, opts: FigureOptions = {}): Layer[] {
+  // Only garments in their own category are drawn: an id in the wrong slot (or an undrawn style) is skipped.
+  const get = (slot: Slot) => {
+    const it = findItem(items, look[slot]);
+    return it && it.cat === slot ? it : null;
+  };
+  const layer = get("layer"), shirt = get("shirt"), undershirt = get("undershirt"), belt = get("belt"), pants = get("pants"), shoes = get("shoes");
+  const p = makePaint(!!opts.cartoon, opts.figure);
+  const acc = lookAccessories(items, look);
+  const out: Layer[] = [];
+  const add = (part: Part, svg: string) => { if (svg) out.push({ part, svg }); };
+
+  if (p.cartoon) add("head", head(p, "back"));
+  add("body", arms(p) + legs(p) + torso(p));
+  if (shoes) add("shoes", shoesSvg(p, shoes));
   // With no shirt, the undershirt is what shows: drawn as a tee in its own colour.
-  const shirt = get(look.shirt) ?? (undershirt && { ...undershirt, style: "tee" });
-  const cartoon = !!opts.cartoon;
-  const ink = cartoon ? "#3a3340" : "#55585e";
-  const sw = cartoon ? 1.6 : 0.6;
-  const line = (w = sw) => `stroke="${ink}" stroke-width="${w}" stroke-linejoin="round" stroke-linecap="round"`;
-  const id = "p" + patternSeq++;
-  let s = "";
-
-  // Shirt fill, striped if needed
-  let shirtFill = "#e6e6e6";
-  if (shirt) {
-    shirtFill = shirt.color;
-    if (shirt.stripe) {
-      s += `<defs><pattern id="${id}" width="6" height="6" patternUnits="userSpaceOnUse"><rect width="6" height="6" fill="${shirt.color}"/><rect width="2" height="6" fill="${shirt.stripe}"/></pattern></defs>`;
-      shirtFill = `url(#${id})`;
+  if (undershirt) add("undershirt", topSvg(p, undershirt, !shirt));
+  if (shirt) add("shirt", topSvg(p, shirt));
+  if (acc.has("tie")) add("acc", tieSvg(p, acc.get("tie")!));
+  if (pants) add("pants", bottomSvg(p, pants));
+  if (belt) add("belt", beltSvg(p, belt));
+  if (belt && pants && pants.style !== "skirt") add("pants", beltLoops(p, pants));
+  if (layer) {
+    add("layer", layerSvg(p, layer));
+    // A crew-neck knit sits under the shirt collar, so the points show on top.
+    if ((layer.style === "sweater" || layer.style === "crewneck") && isCollared(shirt)) {
+      const f = fabric(p, shirt!, 6);
+      add("shirt", f.defs + collarSvg(p, f, shirt!.style === "dress shirt" ? "spread" : "point"));
     }
   }
-
-  if (cartoon) s += head(opts.figure, ink, sw, "back");
-
-  const tee = shirt?.style === "tee";
-  s += tee
-    ? `<path d="M38 30 L82 30 L100 42 L98 60 L88 62 L86 108 L34 108 L32 62 L22 60 L20 42 Z" fill="${shirtFill}" ${line()}/>`
-    : `<path d="M38 30 L82 30 L100 42 L96 86 L86 84 L86 108 L34 108 L34 84 L24 86 L20 42 Z" fill="${shirtFill}" ${line()}/>`;
-
-  if (shirt?.style === "polo") {
-    s += `<path d="M52 30 L60 40 L68 30 Z" fill="${shirt.color}" ${line(sw + 0.2)}/><line x1="60" y1="40" x2="60" y2="52" ${line()}/>`;
-  } else if (tee) {
-    s += !look.shirt && undershirt?.style === "v-neck"
-      ? `<path d="M52 30 L60 40 L68 30" fill="none" ${line(sw + 0.2)}/>`
-      : `<path d="M50 30 Q60 38 70 30" fill="none" ${line(sw + 0.2)}/>`;
-  } else {
-    // A crew undershirt fills the open collar; a v-neck stays hidden under it.
-    if (undershirt?.style === "crew") s += `<path d="M52 30 L60 42 L68 30 Z" fill="${undershirt.color}"/><path d="M53 30 Q60 35 67 30" fill="none" ${line(sw * 0.8)}/>`;
-    s += `<path d="M52 30 L60 42 L68 30" fill="none" ${line(sw + 0.2)}/>`;
-  }
-
-  if (layer?.style === "sweater") {
-    s += `<path d="M38 34 Q60 46 82 34 L100 44 L96 88 L86 86 L86 108 L34 108 L34 86 L24 88 L20 44 Z" fill="${layer.color}" ${line()}/><path d="M50 32 L60 42 L70 32" fill="none" ${line(sw + 0.2)}/><path d="M34 104 L86 104" ${line(sw * 0.8)}/>`;
-  } else if (layer?.style === "cardigan") {
-    s += `<path d="M38 30 L58 64 L57 110 L32 110 L32 86 L22 90 L18 42 Z" fill="${layer.color}" ${line()}/><path d="M82 30 L62 64 L63 110 L88 110 L88 86 L98 90 L102 42 Z" fill="${layer.color}" ${line()}/><circle cx="56" cy="76" r="1.4" fill="${ink}"/><circle cx="56" cy="90" r="1.4" fill="${ink}"/>`;
-  } else if (layer?.style === "blazer") {
-    s += `<path d="M38 28 L56 70 L54 112 L32 112 L32 86 L22 90 L18 42 Z" fill="${layer.color}" ${line()}/><path d="M82 28 L64 70 L66 112 L88 112 L88 86 L98 90 L102 42 Z" fill="${layer.color}" ${line()}/><path d="M38 28 L46 52 L42 56" fill="none" ${line()}/><path d="M82 28 L74 52 L78 56" fill="none" ${line()}/><circle cx="58" cy="90" r="1.6" fill="#c9c9c9"/>`;
-  } else if (layer?.style === "jacket") {
-    s += `<path d="M38 28 L58 34 L58 112 L32 112 L32 86 L22 90 L18 42 Z" fill="${layer.color}" ${line()}/><path d="M82 28 L62 34 L62 112 L88 112 L88 86 L98 90 L102 42 Z" fill="${layer.color}" ${line()}/><path d="M40 28 L50 22 L58 34" fill="${layer.color}" ${line()}/><path d="M80 28 L70 22 L62 34" fill="${layer.color}" ${line()}/><rect x="38" y="66" width="12" height="3" rx="1" fill="none" ${line(sw * 0.8)}/><rect x="70" y="66" width="12" height="3" rx="1" fill="none" ${line(sw * 0.8)}/>`;
-  }
-
-  // Waistband / belt
-  s += `<rect x="34" y="108" width="52" height="6" fill="${belt ? belt.color : pants ? pants.color : "#999"}" ${cartoon ? line() : ""}/>`;
-  if (belt) s += `<rect x="56" y="108" width="7" height="6" fill="none" stroke="#b9a66a" stroke-width="${cartoon ? 1.4 : 1}"/>`;
-
-  const pantsFill = pants ? pants.color : "#bbb";
-  if (pants?.style === "shorts") {
-    s += `<path d="M34 114 L86 114 L90 146 L64 146 L60 128 L56 146 L30 146 Z" fill="${pantsFill}" ${line()}/>`;
-    if (cartoon) s += legs(opts.figure, ink, sw, 146);
-  } else if (pants?.style === "skirt") {
-    s += `<path d="M34 114 L86 114 L96 156 L24 156 Z" fill="${pantsFill}" ${line()}/>`;
-    if (cartoon) s += legs(opts.figure, ink, sw, 156);
-  } else {
-    s += `<path d="M34 114 L86 114 L88 180 L64 180 L60 126 L56 180 L32 180 Z" fill="${pantsFill}" ${line()}/>`;
-  }
-
-  if (shoes) {
-    const c = shoes.color;
-    if (shoes.style === "sneakers") {
-      s += `<path d="M28 180 L56 180 L58 192 L24 192 Z" fill="${c}" ${line(sw + 0.2)}/><path d="M64 180 L92 180 L96 192 L62 192 Z" fill="${c}" ${line(sw + 0.2)}/><line x1="24" y1="189" x2="58" y2="189" ${line()}/><line x1="62" y1="189" x2="96" y2="189" ${line()}/>`;
-    } else if (shoes.style === "loafers") {
-      s += `<path d="M30 182 L56 182 L58 192 L22 192 Z" fill="${c}" ${line()}/><path d="M64 182 L90 182 L98 192 L62 192 Z" fill="${c}" ${line()}/>`;
-    } else {
-      s += `<path d="M30 174 L56 174 L58 192 L22 192 L24 184 Z" fill="${c}" ${line()}/><path d="M64 174 L90 174 L96 184 L98 192 L62 192 Z" fill="${c}" ${line()}/>`;
+  if (p.cartoon) add("body", hands(p));
+  if (acc.has("watch")) add("acc", watchSvg(p, acc.get("watch")!));
+  if (acc.has("scarf")) add("acc", scarfSvg(p, acc.get("scarf")!));
+  if (p.cartoon) {
+    add("head", head(p, "front"));
+    for (const style of ["glasses", "sunglasses", "hat"]) {
+      const it = acc.get(style);
+      if (it) add("acc", style === "hat" ? hatSvg(p, it) : eyewearSvg(p, it));
     }
   }
-
-  if (cartoon) {
-    s += hands(opts.figure, ink, sw, tee);
-    s += head(opts.figure, ink, sw, "front");
-  }
-  return s;
-}
-
-function skinOf(f?: Figure) {
-  return f?.skin || "#f1c7a3";
-}
-
-function legs(f: Figure | undefined, ink: string, sw: number, top: number) {
-  const skin = skinOf(f);
-  return `<path d="M38 ${top} L54 ${top} L55 182 L37 182 Z" fill="${skin}" stroke="${ink}" stroke-width="${sw}" stroke-linejoin="round"/><path d="M66 ${top} L82 ${top} L83 182 L65 182 Z" fill="${skin}" stroke="${ink}" stroke-width="${sw}" stroke-linejoin="round"/>`;
-}
-
-function hands(f: Figure | undefined, ink: string, sw: number, tee: boolean) {
-  const skin = skinOf(f);
-  // Tee sleeves stop high, so draw forearms down to the hands.
-  const arms = tee
-    ? `<path d="M23 60 L32 62 L29 88 L21 88 Z" fill="${skin}" stroke="${ink}" stroke-width="${sw}" stroke-linejoin="round"/><path d="M97 60 L88 62 L91 88 L99 88 Z" fill="${skin}" stroke="${ink}" stroke-width="${sw}" stroke-linejoin="round"/>`
-    : "";
-  return `${arms}<circle cx="24" cy="93" r="6" fill="${skin}" stroke="${ink}" stroke-width="${sw}"/><circle cx="96" cy="93" r="6" fill="${skin}" stroke="${ink}" stroke-width="${sw}"/>`;
-}
-
-/** Hair has a back part (behind the body, for long hair) and a front part. */
-function head(f: Figure | undefined, ink: string, sw: number, part: "back" | "front") {
-  const skin = skinOf(f);
-  const hair = f?.hair || "#4a3426";
-  const style = f?.hairStyle || "short";
-  const st = `stroke="${ink}" stroke-width="${sw}" stroke-linejoin="round" stroke-linecap="round"`;
-  if (part === "back") {
-    if (style === "long") return `<path d="M38 2 Q36 34 42 46 L78 46 Q84 34 82 2 Z" fill="${hair}" ${st}/>`;
-    return "";
-  }
-  let s = `<rect x="54" y="18" width="12" height="12" fill="${skin}" ${st}/>`;
-  s += `<ellipse cx="60" cy="4" rx="20" ry="21" fill="${skin}" ${st}/>`;
-  if (style === "short") s += `<path d="M40 2 Q40 -18 60 -18 Q80 -18 80 2 Q72 -6 62 -5 Q52 -9 40 2 Z" fill="${hair}" ${st}/>`;
-  else if (style === "long") s += `<path d="M40 6 Q38 -18 60 -18 Q82 -18 80 6 Q76 -4 66 -6 Q58 2 46 -2 Q42 2 40 6 Z" fill="${hair}" ${st}/>`;
-  else if (style === "bun") s += `<circle cx="60" cy="-20" r="7" fill="${hair}" ${st}/><path d="M40 2 Q40 -16 60 -16 Q80 -16 80 2 Q70 -8 60 -8 Q50 -8 40 2 Z" fill="${hair}" ${st}/>`;
-  else if (style === "curly")
-    s += `<path d="M40 4 Q34 -2 40 -8 Q38 -18 48 -18 Q52 -24 60 -20 Q68 -24 72 -18 Q82 -18 80 -8 Q86 -2 80 4 Q76 -4 70 -4 Q64 -8 60 -4 Q54 -8 50 -4 Q44 -4 40 4 Z" fill="${hair}" ${st}/>`;
-  // Face
-  s += `<circle cx="53" cy="5" r="2" fill="${ink}"/><circle cx="67" cy="5" r="2" fill="${ink}"/>`;
-  s += `<circle cx="53.7" cy="4.3" r="0.6" fill="#fff"/><circle cx="67.7" cy="4.3" r="0.6" fill="#fff"/>`;
-  s += `<ellipse cx="48" cy="11" rx="3.2" ry="2" fill="#f19aa6" opacity="0.6"/><ellipse cx="72" cy="11" rx="3.2" ry="2" fill="#f19aa6" opacity="0.6"/>`;
-  s += `<path d="M55 12 Q60 17 65 12" fill="none" ${st}/>`;
-  return s;
+  return out;
 }

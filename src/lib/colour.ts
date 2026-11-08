@@ -51,3 +51,27 @@ export function sampleAt(px: ArrayLike<number>, w: number, h: number, x: number,
     }
   return n ? rgbToHex(r / n, g / n, b / n) : "#808080";
 }
+
+const parse = (hex: string): [number, number, number] | null => {
+  const m = /^#?([0-9a-f]{6})$/i.exec(hex || "");
+  if (!m) return null;
+  const v = parseInt(m[1], 16);
+  return [(v >> 16) & 255, (v >> 8) & 255, v & 255];
+};
+
+/** Perceived brightness, 0 (black) to 1 (white). Unparseable colours count as mid-grey. */
+export function luminance(hex: string) {
+  const c = parse(hex);
+  if (!c) return 0.5;
+  return (0.299 * c[0] + 0.587 * c[1] + 0.114 * c[2]) / 255;
+}
+
+/** `a` moved `t` (0–1) of the way toward `b`. Returns `a` unchanged if either isn't a 6-digit hex. */
+export function mix(a: string, b: string, t: number) {
+  const x = parse(a), y = parse(b);
+  if (!x || !y) return a;
+  return rgbToHex(x[0] + (y[0] - x[0]) * t, x[1] + (y[1] - x[1]) * t, x[2] + (y[2] - x[2]) * t);
+}
+
+/** A garment's single depth shade: toward the ink, or toward white for near-black cloth so it still reads. */
+export const shade = (hex: string, ink: string) => (luminance(hex) < 0.12 ? mix(hex, "#ffffff", 0.18) : mix(hex, ink, 0.22));

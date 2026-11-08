@@ -106,7 +106,7 @@ export function RotationView({ data, setData, day, navigate, exitDay, closeGuard
     if (open && cur >= next.looks.length) exitDay();
   }
   function doGenerate() {
-    const looks = generateRotation(items, rot.days, rot.weeks);
+    const looks = generateRotation(items, rot.days, rot.weeks, undefined, undefined, rot.looks);
     setData({ ...data, rotation: { ...rot, looks } });
     setEdit(null);
     setNotice("");

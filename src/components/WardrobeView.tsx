@@ -1,12 +1,14 @@
 import React, { useMemo, useRef, useState } from "react";
-import { Button, Check, Checkbox, Field, GarmentCard, Kicker, Notice, Segmented, SectionHead, Select, Stat, Tag, TextArea } from "../design-system/index.ts";
+import { Button, Checkbox, Field, GarmentCard, Kicker, Notice, Segmented, SectionHead, Select, Stat, Tag, TextArea } from "../design-system/index.ts";
 import { CATEGORIES, clone, daysWorn, EMPTY_LOOK, isSlot, migrate, money, shortName, SLOTS, STYLES, uniqueId, wardrobeTotals } from "../lib/model.ts";
 import type { ProductGuess } from "../lib/productParse.ts";
 import { itemStatus, promote, STATUS_LABEL, type ItemStatus } from "../lib/sketch.ts";
 import type { Backend } from "../lib/storage.ts";
 import { downloadJson, sampleData } from "../lib/storage.ts";
-import type { Category, Item, WardrobeData } from "../lib/types.ts";
-import { Swatch } from "./common.tsx";
+import { cleanDetails, DETAIL_KEYS, detailOptions, detailsOf } from "../lib/styles.ts";
+import type { Category, Item, Look, WardrobeData } from "../lib/types.ts";
+import { ItemArt, Swatch } from "./common.tsx";
+import { DetailFields } from "./DetailFields.tsx";
 
 /** Whole dollars for headline figures ("$2,885"). */
 const dollars = (n: number) => "$" + Math.round(n || 0).toLocaleString("en-US");
@@ -14,13 +16,21 @@ const dollars = (n: number) => "$" + Math.round(n || 0).toLocaleString("en-US");
 /** Brand from a name like "Uniqlo white oxford", when the item has no brand field. */
 const brandOf = (it: Item) => (it.name !== shortName(it) ? it.name.slice(0, it.name.length - shortName(it).length).trim() : undefined);
 
-type Draft = Omit<Item, "id"> & { id?: string; stripeOn: boolean; stripe: string };
+type Draft = Omit<Item, "id"> & { id?: string };
+
+/** Take an accessory off a look (in place), dropping the list when it empties. */
+function dropAccessory(l: Look, id: string) {
+  if (!l.acc) return;
+  l.acc = l.acc.filter((a) => a !== id);
+  if (!l.acc.length) delete l.acc;
+}
+
 type Editing = { isNew: boolean; item: Partial<Item> } | null;
 
 const BLANK: Partial<Item> = { cat: "shirt", name: "", style: "oxford", color: "#9fb3cc", price: 0, qty: 1, owned: false, link: "" };
 
 function ItemForm({ initial, isNew, note, onSave, onCancel, onDelete }: { initial: Partial<Item>; isNew: boolean; note?: string; onSave: (i: Omit<Item, "id">) => void; onCancel: () => void; onDelete: () => void }) {
-  const [f, setF] = useState<Draft>(() => ({ ...(BLANK as Item), ...initial, stripeOn: !!initial.stripe, stripe: initial.stripe || "#7d9bc6" }));
+  const [f, setF] = useState<Draft>(() => ({ ...(BLANK as Item), ...initial }));
   const [err, setErr] = useState("");
   const [status, setStatus] = useState<ItemStatus>(() => itemStatus({ owned: false, ...initial } as Item));
   const statuses: ItemStatus[] = initial.sketch ? ["sketch", "tobuy", "owned"] : ["tobuy", "owned"];
@@ -39,12 +49,14 @@ function ItemForm({ initial, isNew, note, onSave, onCancel, onDelete }: { initia
       owned: status === "owned",
     };
     if (status === "sketch") out.sketch = true;
-    if (f.stripeOn) out.stripe = f.stripe;
     for (const k of ["link", "image", "brand", "notes"] as const) {
       const v = (f[k] || "").trim();
       if (v) out[k] = v;
     }
-    onSave(out);
+    // Details the saved style doesn't use (or that match its defaults) aren't stored.
+    if (f.stripe) out.stripe = f.stripe;
+    for (const k of DETAIL_KEYS) if (f[k] !== undefined) (out as Record<string, unknown>)[k] = f[k];
+    onSave(cleanDetails(out));
   }
 
   return (
@@ -65,16 +77,12 @@ function ItemForm({ initial, isNew, note, onSave, onCancel, onDelete }: { initia
       <Field id="f-brand" label="Brand" value={f.brand || ""} onChange={(e) => set("brand", e.target.value)} />
       <div className="colors">
         <Field id="f-color" type="color" label="Colour" value={f.color} onChange={(e) => set("color", e.target.value)} />
-        <Field
-          id="f-stripe"
-          type="color"
-          label="Stripe"
-          value={f.stripe}
-          disabled={!f.stripeOn}
-          onChange={(e) => set("stripe", e.target.value)}
-          extra={<Check className="rt-check-sm" label="On" checked={f.stripeOn} onCheckedChange={(v) => set("stripeOn", v)} />}
-        />
       </div>
+      {detailOptions(f.cat, f.style).length ? (
+        <div className="full">
+          <DetailFields cat={f.cat} style={f.style} value={f} color={f.color} variant="compact" idPrefix="f" onChange={(patch) => setF((p) => ({ ...p, ...patch }))} />
+        </div>
+      ) : null}
       <Field id="f-price" label="Price ($)" type="number" min="0" step="0.01" value={f.price} onChange={(e) => set("price", e.target.value as unknown as number)} />
       <Field id="f-qty" label="Qty" type="number" min="1" step="1" value={f.qty} onChange={(e) => set("qty", e.target.value as unknown as number)} />
       <div className="rt-field">
@@ -114,7 +122,10 @@ export function WardrobeView({ data, setData, backend }: { data: WardrobeData; s
       const old = nextItems.find((x) => x.id === editing!.item.id)!;
       // Moving an item to another category takes it out of outfits that used it in the old slot.
       if (old.cat !== it.cat) {
-        for (const l of [...looks, ...outfits.map((o) => o.look)]) if ((l as any)[old.cat] === old.id) (l as any)[old.cat] = null;
+        for (const l of [...looks, ...outfits.map((o) => o.look)]) {
+          if ((l as any)[old.cat] === old.id) (l as any)[old.cat] = null;
+          if (old.cat === "other") dropAccessory(l, old.id);
+        }
       }
       Object.keys(old).forEach((k) => delete (old as any)[k]);
       Object.assign(old, { id: editing!.item.id }, it);
@@ -124,7 +135,7 @@ export function WardrobeView({ data, setData, backend }: { data: WardrobeData; s
   }
   function remove() {
     const id = editing!.item.id!;
-    const clear = (l: any) => SLOTS.forEach(([s]) => { if (l[s] === id) l[s] = null; });
+    const clear = (l: any) => { SLOTS.forEach(([s]) => { if (l[s] === id) l[s] = null; }); dropAccessory(l, id); };
     const looks = clone(rot.looks); looks.forEach(clear);
     const outfits = clone(data.outfits); outfits.forEach((o) => clear(o.look));
     setData({ ...data, items: items.filter((i) => i.id !== id), rotation: { ...rot, looks }, outfits });
@@ -217,11 +228,13 @@ export function WardrobeView({ data, setData, backend }: { data: WardrobeData; s
                       brand={it.brand || brandOf(it)}
                       color={it.color}
                       stripe={it.stripe}
+                      pattern={detailsOf(it).pattern}
                       image={it.image}
+                      art={<ItemArt it={it} />}
                       price={money(it.price)}
                       qty={it.qty}
                       owned={!!it.owned}
-                      worn={isSlot(cat) ? daysWorn(rot, it.id) : undefined}
+                      worn={isSlot(cat) || cat === "other" ? daysWorn(rot, it.id) : undefined}
                       onSelect={() => editItem(it)}
                     />
                   ))}
@@ -242,7 +255,9 @@ export function WardrobeView({ data, setData, backend }: { data: WardrobeData; s
                       style={it.style}
                       color={it.color}
                       stripe={it.stripe}
+                      pattern={detailsOf(it).pattern}
                       image={it.image}
+                      art={<ItemArt it={it} />}
                       price={money(it.price)}
                       owned={false}
                       status="sketch"
@@ -277,7 +292,7 @@ export function WardrobeView({ data, setData, backend }: { data: WardrobeData; s
                           <td>
                             <span className="namecell">
                               {it.image ? <img className="thumb" src={it.image} alt="" referrerPolicy="no-referrer" /> : null}
-                              <Swatch it={it} />
+                              {it.cat === "basics" ? <ItemArt it={it} className="item-icon" /> : <Swatch it={it} />}
                               {it.link ? <a href={it.link} target="_blank" rel="noopener">{it.name}</a> : it.name}
                             </span>
                           </td>
@@ -285,7 +300,7 @@ export function WardrobeView({ data, setData, backend }: { data: WardrobeData; s
                           <td className="num">{money(it.price)}</td>
                           <td className="num">{it.qty}</td>
                           <td className="num">{money(it.price * it.qty)}</td>
-                          <td className="num">{isSlot(cat) ? daysWorn(rot, it.id) : ""}</td>
+                          <td className="num">{isSlot(cat) || cat === "other" ? daysWorn(rot, it.id) : ""}</td>
                           <td>
                             <Checkbox checked={!!it.owned} aria-label={"Owned: " + it.name} onCheckedChange={(v) => setData({ ...data, items: items.map((x) => (x.id === it.id ? { ...x, owned: v } : x)) })} />
                           </td>
@@ -310,7 +325,7 @@ export function WardrobeView({ data, setData, backend }: { data: WardrobeData; s
                         <td>
                           <span className="namecell">
                             {it.image ? <img className="thumb" src={it.image} alt="" referrerPolicy="no-referrer" /> : null}
-                            <Swatch it={it} />
+                            {it.cat === "basics" ? <ItemArt it={it} className="item-icon" /> : <Swatch it={it} />}
                             {it.name}
                           </span>
                         </td>

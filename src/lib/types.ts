@@ -1,6 +1,12 @@
 export type Category = "layer" | "shirt" | "undershirt" | "belt" | "pants" | "basics" | "shoes" | "other";
-/** The categories an outfit is built from. Socks & underwear (basics) and other accessories are tracked for cost only. */
+/** The categories an outfit is built from, one item each. Accessories ("other") go on a look as a list; socks & underwear (basics) are tracked for cost only. */
 export type Slot = "layer" | "shirt" | "undershirt" | "belt" | "pants" | "shoes";
+
+export type Sleeve = "long" | "short" | "rolled";
+export type Pattern = "solid" | "stripe" | "pinstripe" | "breton" | "gingham" | "check" | "dot";
+export type Hardware = "brass" | "silver" | "gunmetal" | "black";
+export type Length = "full" | "cropped" | "knee" | "short";
+export type Buckle = "frame" | "plate" | "d-ring";
 
 export interface Item {
   id: string;
@@ -8,7 +14,14 @@ export interface Item {
   name: string;
   style: string;
   color: string;
+  /** The second colour for any pattern. Present without `pattern`, it is read as `pattern: "stripe"`. */
   stripe?: string;
+  /** Optional details. Missing means the style's default (see styles.ts); defaults are never stored. */
+  sleeve?: Sleeve;
+  pattern?: Pattern;
+  hardware?: Hardware;
+  length?: Length;
+  buckle?: Buckle;
   price: number;
   qty: number;
   owned: boolean;
@@ -20,8 +33,11 @@ export interface Item {
   sketch?: true;
 }
 
-/** One outfit: an item id (or null) per slot. */
-export type Look = Record<Slot, string | null>;
+/** One outfit: an item id (or null) per slot, plus any accessories. */
+export type Look = Record<Slot, string | null> & {
+  /** Accessory item ids, unique, in the order added. Omitted when empty. */
+  acc?: string[];
+};
 
 export interface Outfit {
   id: string;

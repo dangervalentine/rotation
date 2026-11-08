@@ -32,6 +32,14 @@ describe("naming", () => {
 });
 
 describe("makeSketch", () => {
+  it("stores only the details that differ from the style's defaults", () => {
+    const s = makeSketch({ cat: "shirt", style: "oxford", color: "#fff", sleeve: "long", pattern: "gingham", stripe: "#7d9bc6" }, []);
+    expect(s.sleeve).toBeUndefined();
+    expect(s).toMatchObject({ pattern: "gingham", stripe: "#7d9bc6" });
+    const b = makeSketch({ cat: "belt", style: "belt", color: "#000", hardware: "silver", sleeve: "short" }, []);
+    expect(b).toMatchObject({ hardware: "silver" });
+    expect(b.sleeve).toBeUndefined();
+  });
   it("makes a $0, not-owned sketch with a generated name", () => {
     const s = makeSketch({ cat: "layer", ...SKETCH_DEFAULTS.layer, name: "  " }, []);
     expect(s).toMatchObject({ cat: "layer", style: "blazer", name: "Navy blazer", price: 0, qty: 1, owned: false, sketch: true });
@@ -68,5 +76,12 @@ describe("status", () => {
       ],
     });
     expect(d.items.map((i) => i.sketch)).toEqual([true, undefined, undefined]);
+  });
+});
+
+describe("accessory sketches", () => {
+  it("sketches a drawable accessory but not the generic one", () => {
+    expect(makeSketch({ cat: "other", style: "glasses", color: "#000000" }, [])).toMatchObject({ cat: "other", style: "glasses", sketch: true });
+    expect(() => makeSketch({ cat: "other", style: "other", color: "#000000" }, [])).toThrow();
   });
 });

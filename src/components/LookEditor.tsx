@@ -2,15 +2,23 @@ import { useEffect, useRef, useState } from "react";
 import { Button, Check, Kicker, Segmented, Select, Tag } from "../design-system/index.ts";
 import { canRedo, canUndo, initHistory, push, redo, undo, type History } from "../lib/history.ts";
 import { canShuffle, findItem, OPTIONAL_SLOTS, same, shortName, shuffleLook, SLOTS, sortForPicker, variations } from "../lib/model.ts";
-import { itemStatus, STATUS_LABEL } from "../lib/sketch.ts";
+import { itemStatus, STATUS_LABEL, type SketchPart } from "../lib/sketch.ts";
 import type { Item, Look, Slot } from "../lib/types.ts";
-import { itemOption, OutfitFigure } from "./common.tsx";
+import { Swatch, itemOption, OutfitFigure } from "./common.tsx";
 import { SketchCreator } from "./SketchCreator.tsx";
 
 const NONE = "__none";
 const CREATE = "__create";
 const DRAFT = "__draft";
 const cx = (...c: (string | false | null | undefined)[]) => c.filter(Boolean).join(" ");
+
+/** The look with an accessory added (once), or taken off. */
+const withAcc = (l: Look, id: string): Look => ({ ...l, acc: [...(l.acc ?? []).filter((a) => a !== id), id] });
+const withoutAcc = (l: Look, id: string): Look => {
+  const acc = (l.acc ?? []).filter((a) => a !== id);
+  const { acc: _, ...rest } = l;
+  return acc.length ? { ...rest, acc } : rest;
+};
 
 export interface LookEditorProps {
   items: Item[];
@@ -48,9 +56,9 @@ export function LookEditor({ items, look, onChange, onCreateItem, historyKey, on
 
   const [locked, setLocked] = useState<Partial<Record<Slot, boolean>>>({});
   const [vary, setVary] = useState<Slot>("shirt");
-  const [preview, setPreview] = useState<{ slot: Slot; id: string | null } | null>(null);
-  const [creating, setCreating] = useState<{ slot: Slot; draft: Omit<Item, "id"> | null } | null>(null);
-  const [changed, setChanged] = useState<{ slots: Slot[]; seq: number }>({ slots: [], seq: 0 });
+  const [preview, setPreview] = useState<{ slot: SketchPart; id: string | null } | null>(null);
+  const [creating, setCreating] = useState<{ slot: SketchPart; draft: Omit<Item, "id"> | null } | null>(null);
+  const [changed, setChanged] = useState<{ slots: SketchPart[]; seq: number }>({ slots: [], seq: 0 });
   const [status, setStatus] = useState("");
   const rootRef = useRef<HTMLDivElement>(null);
 
@@ -58,8 +66,10 @@ export function LookEditor({ items, look, onChange, onCreateItem, historyKey, on
   useEffect(() => { onCreatingChange?.(isCreating); }, [isCreating]); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => () => onCreatingChange?.(false), []); // eslint-disable-line react-hooks/exhaustive-deps
 
+  /** What changed between two looks, for the row pulse: slots, plus "acc" when the accessories did. */
+  const diff = (a: Look, b: Look): SketchPart[] => [...SLOTS.map(([s]) => s).filter((s) => a[s] !== b[s]), ...(same(a.acc ?? [], b.acc ?? []) ? [] : ["acc" as const])];
   function commit(next: Look, message = "") {
-    const slots = SLOTS.map(([s]) => s).filter((s) => present[s] !== next[s]);
+    const slots = diff(present, next);
     setHist({ key: historyKey, h: push(h, next) });
     setChanged((c) => ({ slots, seq: c.seq + 1 }));
     setPreview(null);
@@ -70,7 +80,7 @@ export function LookEditor({ items, look, onChange, onCreateItem, historyKey, on
     const nh = dir === "undo" ? undo(h) : redo(h);
     if (nh === h) return;
     setHist({ key: historyKey, h: nh });
-    setChanged((c) => ({ slots: SLOTS.map(([s]) => s).filter((s) => present[s] !== nh.present[s]), seq: c.seq + 1 }));
+    setChanged((c) => ({ slots: diff(present, nh.present), seq: c.seq + 1 }));
     setStatus(dir === "undo" ? "Undone" : "Redone");
     onChange(nh.present);
   }
@@ -78,8 +88,8 @@ export function LookEditor({ items, look, onChange, onCreateItem, historyKey, on
     if (!canShuffle(items, locked)) return setStatus("Nothing left to shuffle");
     commit(shuffleLook(items, present, locked), "Shuffled");
   }
-  const focusSlot = (slot: Slot) => requestAnimationFrame(() => document.getElementById("slot-" + slot)?.focus());
-  function openCreator(slot: Slot) {
+  const focusSlot = (slot: SketchPart) => requestAnimationFrame(() => document.getElementById("slot-" + slot)?.focus());
+  function openCreator(slot: SketchPart) {
     setPreview(null);
     setCreating({ slot, draft: null });
   }
@@ -87,7 +97,7 @@ export function LookEditor({ items, look, onChange, onCreateItem, historyKey, on
     const slot = creating!.slot;
     const id = onCreateItem(it);
     setCreating(null);
-    commit({ ...present, [slot]: id }, `Added ${it.name}`);
+    commit(slot === "acc" ? withAcc(present, id) : { ...present, [slot]: id }, `Added ${it.name}`);
     focusSlot(slot);
   }
   function cancelSketch() {
@@ -101,10 +111,12 @@ export function LookEditor({ items, look, onChange, onCreateItem, historyKey, on
   let figLook = present;
   if (creating?.draft) {
     figItems = [...items, { id: DRAFT, ...creating.draft }];
-    figLook = { ...present, [creating.slot]: DRAFT };
+    figLook = creating.slot === "acc" ? withAcc(present, DRAFT) : { ...present, [creating.slot]: DRAFT };
   } else if (preview) {
-    figLook = { ...present, [preview.slot]: preview.id };
+    figLook = preview.slot === "acc" ? (preview.id ? withAcc(present, preview.id) : present) : { ...present, [preview.slot]: preview.id };
   }
+  const accessories = (present.acc ?? []).map((id) => findItem(items, id)).filter((x): x is Item => !!x);
+  const accChoices = sortForPicker(items.filter((i) => i.cat === "other" && !present.acc?.includes(i.id)));
 
   const vars = variations(items, present, vary);
   const varyLabel = SLOTS.find(([s]) => s === vary)![1];
@@ -132,7 +144,7 @@ export function LookEditor({ items, look, onChange, onCreateItem, historyKey, on
         {creating ? (
           <SketchCreator
             key={creating.slot}
-            slot={creating.slot}
+            part={creating.slot}
             items={items}
             onDraftChange={(draft) => setCreating((c) => (c ? { ...c, draft } : c))}
             onConfirm={confirmSketch}
@@ -191,6 +203,45 @@ export function LookEditor({ items, look, onChange, onCreateItem, historyKey, on
                   </li>
                 );
               })}
+              <li className={cx("piece-row", "is-acc", !accessories.length && !accChoices.length && "is-empty")}>
+                {accessories.length || accChoices.length ? (
+                  <>
+                    <Select
+                      id="slot-acc"
+                      label="Accessories"
+                      value=""
+                      placeholder={accChoices.length ? "Add an accessory…" : "All your accessories are on"}
+                      options={[...accChoices.map(itemOption), { value: CREATE, label: "Create a piece…", action: true }]}
+                      onChange={(v) => { const it = findItem(items, v); commit(withAcc(present, v), it ? `Added ${shortName(it)}` : ""); }}
+                      onHighlight={(v) => setPreview(v === null ? null : { slot: "acc", id: v })}
+                      onAction={() => openCreator("acc")}
+                    />
+                    {accessories.length ? (
+                      <ul className="acc-chips" aria-label="Accessories in this look">
+                        {accessories.map((a) => (
+                          <li key={a.id} className="acc-chip">
+                            <Swatch it={a} />
+                            <span>{shortName(a)}</span>
+                            {a.sketch ? <Tag tone="sketch">Sketch</Tag> : null}
+                            <button type="button" className="acc-remove" aria-label={`Remove ${shortName(a)}`} title="Remove" onClick={() => commit(withoutAcc(present, a.id), `Removed ${shortName(a)}`)}>
+                              <svg width="10" height="10" viewBox="0 0 10 10" aria-hidden="true"><path d="M1.5 1.5l7 7M8.5 1.5l-7 7" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" /></svg>
+                            </button>
+                          </li>
+                        ))}
+                      </ul>
+                    ) : null}
+                  </>
+                ) : (
+                  <>
+                    <div className="piece-empty">
+                      <Kicker>Accessories</Kicker>
+                      <span className="lede">Add glasses, a watch or a tie.</span>
+                    </div>
+                    <Button id="slot-acc" size="sm" onClick={() => openCreator("acc")}>Create a piece</Button>
+                  </>
+                )}
+                {changed.slots.includes("acc") ? <span key={changed.seq} className="piece-pulse" aria-hidden="true" /> : null}
+              </li>
             </ul>
             <div className="builder-tools">
               <Button onClick={shuffle}>Shuffle unkept pieces</Button>

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import seed from "../data/wardrobe.json";
-import { dayWarnings, generateRotation, matchingBelt, migrate, resizeRotation, shuffleLook, sortForPicker, canShuffle, uniqueId, variations, wardrobeTotals } from "../src/lib/model.ts";
+import { daysWorn, normalizeLook, dayWarnings, generateRotation, matchingBelt, migrate, resizeRotation, shuffleLook, sortForPicker, canShuffle, uniqueId, variations, wardrobeTotals } from "../src/lib/model.ts";
 import { makeSketch } from "../src/lib/sketch.ts";
 import type { Item, Slot } from "../src/lib/types.ts";
 import { figureSvg, pieceSvg } from "../src/lib/figure.ts";
@@ -31,6 +31,22 @@ describe("migrate", () => {
   });
   it("rejects junk", () => {
     expect(() => migrate({ nope: 1 })).toThrow();
+  });
+  it("keeps item details, including values it doesn't know", () => {
+    const d = migrate({ items: [{ id: "a", cat: "shirt", name: "A", style: "oxford", color: "#fff", sleeve: "rolled", pattern: "gingham", stripe: "#000" }, { id: "b", cat: "belt", name: "B", style: "belt", color: "#000", hardware: "silver", buckle: "plate" }, { id: "c", cat: "pants", name: "C", style: "pants", color: "#000", length: "capri" }] });
+    expect(d.items[0]).toMatchObject({ sleeve: "rolled", pattern: "gingham", stripe: "#000" });
+    expect(d.items[1]).toMatchObject({ hardware: "silver", buckle: "plate" });
+    expect(d.items[2]).toMatchObject({ length: "capri" });
+  });
+  it("loads the sample wardrobe with every item, outfit and slot unchanged", () => {
+    const d = migrate(seed);
+    expect(d.items.map((i) => [i.id, i.color, i.stripe ?? null])).toEqual(seed.items.map((i: any) => [i.id, i.color, i.stripe ?? null]));
+    expect(d.rotation.looks).toEqual(seed.rotation.looks.map((l: any) => normalizeLook(l)));
+    expect(d.outfits.map((o) => o.look)).toEqual((seed.outfits ?? []).map((o: any) => normalizeLook(o.look)));
+  });
+  it("round-trips an export with every detail", () => {
+    const d = migrate({ items: [{ id: "a", cat: "shirt", name: "A", style: "oxford", color: "#fff", price: 1, qty: 1, owned: true, sleeve: "short", pattern: "dot", stripe: "#123456" }, { id: "b", cat: "pants", name: "B", style: "pants", color: "#000", price: 1, qty: 1, owned: true, length: "cropped" }, { id: "c", cat: "belt", name: "C", style: "belt", color: "#000", price: 1, qty: 1, owned: true, hardware: "gunmetal", buckle: "d-ring" }] });
+    expect(migrate(JSON.parse(JSON.stringify(d)))).toEqual(d);
   });
 });
 
@@ -147,5 +163,38 @@ describe("piece silhouettes", () => {
     const empty = { layer: null, shirt: null, undershirt: null, belt: null, pants: null, shoes: null };
     expect(figureSvg(items, { ...empty, shirt: "o", undershirt: "u" })).toContain("#123456");
     expect(pieceSvg(items[0], "undershirt").svg).toContain("#123456");
+  });
+});
+
+describe("accessories on a look", () => {
+  const d = migrate(seed);
+  it("keeps accessory ids unique and drops an empty or invalid list", () => {
+    expect(normalizeLook({ shirt: "a", acc: ["g", "w", "g", 3 as any, ""] }).acc).toEqual(["g", "w"]);
+    expect("acc" in normalizeLook({ shirt: "a", acc: [] })).toBe(false);
+    expect("acc" in normalizeLook({ shirt: "a", acc: "g" as any })).toBe(false);
+    expect(normalizeLook({ shirt: "a" })).toEqual({ layer: null, shirt: "a", undershirt: null, belt: null, pants: null, shoes: null });
+  });
+  it("carries accessories through shuffles and variations", () => {
+    const look = { ...d.rotation.looks[0], acc: ["glasses"] };
+    expect(shuffleLook(d.items, look, {}, rng(3)).acc).toEqual(["glasses"]);
+    for (const v of variations(d.items, look, "shirt")) expect(v.look.acc).toEqual(["glasses"]);
+  });
+  it("never adds accessories when generating, but keeps the ones already on each day", () => {
+    const keep = d.rotation.looks.map((l, i) => (i === 0 ? { ...l, acc: ["tie"] } : l));
+    const looks = generateRotation(d.items, d.rotation.days, d.rotation.weeks, rng(5), 0.4, keep);
+    expect(looks[0].acc).toEqual(["tie"]);
+    expect(looks.slice(1).every((l) => !l.acc)).toBe(true);
+    expect(generateRotation(d.items, d.rotation.days, d.rotation.weeks, rng(5)).every((l) => !l.acc)).toBe(true);
+  });
+  it("counts days an accessory is worn", () => {
+    const rot = { ...d.rotation, looks: d.rotation.looks.map((l, i) => (i < 3 ? { ...l, acc: ["tie"] } : l)) };
+    expect(daysWorn(rot, "tie")).toBe(3);
+  });
+});
+
+describe("underwear in older files", () => {
+  it("picks the specific style a name mentions", () => {
+    const d = migrate({ items: ["Boxer briefs, black", "Woven boxers", "Cotton briefs", "Swim trunks", "Underwear 3-pack"].map((name, i) => ({ id: "u" + i, cat: "other", name, style: "other", color: "#000000" })) });
+    expect(d.items.map((i) => [i.cat, i.style])).toEqual([["basics", "boxer-briefs"], ["basics", "boxers"], ["basics", "briefs"], ["basics", "trunks"], ["basics", "underwear"]]);
   });
 });

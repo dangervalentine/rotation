@@ -11,7 +11,8 @@
     "test": "vitest run",
     "typecheck": "tsc -b",
     "tokens": "node scripts/build-tokens.mjs",
-    "audit": "node scripts/lighthouse.mjs"
+    "audit": "node scripts/lighthouse.mjs",
+    "gallery": "node --experimental-strip-types --no-warnings scripts/garment-gallery.mts"
   },
   "dependencies": {
     "@radix-ui/react-alert-dialog": "^1.2.1",

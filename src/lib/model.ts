@@ -1,3 +1,4 @@
+import { luminance } from "./colour.ts";
 import type { Category, Figure, Item, Look, Outfit, Rotation, Slot, WardrobeData } from "./types.ts";
 
 /** Categories in the order they're worn, top to bottom (outer before inner where they overlap). */
@@ -9,19 +10,10 @@ export const CATEGORIES: [Category, string][] = [
   ["pants", "Pants"],
   ["basics", "Socks & underwear"],
   ["shoes", "Shoes"],
-  ["other", "Other"],
+  ["other", "Accessories"],
 ];
 
-export const STYLES: Record<Category, string[]> = {
-  layer: ["blazer", "sweater", "cardigan", "jacket"],
-  shirt: ["oxford", "polo", "tee"],
-  undershirt: ["crew", "v-neck"],
-  belt: ["belt"],
-  pants: ["pants", "shorts", "skirt"],
-  basics: ["socks", "underwear"],
-  shoes: ["boots", "sneakers", "loafers"],
-  other: ["other"],
-};
+export { STYLES } from "./styles.ts";
 
 export const SLOTS: [Slot, string][] = [
   ["layer", "Top layer"],
@@ -88,6 +80,9 @@ export function dayLabel(rot: Rotation, index: number) {
 export function normalizeLook(raw: Partial<Look> | null | undefined): Look {
   const look = clone(EMPTY_LOOK);
   for (const [slot] of SLOTS) look[slot] = raw?.[slot] ?? null;
+  // Accessories: unique string ids, and no list at all when there are none.
+  const acc = Array.isArray(raw?.acc) ? [...new Set(raw.acc.filter((a): a is string => typeof a === "string" && a !== ""))] : [];
+  if (acc.length) look.acc = acc;
   return look;
 }
 
@@ -104,9 +99,13 @@ function splitOther(i: any): Partial<Item> {
   const name = String(i.name || "").toLowerCase();
   if (/undershirt/.test(name)) return { cat: "undershirt", style: /v-?neck/.test(name) ? "v-neck" : "crew" };
   if (/\bsocks?\b/.test(name)) return { cat: "basics", style: "socks" };
-  if (/underwear|boxers?|briefs?|trunks?/.test(name)) return { cat: "basics", style: "underwear" };
+  if (/underwear|boxers?|briefs?|trunks?/.test(name)) return { cat: "basics", style: underwearStyle(name) };
   return {};
 }
+
+/** The specific underwear style a name mentions, or the generic one. */
+const underwearStyle = (name: string) =>
+  /boxer[- ]?briefs/.test(name) ? "boxer-briefs" : /boxers?/.test(name) ? "boxers" : /briefs?/.test(name) ? "briefs" : /trunks?/.test(name) ? "trunks" : "underwear";
 
 /**
  * Accept the current format, or the original single-file format
@@ -160,19 +159,12 @@ export function dayWarnings(items: Item[], rot: Rotation, index: number, looks =
 
 /** How many rotation slots use this item. */
 export function daysWorn(rot: Rotation, id: string) {
-  return rot.looks.reduce((n, look) => n + SLOTS.filter(([s]) => look[s] === id).length, 0);
+  return rot.looks.reduce((n, look) => n + SLOTS.filter(([s]) => look[s] === id).length + (look.acc?.includes(id) ? 1 : 0), 0);
 }
 
 // ---------- mix and match ----------
 
 export type Rng = () => number;
-
-function luminance(hex: string) {
-  const m = /^#?([0-9a-f]{6})$/i.exec(hex || "");
-  if (!m) return 0.5;
-  const v = parseInt(m[1], 16);
-  return (0.299 * ((v >> 16) & 255) + 0.587 * ((v >> 8) & 255) + 0.114 * (v & 255)) / 255;
-}
 
 const pick = <T>(arr: T[], rng: Rng) => arr[Math.floor(rng() * arr.length)];
 
@@ -239,7 +231,7 @@ export function variations(items: Item[], look: Look, slot: Slot): { id: string 
  * repeats that dayWarnings flags. Leather shoes and pants never repeat on
  * consecutive days when there's an alternative.
  */
-export function generateRotation(all: Item[], days: string[], weeks: number, rng: Rng = Math.random, layerChance = 0.4): Look[] {
+export function generateRotation(all: Item[], days: string[], weeks: number, rng: Rng = Math.random, layerChance = 0.4, keep: Look[] = []): Look[] {
   // Sketches are only placed by hand, never generated (including through belt matching).
   const items = all.filter((i) => !i.sketch);
   const per = days.length;
@@ -267,6 +259,8 @@ export function generateRotation(all: Item[], days: string[], weeks: number, rng
       belt: null,
     };
     look.belt = matchingBelt(items, look.shoes);
+    // Accessories are only ever put on by hand: keep each day's.
+    if (keep[d]?.acc?.length) look.acc = [...keep[d].acc!];
     for (const [s] of SLOTS) bump(look[s]);
     looks.push(look);
   }

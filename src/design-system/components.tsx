@@ -12,15 +12,19 @@ import { forwardRef, useEffect, useId, useLayoutEffect, useRef, useSyncExternalS
 export type Category = "layer" | "shirt" | "undershirt" | "belt" | "pants" | "basics" | "shoes" | "other";
 export type Slot = "layer" | "shirt" | "undershirt" | "belt" | "pants" | "shoes";
 export interface Piece {
-  slot: Slot;
+  /** An outfit slot, or "acc" for one of the look's accessories. */
+  slot: Slot | "acc";
+  /** Tells several accessories apart (React keys). */
+  id?: string;
   name: string | null;
   color: string | null;
   stripe?: string;
+  pattern?: SwatchPattern;
   /** Owned, to buy or a sketch. Only sketches are marked in a look. */
   status?: "owned" | "tobuy" | "sketch";
 }
 
-const SLOT_LABEL: Record<Category, string> = { layer: "Layer", shirt: "Shirt", undershirt: "Undershirt", belt: "Belt", pants: "Pants", basics: "Socks & underwear", shoes: "Shoes", other: "Other" };
+const SLOT_LABEL: Record<Category | "acc", string> = { layer: "Layer", shirt: "Shirt", undershirt: "Undershirt", belt: "Belt", pants: "Pants", basics: "Socks & underwear", shoes: "Shoes", other: "Accessories", acc: "Accessory" };
 const cx = (...c: (string | false | null | undefined)[]) => c.filter(Boolean).join(" ");
 const pad2 = (n: number) => String(n).padStart(2, "0");
 
@@ -49,15 +53,34 @@ export function Tag({ tone = "neutral", className, children }: { tone?: "neutral
 
 /* ---------- Swatch ---------- */
 
-export function swatchBackground(color: string, stripe?: string, band = 3) {
-  return stripe ? `repeating-linear-gradient(90deg,${color} 0 ${band}px,${stripe} ${band}px ${band + 2}px)` : color;
+/** A garment's pattern as a swatch shows it. "stripe" is the default whenever a second colour is set. */
+export type SwatchPattern = "solid" | "stripe" | "pinstripe" | "breton" | "gingham" | "check" | "dot";
+
+/** CSS background for a garment colour with its pattern (`stripe` is the pattern's second colour). */
+export function swatchBackground(color: string, stripe?: string, band = 3, pattern: SwatchPattern = "stripe") {
+  if (!stripe || pattern === "solid") return color;
+  const tile = (g: string, size: number) => `${g} 0 0 / ${size}px ${size}px`;
+  switch (pattern) {
+    case "pinstripe":
+      return `repeating-linear-gradient(90deg,${color} 0 ${band * 1.5}px,${stripe} ${band * 1.5}px ${band * 1.5 + 1}px)`;
+    case "breton":
+      return `repeating-linear-gradient(0deg,${color} 0 ${band}px,${stripe} ${band}px ${band + 2}px)`;
+    case "gingham":
+      return [tile(`linear-gradient(90deg,${stripe}80 50%,transparent 50%)`, band * 2), tile(`linear-gradient(0deg,${stripe}80 50%,transparent 50%)`, band * 2), color].join(",");
+    case "check":
+      return [tile(`linear-gradient(90deg,${stripe}a6 30%,transparent 30%)`, band * 3), tile(`linear-gradient(0deg,${stripe}a6 30%,transparent 30%)`, band * 3), color].join(",");
+    case "dot":
+      return [tile(`radial-gradient(${stripe} 28%,transparent 32%)`, band * 2), color].join(",");
+    default:
+      return `repeating-linear-gradient(90deg,${color} 0 ${band}px,${stripe} ${band}px ${band + 2}px)`;
+  }
 }
 
-export function Swatch({ color, stripe, size = "sm", label, className }: { color: string | null | undefined; stripe?: string; size?: "sm" | "lg"; label?: string; className?: string }) {
+export function Swatch({ color, stripe, pattern, size = "sm", label, className }: { color: string | null | undefined; stripe?: string; pattern?: SwatchPattern; size?: "sm" | "lg"; label?: string; className?: string }) {
   return (
     <span
       className={cx("rt-sw", size === "lg" && "rt-sw-lg", !color && "rt-sw-none", className)}
-      style={color ? { background: swatchBackground(color, stripe) } : undefined}
+      style={color ? { background: swatchBackground(color, stripe, 3, pattern) } : undefined}
       role={label ? "img" : undefined}
       aria-label={label}
       aria-hidden={label ? undefined : true}
@@ -177,7 +200,10 @@ export interface GarmentCardProps {
   brand?: string;
   color?: string;
   stripe?: string;
+  pattern?: SwatchPattern;
   image?: string;
+  /** A drawing of the piece, centred on the colour plate (under any photo). */
+  art?: ReactNode;
   price: ReactNode;
   qty?: number;
   owned: boolean;
@@ -191,7 +217,8 @@ export interface GarmentCardProps {
 export function GarmentCard(p: GarmentCardProps) {
   const inner = (
     <>
-      <div className="rt-garment-plate" style={{ background: p.color ? swatchBackground(p.color, p.stripe, 10) : "var(--paper-sunk)" }}>
+      <div className="rt-garment-plate" style={{ background: p.color ? swatchBackground(p.color, p.stripe, 10, p.pattern) : "var(--paper-sunk)" }}>
+        {p.art ? <span className="rt-garment-art" aria-hidden="true">{p.art}</span> : null}
         {p.image ? <img src={p.image} alt="" referrerPolicy="no-referrer" /> : null}
         {(() => {
           const st = p.status ?? (p.owned ? "owned" : "tobuy");
@@ -248,16 +275,16 @@ export function LookCard(p: LookCardProps) {
       {p.name ? <div className="rt-look-name">{p.name}</div> : null}
       <div className="rt-look-strip" aria-hidden="true">
         {p.pieces.filter((x) => x.color).map((x) => (
-          <span key={x.slot} style={{ background: x.color! }} />
+          <span key={x.id ?? x.slot} style={{ background: x.color! }} />
         ))}
       </div>
       <div className={cx("rt-look-main", p.figure != null && "has-figure")}>
         {p.figure != null ? <div className="rt-look-figure">{p.figure}</div> : null}
         <ul className="rt-pieces">
           {p.pieces.map((pc) => (
-            <li key={pc.slot} className="rt-piece">
+            <li key={pc.id ?? pc.slot} className="rt-piece">
               <Kicker>{SLOT_LABEL[pc.slot]}</Kicker>
-              <Swatch color={pc.color} stripe={pc.stripe} />
+              <Swatch color={pc.color} stripe={pc.stripe} pattern={pc.pattern} />
               {pc.name ? <span>{pc.name}</span> : <span className="rt-piece-empty">None</span>}
               {pc.status === "sketch" ? <Tag tone="sketch">Sketch</Tag> : null}
             </li>
@@ -316,12 +343,12 @@ export const RotationDay = forwardRef<HTMLButtonElement, RotationDayProps>(funct
         </span>
         <span className="rt-day-strip" aria-hidden="true">
           {p.pieces.map((x) => (
-            <Swatch key={x.slot} color={x.color} stripe={x.stripe} />
+            <Swatch key={x.id ?? x.slot} color={x.color} stripe={x.stripe} pattern={x.pattern} />
           ))}
         </span>
         <span className="rt-day-list">
           {p.pieces.filter((x) => x.name).map((x) => (
-            <span key={x.slot}>{x.name}</span>
+            <span key={x.id ?? x.slot}>{x.name}</span>
           ))}
         </span>
         {p.edited ? <span className="rt-day-edited">Edited, not applied</span> : null}
@@ -383,16 +410,18 @@ export interface SelectOption {
   value: string;
   label: string;
   /** Show a swatch before the label; null draws the empty-slot ring. */
-  swatch?: { color: string; stripe?: string } | null;
+  swatch?: { color: string; stripe?: string; pattern?: SwatchPattern } | null;
   /** A status shown in the menu row (not in the trigger). */
   tag?: { label: string; tone: "owned" | "tobuy" | "sketch" };
   /** An action ("Create a piece…"): listed after a separator, calls onAction, never becomes the value. */
   action?: true;
 }
 
-export function Select({ id, label, value, onChange, options, extra, hint, className, onHighlight, onAction }: FieldBase & {
+export function Select({ id, label, value, onChange, options, extra, hint, className, onHighlight, onAction, placeholder }: FieldBase & {
   id: string;
+  /** "" shows the placeholder: for pickers that add to a list rather than hold a value. */
   value: string;
+  placeholder?: string;
   onChange: (v: string) => void;
   options: SelectOption[];
   /** The option under the pointer or keyboard focus (null for actions, and when the menu closes). For previews. */
@@ -405,7 +434,7 @@ export function Select({ id, label, value, onChange, options, extra, hint, class
     <RSelect.Item key={o.value} value={o.value} className={cx("rt-select-item", o.action && "rt-select-action")} onFocus={() => onHighlight?.(o.action ? null : o.value)}>
       <RSelect.ItemText>
         <span className="rt-select-row">
-          {o.swatch !== undefined ? <Swatch color={o.swatch?.color} stripe={o.swatch?.stripe} /> : null}
+          {o.swatch !== undefined ? <Swatch color={o.swatch?.color} stripe={o.swatch?.stripe} pattern={o.swatch?.pattern} /> : null}
           {o.label}
         </span>
       </RSelect.ItemText>
@@ -421,7 +450,7 @@ export function Select({ id, label, value, onChange, options, extra, hint, class
         onOpenChange={(o) => { if (!o) onHighlight?.(null); }}
       >
         <RSelect.Trigger id={id} className="rt-input rt-select-trigger">
-          <RSelect.Value />
+          <RSelect.Value placeholder={placeholder} />
           <RSelect.Icon className="rt-select-icon" aria-hidden="true">
             <svg width="10" height="6" viewBox="0 0 10 6"><path d="M1 1l4 4 4-4" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="square" /></svg>
           </RSelect.Icon>

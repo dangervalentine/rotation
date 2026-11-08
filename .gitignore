@@ -10,3 +10,6 @@ specs/*/lighthouse/after/
 .playwright-mcp/
 *.log
 .env*
+
+# npm run gallery output
+garment-gallery.html

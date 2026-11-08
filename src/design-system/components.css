@@ -105,6 +105,8 @@ button.rt-garment:hover { border-color: var(--rule-strong); }
 .rt-garment-plate { position: relative; aspect-ratio: 4 / 5; display: flex; align-items: flex-end; padding: var(--space-3); overflow: hidden; }
 .rt-garment-plate img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
 .rt-garment-plate .rt-tag { position: relative; background: var(--paper-raised); }
+.rt-garment-art { position: absolute; inset: 50% auto auto 50%; transform: translate(-50%, -60%); display: grid; place-items: center; width: 56%; aspect-ratio: 1; border-radius: 50%; background: var(--garment-ground); }
+.rt-garment-art svg { display: block; width: 72%; height: 72%; }
 .rt-garment-plate .rt-tag-owned { background: var(--loden-soft); }
 .rt-garment-plate .rt-tag-tobuy { background: var(--camel-soft); }
 .rt-garment-plate .rt-tag-sketch { background: var(--paper-raised); }
@@ -268,6 +270,7 @@ html[data-sheet="side"] body { padding-right: var(--sheet-width); }
 .rt-tile:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
 .rt-tiles-tile .rt-tile { width: var(--tile-size); }
 .rt-tile-art { display: block; width: 100%; }
+.rt-tiles-tile .rt-tile-art { padding: var(--space-1); background: var(--garment-ground); }
 .rt-tile-art svg { display: block; width: 100%; height: auto; max-height: calc(var(--tile-size) - 28px); }
 .rt-tile-label { font: 600 10px/14px var(--font-sans); letter-spacing: .12em; text-transform: uppercase; }
 .rt-tiles-swatch { gap: var(--space-1); }
@@ -294,3 +297,10 @@ html[data-sheet="side"] body { padding-right: var(--sheet-width); }
 .rt-creator .actions { margin: 0; }
 .rt-creator-title { justify-self: start; }
 .rt-creator-section > button { justify-self: start; }
+/* Detail options (sleeve, pattern, hardware, length, buckle): DetailFields, in the creator and the item form. */
+.rt-details { display: grid; gap: var(--space-4); min-width: 0; }
+.rt-details-compact { grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: var(--space-3) var(--space-5); }
+.rt-detail { display: grid; gap: var(--space-2); min-width: 0; align-content: start; }
+.rt-detail-head { display: flex; align-items: baseline; justify-content: space-between; gap: var(--space-3); }
+.rt-detail-value { font: 400 13px/18px var(--font-sans); color: var(--ink); }
+.rt-detail .rt-field { width: 140px; }

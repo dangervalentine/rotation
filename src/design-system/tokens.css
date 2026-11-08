@@ -6,6 +6,7 @@
   --paper: #f3efe6;
   --paper-raised: #fbf9f4;
   --paper-sunk: #e8e2d5;
+  --garment-ground: #efe9de;
   --rule: #cfc7b6;
   --rule-strong: #141312;
   --ink: #141312;
@@ -45,6 +46,7 @@
     --paper: #12110f;
     --paper-raised: #1b1a17;
     --paper-sunk: #0b0a09;
+    --garment-ground: #d9d1c2;
     --rule: #3a3631;
     --rule-strong: #ede7da;
     --ink: #ede7da;
@@ -85,6 +87,7 @@
     --paper: #12110f;
     --paper-raised: #1b1a17;
     --paper-sunk: #0b0a09;
+    --garment-ground: #d9d1c2;
     --rule: #3a3631;
     --rule-strong: #ede7da;
     --ink: #ede7da;
