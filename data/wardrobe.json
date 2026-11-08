@@ -1,0 +1,374 @@
+{
+  "version": 1,
+  "savedAt": 1794108608080,
+  "title": "Workweek Wardrobe",
+  "subtitle": "Two-week business casual rotation. Pants repeat every five workdays, with no pants or leather shoes two days running.",
+  "items": [
+    {
+      "id": "blazer",
+      "cat": "layer",
+      "name": "Suitsupply navy blazer",
+      "style": "blazer",
+      "color": "#1f2a45",
+      "price": 399,
+      "qty": 1,
+      "owned": false,
+      "link": "https://suitsupply.com/en-us/men/jackets/navy-tailored-fit-havana-blazer/C25216.html"
+    },
+    {
+      "id": "sweater",
+      "cat": "layer",
+      "name": "Uniqlo merino sweater",
+      "style": "sweater",
+      "color": "#8b8e93",
+      "price": 49.9,
+      "qty": 2,
+      "owned": false,
+      "link": "https://www.uniqlo.com/us/en/products/E450535-000/00"
+    },
+    {
+      "id": "white-ox",
+      "cat": "shirt",
+      "name": "Uniqlo white oxford",
+      "style": "oxford",
+      "color": "#f5f3ee",
+      "price": 49.9,
+      "qty": 1,
+      "owned": false,
+      "link": "https://www.uniqlo.com/us/en/products/E456630-000/00?colorDisplayCode=01&sizeDisplayCode=004"
+    },
+    {
+      "id": "blue-ox",
+      "cat": "shirt",
+      "name": "Uniqlo light blue oxford",
+      "style": "oxford",
+      "color": "#b8cfe9",
+      "price": 49.9,
+      "qty": 1,
+      "owned": false,
+      "link": "https://www.uniqlo.com/us/en/products/E456630-000/00?colorDisplayCode=64&sizeDisplayCode=004"
+    },
+    {
+      "id": "pink-ox",
+      "cat": "shirt",
+      "name": "Uniqlo pink striped oxford",
+      "style": "oxford",
+      "color": "#f6e9ec",
+      "stripe": "#e3a4b4",
+      "price": 49.9,
+      "qty": 1,
+      "owned": false,
+      "link": "https://www.uniqlo.com/us/en/products/E486579-000/00?colorDisplayCode=11&sizeDisplayCode=004"
+    },
+    {
+      "id": "bstripe-ox",
+      "cat": "shirt",
+      "name": "Uniqlo blue striped oxford",
+      "style": "oxford",
+      "color": "#f1f4f8",
+      "stripe": "#7d9bc6",
+      "price": 49.9,
+      "qty": 1,
+      "owned": false,
+      "link": "https://www.uniqlo.com/us/en/products/E486579-000/00?colorDisplayCode=65&sizeDisplayCode=004"
+    },
+    {
+      "id": "polo",
+      "cat": "shirt",
+      "name": "Uniqlo merino polo",
+      "style": "polo",
+      "color": "#27334f",
+      "price": 39.9,
+      "qty": 1,
+      "owned": false,
+      "link": "https://www.uniqlo.com/us/en/products/E460939-000/00?colorDisplayCode=69&sizeDisplayCode=004"
+    },
+    {
+      "id": "chambray",
+      "cat": "shirt",
+      "name": "Banana Republic chambray",
+      "style": "oxford",
+      "color": "#8fa7c6",
+      "price": 37.5,
+      "qty": 1,
+      "owned": false,
+      "link": "https://bananarepublicfactory.gapfactory.com/browse/product.do?pid=1174510001&vid=1"
+    },
+    {
+      "id": "jeans",
+      "cat": "pants",
+      "name": "Levi's 501 indigo jeans",
+      "style": "pants",
+      "color": "#2b3a63",
+      "price": 98,
+      "qty": 1,
+      "owned": false,
+      "link": "https://www.levi.com/US/en_US/clothing/men/jeans/straight/501-original-mens-jeans/p/005010101"
+    },
+    {
+      "id": "stone",
+      "cat": "pants",
+      "name": "J.Crew stone chinos",
+      "style": "pants",
+      "color": "#cdbf9c",
+      "price": 98,
+      "qty": 1,
+      "owned": false,
+      "link": "https://www.jcrew.com/p/mens/categories/clothing/pants-and-chinos/chino/classic-chino-pant/BE611?color_name=stone&colorProductCode=BE611"
+    },
+    {
+      "id": "navy-chino",
+      "cat": "pants",
+      "name": "J.Crew navy chinos",
+      "style": "pants",
+      "color": "#25304c",
+      "price": 98,
+      "qty": 1,
+      "owned": false,
+      "link": "https://www.jcrew.com/p/mens/categories/clothing/pants-and-chinos/chino/classic-chino-pant/BE611?color_name=storm-navy&colorProductCode=BE611"
+    },
+    {
+      "id": "olive",
+      "cat": "pants",
+      "name": "J.Crew olive chinos",
+      "style": "pants",
+      "color": "#5c603a",
+      "price": 98,
+      "qty": 1,
+      "owned": false,
+      "link": "https://www.jcrew.com/p/mens/categories/clothing/pants-and-chinos/chino/classic-chino-pant/BE611?color_name=dill&colorProductCode=BE611"
+    },
+    {
+      "id": "wool",
+      "cat": "pants",
+      "name": "Spier & Mackay charcoal flannel trousers",
+      "style": "pants",
+      "color": "#45484e",
+      "price": 198,
+      "qty": 1,
+      "owned": false,
+      "link": "https://www.spierandmackay.com/product/product-detail/charcoal-flannel-ellis-trousers-cashmere"
+    },
+    {
+      "id": "belt-black",
+      "cat": "belt",
+      "name": "Red Wing black belt",
+      "style": "belt",
+      "color": "#141414",
+      "price": 79.99,
+      "qty": 1,
+      "owned": false,
+      "link": "https://www.redwingshoes.com/accessories/leathergoods/belts/basic-work-leather-belt-96523.html?currency=USD"
+    },
+    {
+      "id": "belt-brown",
+      "cat": "belt",
+      "name": "Red Wing brown belt",
+      "style": "belt",
+      "color": "#8a5630",
+      "price": 99.99,
+      "qty": 1,
+      "owned": true,
+      "link": "https://www.redwingshoes.com/accessories/leathergoods/belts/classic-heritage-leather-belt-96550.html?currency=USD"
+    },
+    {
+      "id": "beckman",
+      "cat": "shoes",
+      "name": "Red Wing Beckman (black)",
+      "style": "boots",
+      "color": "#1b1b1d",
+      "price": 400,
+      "qty": 1,
+      "owned": false,
+      "link": "https://www.guiltyparty.co/products/red-wing-9423-beckman-black-excalibur?variant=51721615474998"
+    },
+    {
+      "id": "iron-ranger",
+      "cat": "shoes",
+      "name": "Red Wing Iron Ranger (brown)",
+      "style": "boots",
+      "color": "#6b3f22",
+      "price": 349.99,
+      "qty": 1,
+      "owned": true,
+      "link": "https://www.redwingshoes.com/mens/heritage/iron-ranger/iron-ranger-08111.html?currency=USD"
+    },
+    {
+      "id": "sneakers",
+      "cat": "shoes",
+      "name": "Cole Haan white sneakers",
+      "style": "sneakers",
+      "color": "#f3f3f1",
+      "price": 175,
+      "qty": 1,
+      "owned": false,
+      "link": "https://www.colehaan.com/products/mens-grandpro-luxe-slip-on-sneakers-c41964"
+    },
+    {
+      "id": "socks-white",
+      "cat": "other",
+      "name": "Darn Tough socks, white",
+      "style": "other",
+      "color": "#f4f4f4",
+      "price": 24,
+      "qty": 5,
+      "owned": false,
+      "link": "https://darntough.com/products/mens-merino-wool-solid-crew-no-cushion-lightweight-lifestyle-socks?variant=45481251340474"
+    },
+    {
+      "id": "socks-black",
+      "cat": "other",
+      "name": "Darn Tough socks, black",
+      "style": "other",
+      "color": "#222222",
+      "price": 24,
+      "qty": 5,
+      "owned": false,
+      "link": "https://darntough.com/products/mens-merino-wool-solid-crew-no-cushion-lightweight-lifestyle-socks?variant=45481251569850"
+    },
+    {
+      "id": "undershirt",
+      "cat": "other",
+      "name": "Uniqlo AIRism undershirt",
+      "style": "other",
+      "color": "#ffffff",
+      "price": 14.9,
+      "qty": 5,
+      "owned": false,
+      "link": "https://www.uniqlo.com/us/en/products/E482514-000/00?colorDisplayCode=00&sizeDisplayCode=004"
+    },
+    {
+      "id": "wallet",
+      "cat": "other",
+      "name": "Red Wing black wallet",
+      "style": "other",
+      "color": "#1a1a1a",
+      "price": 99.99,
+      "qty": 1,
+      "owned": false,
+      "link": "https://www.redwingshoes.com/accessories/leathergoods/wallets/bifold-wallet-96582.html?currency=USD"
+    }
+  ],
+  "outfits": [
+    {
+      "id": "friday-easy",
+      "name": "Easy Friday",
+      "look": {
+        "layer": null,
+        "shirt": "polo",
+        "belt": "belt-brown",
+        "pants": "olive",
+        "shoes": "sneakers"
+      }
+    },
+    {
+      "id": "client-day",
+      "name": "Client day",
+      "look": {
+        "layer": "blazer",
+        "shirt": "white-ox",
+        "belt": "belt-black",
+        "pants": "wool",
+        "shoes": "beckman"
+      }
+    },
+    {
+      "id": "cozy-chambray",
+      "name": "Cozy chambray",
+      "look": {
+        "layer": "sweater",
+        "shirt": "chambray",
+        "belt": "belt-brown",
+        "pants": "stone",
+        "shoes": "sneakers"
+      }
+    }
+  ],
+  "rotation": {
+    "days": [
+      "Mon",
+      "Tue",
+      "Wed",
+      "Thu",
+      "Fri"
+    ],
+    "weeks": 2,
+    "looks": [
+      {
+        "layer": null,
+        "shirt": "white-ox",
+        "belt": "belt-brown",
+        "pants": "jeans",
+        "shoes": "iron-ranger"
+      },
+      {
+        "layer": "sweater",
+        "shirt": "chambray",
+        "belt": "belt-brown",
+        "pants": "stone",
+        "shoes": "sneakers"
+      },
+      {
+        "layer": null,
+        "shirt": "blue-ox",
+        "belt": "belt-black",
+        "pants": "wool",
+        "shoes": "beckman"
+      },
+      {
+        "layer": "sweater",
+        "shirt": "pink-ox",
+        "belt": "belt-brown",
+        "pants": "navy-chino",
+        "shoes": "iron-ranger"
+      },
+      {
+        "layer": null,
+        "shirt": "polo",
+        "belt": "belt-brown",
+        "pants": "olive",
+        "shoes": "sneakers"
+      },
+      {
+        "layer": "sweater",
+        "shirt": "bstripe-ox",
+        "belt": "belt-black",
+        "pants": "jeans",
+        "shoes": "beckman"
+      },
+      {
+        "layer": null,
+        "shirt": "white-ox",
+        "belt": "belt-brown",
+        "pants": "stone",
+        "shoes": "iron-ranger"
+      },
+      {
+        "layer": "sweater",
+        "shirt": "pink-ox",
+        "belt": "belt-black",
+        "pants": "wool",
+        "shoes": "beckman"
+      },
+      {
+        "layer": null,
+        "shirt": "chambray",
+        "belt": "belt-brown",
+        "pants": "navy-chino",
+        "shoes": "iron-ranger"
+      },
+      {
+        "layer": null,
+        "shirt": "blue-ox",
+        "belt": "belt-brown",
+        "pants": "olive",
+        "shoes": "sneakers"
+      }
+    ]
+  },
+  "figure": {
+    "skin": "#f1c7a3",
+    "hair": "#4a3426",
+    "hairStyle": "short"
+  }
+}
