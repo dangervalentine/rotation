@@ -1,7 +1,8 @@
 import { useState } from "react";
+import { Button, Check, Kicker, Segmented, Select } from "../design-system/index.ts";
 import { findItem, OPTIONAL_SLOTS, shortName, shuffleLook, SLOTS, variations } from "../lib/model.ts";
 import type { Item, Look, Slot } from "../lib/types.ts";
-import { OutfitFigure, Select } from "./common.tsx";
+import { itemOption, OutfitFigure } from "./common.tsx";
 
 const NONE = "__none";
 
@@ -14,10 +15,12 @@ export function LookEditor({ items, look, onChange }: { items: Item[]; look: Loo
   return (
     <>
       <div className="builder-grid">
-        <OutfitFigure items={items} look={look} width={170} />
+        <div className="builder-figure">
+          <OutfitFigure items={items} look={look} />
+        </div>
         <div className="fields">
           {SLOTS.map(([slot, label]) => {
-            const opts = items.filter((i) => i.cat === slot).map((i) => ({ value: i.id, label: shortName(i), swatch: i as Item | null }));
+            const opts = items.filter((i) => i.cat === slot).map(itemOption);
             if (OPTIONAL_SLOTS[slot]) opts.unshift({ value: NONE, label: "None", swatch: null });
             return (
               <Select
@@ -28,43 +31,38 @@ export function LookEditor({ items, look, onChange }: { items: Item[]; look: Loo
                 options={opts}
                 onChange={(v) => onChange({ ...look, [slot]: v === NONE ? null : v })}
                 extra={
-                  <label className="lock" title="Keep this piece when shuffling">
-                    <input type="checkbox" checked={!!locked[slot]} onChange={(e) => setLocked({ ...locked, [slot]: e.target.checked })} />
-                    keep
-                  </label>
+                  <Check
+                    className="rt-check-sm"
+                    label="Keep"
+                    title="Keep this piece when shuffling"
+                    checked={!!locked[slot]}
+                    onChange={(e) => setLocked({ ...locked, [slot]: e.target.checked })}
+                  />
                 }
               />
             );
           })}
-          <div className="actions full" style={{ marginTop: 0 }}>
-            <button className="btn" onClick={() => onChange(shuffleLook(items, look, locked))}>
-              Shuffle unkept pieces
-            </button>
+          <div className="full">
+            <Button onClick={() => onChange(shuffleLook(items, look, locked))}>Shuffle unkept pieces</Button>
           </div>
         </div>
       </div>
 
-      <div className="panel-head" style={{ marginTop: 18, marginBottom: 6 }}>
-        <span className="hint">Try every</span>
-        <div className="seg" role="group" aria-label="Piece to vary">
-          {SLOTS.map(([slot, label]) => (
-            <button key={slot} className={slot === vary ? "on" : ""} aria-pressed={slot === vary} onClick={() => setVary(slot)}>
-              {label}
-            </button>
-          ))}
-        </div>
+      <div className="try-head">
+        <Kicker tone="ink">Try every</Kicker>
+        <Segmented label="Piece to vary" options={SLOTS} value={vary} onChange={setVary} />
       </div>
       {vars.length ? (
         <div className="var-strip">
           {vars.map((v) => (
-            <button key={v.id || NONE} className={"var" + (look[vary] === v.id ? " on" : "")} onClick={() => onChange(v.look)}>
-              <OutfitFigure items={items} look={v.look} width={70} />
+            <button key={v.id || NONE} className="var" aria-pressed={look[vary] === v.id} onClick={() => onChange(v.look)}>
+              <OutfitFigure items={items} look={v.look} width={64} />
               <span>{v.id ? shortName(findItem(items, v.id)) : "None"}</span>
             </button>
           ))}
         </div>
       ) : (
-        <p className="hint">No items in this category yet. Add some on the Wardrobe tab.</p>
+        <p className="lede">No items in this category yet. Add some on the Wardrobe tab.</p>
       )}
     </>
   );

@@ -1,10 +1,17 @@
 import React, { useMemo, useRef, useState } from "react";
-import { CATEGORIES, clone, daysWorn, migrate, money, SLOTS, STYLES, uniqueId, wardrobeTotals } from "../lib/model.ts";
+import { Button, Check, Field, GarmentCard, Kicker, Notice, Segmented, SectionHead, Select, Stat, TextArea } from "../design-system/index.ts";
+import { CATEGORIES, clone, daysWorn, migrate, money, shortName, SLOTS, STYLES, uniqueId, wardrobeTotals } from "../lib/model.ts";
 import type { ProductGuess } from "../lib/productParse.ts";
 import type { Backend } from "../lib/storage.ts";
 import { downloadJson, sampleData } from "../lib/storage.ts";
 import type { Category, Item, WardrobeData } from "../lib/types.ts";
-import { Select, Swatch } from "./common.tsx";
+import { Swatch } from "./common.tsx";
+
+/** Whole dollars for headline figures ("$2,885"). */
+const dollars = (n: number) => "$" + Math.round(n || 0).toLocaleString("en-US");
+
+/** Brand from a name like "Uniqlo white oxford", when the item has no brand field. */
+const brandOf = (it: Item) => (it.name !== shortName(it) ? it.name.slice(0, it.name.length - shortName(it).length).trim() : undefined);
 
 type Draft = Omit<Item, "id"> & { id?: string; stripeOn: boolean; stripe: string };
 type Editing = { isNew: boolean; item: Partial<Item> } | null;
@@ -38,63 +45,45 @@ function ItemForm({ initial, isNew, note, onSave, onCancel, onDelete }: { initia
 
   return (
     <form className="edit" onSubmit={submit} noValidate>
-      {note ? <p className="hint full" style={{ gridColumn: "1/-1", margin: 0 }}>{note}</p> : null}
+      <div className="edit-head full">
+        <Kicker tone="accent">{isNew ? "New item" : "Edit item"}</Kicker>
+        {note ? <p className="lede">{note}</p> : null}
+      </div>
       {f.image ? (
-        <div className="preview">
+        <div className="preview full">
           <img src={f.image} alt="" referrerPolicy="no-referrer" />
-          <span>Photo from the product page. Pick the swatch color below to match it.</span>
+          <span className="lede">Photo from the product page. Pick the swatch colour below to match it.</span>
         </div>
       ) : null}
+      <Field className="full" id="f-name" label="Name" placeholder="Charcoal flannel trousers" value={f.name} error={err || undefined} hint="Colour, cut, type." onChange={(e) => { set("name", e.target.value); setErr(""); }} autoFocus />
       <Select id="f-cat" label="Category" value={f.cat} options={CATEGORIES.map(([v, l]) => ({ value: v, label: l }))} onChange={(c) => setF((p) => ({ ...p, cat: c as Category, style: STYLES[c as Category][0] }))} />
-      <div className="field full">
-        <label htmlFor="f-name">Name</label>
-        <input id="f-name" value={f.name} onChange={(e) => { set("name", e.target.value); setErr(""); }} autoFocus />
-      </div>
       <Select id="f-style" label="Style" value={STYLES[f.cat].includes(f.style) ? f.style : STYLES[f.cat][0]} options={STYLES[f.cat].map((s) => ({ value: s, label: s }))} onChange={(s) => set("style", s)} />
-      <div className="field">
-        <label htmlFor="f-brand">Brand</label>
-        <input id="f-brand" value={f.brand || ""} onChange={(e) => set("brand", e.target.value)} />
+      <Field id="f-brand" label="Brand" value={f.brand || ""} onChange={(e) => set("brand", e.target.value)} />
+      <div className="colors">
+        <Field id="f-color" type="color" label="Colour" value={f.color} onChange={(e) => set("color", e.target.value)} />
+        <Field
+          id="f-stripe"
+          type="color"
+          label="Stripe"
+          value={f.stripe}
+          disabled={!f.stripeOn}
+          onChange={(e) => set("stripe", e.target.value)}
+          extra={<Check className="rt-check-sm" label="On" checked={f.stripeOn} onChange={(e) => set("stripeOn", e.target.checked)} />}
+        />
       </div>
-      <div className="field">
-        <label htmlFor="f-color">Color</label>
-        <input type="color" id="f-color" value={f.color} onChange={(e) => set("color", e.target.value)} />
+      <Field id="f-price" label="Price ($)" type="number" min="0" step="0.01" value={f.price} onChange={(e) => set("price", e.target.value as unknown as number)} />
+      <Field id="f-qty" label="Qty" type="number" min="1" step="1" value={f.qty} onChange={(e) => set("qty", e.target.value as unknown as number)} />
+      <div className="rt-field">
+        <span className="rt-field-label">Status</span>
+        <Check label="I own this" checked={!!f.owned} onChange={(e) => set("owned", e.target.checked)} />
       </div>
-      <div className="field">
-        <label htmlFor="f-stripeon">Stripe</label>
-        <div className="inline">
-          <input type="checkbox" id="f-stripeon" checked={f.stripeOn} onChange={(e) => set("stripeOn", e.target.checked)} />
-          <input type="color" aria-label="Stripe color" value={f.stripe} disabled={!f.stripeOn} onChange={(e) => set("stripe", e.target.value)} />
-        </div>
-      </div>
-      <div className="field">
-        <label htmlFor="f-price">Price ($)</label>
-        <input id="f-price" type="number" min="0" step="0.01" value={f.price} onChange={(e) => set("price", e.target.value as unknown as number)} />
-      </div>
-      <div className="field">
-        <label htmlFor="f-qty">Qty</label>
-        <input id="f-qty" type="number" min="1" step="1" value={f.qty} onChange={(e) => set("qty", e.target.value as unknown as number)} />
-      </div>
-      <div className="field">
-        <label htmlFor="f-owned">Owned</label>
-        <input id="f-owned" type="checkbox" checked={!!f.owned} onChange={(e) => set("owned", e.target.checked)} />
-      </div>
-      <div className="field full">
-        <label htmlFor="f-link">Link</label>
-        <input id="f-link" type="url" value={f.link || ""} onChange={(e) => set("link", e.target.value)} />
-      </div>
-      <div className="field full">
-        <label htmlFor="f-image">Image URL</label>
-        <input id="f-image" type="url" value={f.image || ""} onChange={(e) => set("image", e.target.value)} />
-      </div>
-      <div className="field full">
-        <label htmlFor="f-notes">Notes</label>
-        <textarea id="f-notes" value={f.notes || ""} onChange={(e) => set("notes", e.target.value)} />
-      </div>
+      <Field className="full" id="f-link" label="Link" type="url" value={f.link || ""} onChange={(e) => set("link", e.target.value)} />
+      <Field className="full" id="f-image" label="Image URL" type="url" value={f.image || ""} onChange={(e) => set("image", e.target.value)} />
+      <TextArea className="full" id="f-notes" label="Notes" value={f.notes || ""} onChange={(e) => set("notes", e.target.value)} />
       <div className="actions full">
-        <button className="btn primary" type="submit">{isNew ? "Add item" : "Save item"}</button>
-        <button className="btn" type="button" onClick={onCancel}>Cancel</button>
-        {isNew ? null : <button className="btn danger" type="button" onClick={onDelete}>Delete item</button>}
-        {err ? <span className="err" role="alert">{err}</span> : null}
+        <Button variant="primary" type="submit">{isNew ? "Add item" : "Save item"}</Button>
+        <Button onClick={onCancel}>Cancel</Button>
+        {isNew ? null : <Button variant="danger" onClick={onDelete}>Delete item</Button>}
       </div>
     </form>
   );
@@ -107,6 +96,7 @@ export function WardrobeView({ data, setData, backend }: { data: WardrobeData; s
   const [url, setUrl] = useState("");
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState("");
+  const [layout, setLayout] = useState<"table" | "cards">("table");
   const fileRef = useRef<HTMLInputElement>(null);
   const totals = useMemo(() => wardrobeTotals(items), [items]);
 
@@ -166,91 +156,137 @@ export function WardrobeView({ data, setData, backend }: { data: WardrobeData; s
     }
   }
 
+  const editItem = (it: Item) => { setNote(""); setEditing({ isNew: false, item: clone(it) }); };
+  const toBuy = totals.all - totals.own;
+
   return (
-    <div className="ward">
+    <div className="view">
       <div className="stats">
-        <div className="stat"><b>{money(totals.all)}</b><span>Whole wardrobe, {totals.pieces} pieces</span></div>
-        <div className="stat"><b>{money(totals.own)}</b><span>Already owned</span></div>
-        <div className="stat"><b>{money(totals.all - totals.own)}</b><span>Left to buy</span></div>
+        <Stat value={dollars(totals.all)} label="Whole wardrobe" note={`${totals.pieces} pieces`} />
+        <Stat value={dollars(totals.own)} label="Already owned" note={totals.all ? `${Math.round((totals.own / totals.all) * 100)}% of the total` : undefined} />
+        <Stat value={dollars(toBuy)} label="Left to buy" note={toBuy ? `${items.filter((i) => !i.owned).length} items on the list` : "Nothing left to buy"} />
       </div>
 
-      <section className="panel" aria-labelledby="w-h">
-        <div className="panel-head">
-          <h2 id="w-h">Wardrobe and costs</h2>
-          <button className="btn primary" onClick={() => { setNote(""); setEditing({ isNew: true, item: BLANK }); }}>Add an item</button>
-        </div>
+      <section aria-labelledby="w-h">
+        <SectionHead
+          id="w-h"
+          kicker="Inventory"
+          title="Wardrobe & costs"
+          aside={
+            <>
+              <Segmented label="Show as" options={[["table", "Table"], ["cards", "Cards"]]} value={layout} onChange={setLayout} />
+              <Button variant="primary" onClick={() => { setNote(""); setEditing({ isNew: true, item: BLANK }); }}>Add an item</Button>
+            </>
+          }
+        />
         <form className="urlbar" onSubmit={fromUrl}>
-          <input type="url" placeholder="Paste a product link to fill in an item" value={url} onChange={(e) => setUrl(e.target.value)} aria-label="Product link" />
-          <button className="btn" type="submit" disabled={busy || !url.trim()}>{busy ? "Reading…" : "Add from link"}</button>
+          <Field type="url" label="Add from a product link" placeholder="Paste a link to fill in an item" value={url} onChange={(e) => setUrl(e.target.value)} />
+          <Button type="submit" disabled={busy || !url.trim()}>{busy ? "Reading…" : "Add from link"}</Button>
         </form>
         {editing ? (
           <ItemForm key={editing.item.id || "new:" + (editing.item.link || "")} initial={editing.item} isNew={editing.isNew} note={note} onSave={save} onCancel={() => setEditing(null)} onDelete={remove} />
         ) : null}
-        <div className="tablewrap">
-          <table>
-            <thead>
-              <tr>
-                <th>Item</th><th>Style</th><th className="num">Price</th><th className="num">Qty</th><th className="num">Subtotal</th><th className="num">Days worn</th><th>Owned</th>
-                <th><span className="sr-only">Edit</span></th>
-              </tr>
-            </thead>
-            <tbody>
-              {CATEGORIES.map(([cat, label]) => {
-                const rows = items.filter((i) => i.cat === cat);
-                const t = totals.by[cat] || { t: 0, o: 0, n: 0 };
-                return (
-                  <React.Fragment key={cat}>
-                    <tr className="cat"><td colSpan={8}>{label}</td></tr>
-                    {rows.map((it) => (
-                      <tr key={it.id}>
-                        <td>
-                          <span className="namecell">
-                            {it.image ? <img className="thumb" src={it.image} alt="" referrerPolicy="no-referrer" /> : null}
-                            <Swatch it={it} />
-                            {it.link ? <a href={it.link} target="_blank" rel="noopener">{it.name}</a> : it.name}
-                          </span>
-                        </td>
-                        <td>{it.style}</td>
-                        <td className="num">{money(it.price)}</td>
-                        <td className="num">{it.qty}</td>
-                        <td className="num">{money(it.price * it.qty)}</td>
-                        <td className="num">{cat === "other" ? "" : daysWorn(rot, it.id)}</td>
-                        <td>
-                          <input type="checkbox" checked={!!it.owned} aria-label={"Owned: " + it.name} onChange={(e) => setData({ ...data, items: items.map((x) => (x.id === it.id ? { ...x, owned: e.target.checked } : x)) })} />
-                        </td>
-                        <td><button className="btn small" onClick={() => { setNote(""); setEditing({ isNew: false, item: clone(it) }); }}>Edit</button></td>
+        {layout === "cards" ? (
+          CATEGORIES.map(([cat, label]) => {
+            const rows = items.filter((i) => i.cat === cat);
+            if (!rows.length) return null;
+            return (
+              <div className="card-group" key={cat}>
+                <Kicker tone="ink">{label} · {rows.length}</Kicker>
+                <div className="garment-grid">
+                  {rows.map((it) => (
+                    <GarmentCard
+                      key={it.id}
+                      category={it.cat}
+                      name={shortName(it)}
+                      style={it.style}
+                      brand={it.brand || brandOf(it)}
+                      color={it.color}
+                      stripe={it.stripe}
+                      image={it.image}
+                      price={money(it.price)}
+                      qty={it.qty}
+                      owned={!!it.owned}
+                      worn={cat === "other" ? undefined : daysWorn(rot, it.id)}
+                      onSelect={() => editItem(it)}
+                    />
+                  ))}
+                </div>
+              </div>
+            );
+          })
+        ) : (
+          <div className="tablewrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Item</th><th>Style</th><th className="num">Price</th><th className="num">Qty</th><th className="num">Subtotal</th><th className="num">Days worn</th><th>Owned</th>
+                  <th><span className="sr-only">Edit</span></th>
+                </tr>
+              </thead>
+              <tbody>
+                {CATEGORIES.map(([cat, label]) => {
+                  const rows = items.filter((i) => i.cat === cat);
+                  const t = totals.by[cat] || { t: 0, o: 0, n: 0 };
+                  return (
+                    <React.Fragment key={cat}>
+                      <tr className="cat"><td colSpan={8}>{label}</td></tr>
+                      {rows.map((it) => (
+                        <tr key={it.id}>
+                          <td>
+                            <span className="namecell">
+                              {it.image ? <img className="thumb" src={it.image} alt="" referrerPolicy="no-referrer" /> : null}
+                              <Swatch it={it} />
+                              {it.link ? <a href={it.link} target="_blank" rel="noopener">{it.name}</a> : it.name}
+                            </span>
+                          </td>
+                          <td className="muted">{it.style}</td>
+                          <td className="num">{money(it.price)}</td>
+                          <td className="num">{it.qty}</td>
+                          <td className="num">{money(it.price * it.qty)}</td>
+                          <td className="num">{cat === "other" ? "" : daysWorn(rot, it.id)}</td>
+                          <td>
+                            <input className="rt-checkbox" type="checkbox" checked={!!it.owned} aria-label={"Owned: " + it.name} onChange={(e) => setData({ ...data, items: items.map((x) => (x.id === it.id ? { ...x, owned: e.target.checked } : x)) })} />
+                          </td>
+                          <td className="num"><Button variant="ghost" size="sm" onClick={() => editItem(it)}>Edit</Button></td>
+                        </tr>
+                      ))}
+                      <tr className="tot">
+                        <td>{label} total</td><td /><td />
+                        <td className="num">{t.n}</td>
+                        <td className="num">{money(t.t)}</td>
+                        <td />
+                        <td colSpan={2} className="muted">{t.o ? money(t.o) + " owned" : ""}</td>
                       </tr>
-                    ))}
-                    <tr className="tot">
-                      <td>{label} total</td><td /><td />
-                      <td className="num">{t.n}</td>
-                      <td className="num">{money(t.t)}</td>
-                      <td />
-                      <td colSpan={2} className="muted">{t.o ? money(t.o) + " owned" : ""}</td>
-                    </tr>
-                  </React.Fragment>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
+                    </React.Fragment>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
       </section>
 
-      <section className="panel" aria-labelledby="d-h">
-        <div className="panel-head">
-          <h2 id="d-h">Your data</h2>
-          <span className="hint">
-            {backend.kind === "file" ? <>Saving to <b>data/wardrobe.json</b> on this computer.</> : <>Saving in <b>this browser</b>. Export a copy to move it to another device.</>}
-          </span>
-        </div>
-        <div className="datarow">
-          <button className="btn" onClick={() => downloadJson(data)}>Export JSON</button>
-          <button className="btn" onClick={() => fileRef.current?.click()}>Import JSON</button>
+      <section aria-labelledby="d-h">
+        <SectionHead
+          id="d-h"
+          level={3}
+          kicker="Housekeeping"
+          title="Your data"
+          aside={
+            <span className="lede">
+              {backend.kind === "file" ? <>Saving to <b>data/wardrobe.json</b> on this computer.</> : <>Saving in <b>this browser</b>. Export a copy to move it to another device.</>}
+            </span>
+          }
+        />
+        <div className="actions">
+          <Button onClick={() => downloadJson(data)}>Export JSON</Button>
+          <Button onClick={() => fileRef.current?.click()}>Import JSON</Button>
           <input ref={fileRef} type="file" accept="application/json,.json" hidden onChange={(e) => { const f = e.target.files?.[0]; if (f) importFile(f); e.target.value = ""; }} />
-          <button className="btn" onClick={() => { setData({ ...sampleData(), savedAt: data.savedAt }); setMsg("Loaded the sample wardrobe. Save to keep it."); }}>Load sample wardrobe</button>
-          <button className="btn danger" onClick={() => { setData({ ...data, items: [], outfits: [], rotation: { ...rot, looks: rot.looks.map(() => ({ layer: null, shirt: null, belt: null, pants: null, shoes: null })) } }); setMsg("Cleared. Save to keep the empty wardrobe, or discard to undo."); }}>Start empty</button>
-          {msg ? <span className="hint" role="status">{msg}</span> : null}
+          <Button variant="ghost" onClick={() => { setData({ ...sampleData(), savedAt: data.savedAt }); setMsg("Loaded the sample wardrobe. Save to keep it."); }}>Load sample wardrobe</Button>
+          <Button variant="danger" onClick={() => { setData({ ...data, items: [], outfits: [], rotation: { ...rot, looks: rot.looks.map(() => ({ layer: null, shirt: null, belt: null, pants: null, shoes: null })) } }); setMsg("Cleared. Save to keep the empty wardrobe, or discard to undo."); }}>Start empty</Button>
         </div>
+        {msg ? <Notice tone="neutral">{msg}</Notice> : null}
       </section>
     </div>
   );
