@@ -34,7 +34,7 @@ export function PrintView({ data, setData }: { data: WardrobeData; setData: (d: 
           <Field className="f-tagline" label="Tagline" value={tagline} onChange={(e) => setTagline(e.target.value)} />
           <div className="rt-field">
             <span className="rt-field-label">Labels</span>
-            <Check label="Show item names" checked={names} onChange={(e) => setNames(e.target.checked)} />
+            <Check label="Show item names" checked={names} onCheckedChange={setNames} />
           </div>
         </div>
         <p className="lede">Each week prints on its own landscape page. Turn on “Background graphics” in the print dialog to keep the colours.</p>

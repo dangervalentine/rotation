@@ -3,3 +3,8 @@ dist
 *.tmp
 .DS_Store
 *.tsbuildinfo
+
+# Raw Lighthouse reports (large); REPORT.md is kept
+specs/*/lighthouse/before/
+specs/*/lighthouse/after/
+.playwright-mcp/

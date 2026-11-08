@@ -44,5 +44,11 @@ describe("design tokens", () => {
         expect(contrast(color(fg, id), color(bg, id))).toBeGreaterThanOrEqual(4.5);
       });
     }
+    // The masthead dek is set in ink and must read at 7:1 (FR-014).
+    for (const bg of ["paper", "paper-raised"]) {
+      it(`ink on ${bg} reads at 7:1 in ${id} (masthead dek)`, () => {
+        expect(contrast(color("ink", id), color(bg, id))).toBeGreaterThanOrEqual(7);
+      });
+    }
   }
 });

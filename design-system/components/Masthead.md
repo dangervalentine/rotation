@@ -7,4 +7,5 @@ The magazine cover line for every screen: section kicker and issue meta over a h
 - One per screen, at the top. Never inside a card.
 - Keep `title` short — one or two words reads like a masthead; four reads like a form.
 - The dek is a sentence, not a list. End it with a period.
+- The dek is set in `ink` (not `ink-muted`) at Bodoni's text optical size (`opsz` 14), weight 450, 20px (18px on phones). The display cut's hairlines in `ink-muted` read poorly at that size; the test suite holds `ink` at 7:1 or better on `paper` and `paper-raised`. Hierarchy comes from size and italic, not a lighter colour.
 - Don't recolour the title. It is always `ink`; oxblood belongs to actions.

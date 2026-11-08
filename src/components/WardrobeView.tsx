@@ -1,5 +1,5 @@
 import React, { useMemo, useRef, useState } from "react";
-import { Button, Check, Field, GarmentCard, Kicker, Notice, Segmented, SectionHead, Select, Stat, TextArea } from "../design-system/index.ts";
+import { Button, Check, Checkbox, Field, GarmentCard, Kicker, Notice, Segmented, SectionHead, Select, Stat, TextArea } from "../design-system/index.ts";
 import { CATEGORIES, clone, daysWorn, migrate, money, shortName, SLOTS, STYLES, uniqueId, wardrobeTotals } from "../lib/model.ts";
 import type { ProductGuess } from "../lib/productParse.ts";
 import type { Backend } from "../lib/storage.ts";
@@ -68,14 +68,14 @@ function ItemForm({ initial, isNew, note, onSave, onCancel, onDelete }: { initia
           value={f.stripe}
           disabled={!f.stripeOn}
           onChange={(e) => set("stripe", e.target.value)}
-          extra={<Check className="rt-check-sm" label="On" checked={f.stripeOn} onChange={(e) => set("stripeOn", e.target.checked)} />}
+          extra={<Check className="rt-check-sm" label="On" checked={f.stripeOn} onCheckedChange={(v) => set("stripeOn", v)} />}
         />
       </div>
       <Field id="f-price" label="Price ($)" type="number" min="0" step="0.01" value={f.price} onChange={(e) => set("price", e.target.value as unknown as number)} />
       <Field id="f-qty" label="Qty" type="number" min="1" step="1" value={f.qty} onChange={(e) => set("qty", e.target.value as unknown as number)} />
       <div className="rt-field">
         <span className="rt-field-label">Status</span>
-        <Check label="I own this" checked={!!f.owned} onChange={(e) => set("owned", e.target.checked)} />
+        <Check label="I own this" checked={!!f.owned} onCheckedChange={(v) => set("owned", v)} />
       </div>
       <Field className="full" id="f-link" label="Link" type="url" value={f.link || ""} onChange={(e) => set("link", e.target.value)} />
       <Field className="full" id="f-image" label="Image URL" type="url" value={f.image || ""} onChange={(e) => set("image", e.target.value)} />
@@ -246,7 +246,7 @@ export function WardrobeView({ data, setData, backend }: { data: WardrobeData; s
                           <td className="num">{money(it.price * it.qty)}</td>
                           <td className="num">{cat === "other" ? "" : daysWorn(rot, it.id)}</td>
                           <td>
-                            <input className="rt-checkbox" type="checkbox" checked={!!it.owned} aria-label={"Owned: " + it.name} onChange={(e) => setData({ ...data, items: items.map((x) => (x.id === it.id ? { ...x, owned: e.target.checked } : x)) })} />
+                            <Checkbox checked={!!it.owned} aria-label={"Owned: " + it.name} onCheckedChange={(v) => setData({ ...data, items: items.map((x) => (x.id === it.id ? { ...x, owned: v } : x)) })} />
                           </td>
                           <td className="num"><Button variant="ghost" size="sm" onClick={() => editItem(it)}>Edit</Button></td>
                         </tr>

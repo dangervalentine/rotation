@@ -46,6 +46,8 @@ Rules for changing it:
 | [`Check`](components/Check.md) | Square checkbox with a label. |
 | [`Segmented`](components/Segmented.md) | Pick one of a few (Table / Cards, Try every…). |
 | [`Notice`](components/Notice.md) | One-line status or warning under an action. |
+| [`Sheet`](components/Sheet.md) | Editing panel for one item: docked right on wide screens, bottom sheet on phones. |
+| [`ConfirmDialog`](components/ConfirmDialog.md) | "Apply or discard?" before an action would drop unapplied changes. |
 | [`SaveBar`](components/SaveBar.md) | Sticky unsaved-changes bar. |
 
 ---
@@ -95,7 +97,7 @@ Two themes: **Newsprint** (light, default) and **Evening** (dark). Every text pa
 
 Three families, all on Google Fonts:
 
-- **Bodoni Moda** (`display`) — masthead, headlines, titles, look numbers, stat figures, garment names, field values, deks in italic. Use its optical size axis: high contrast at display sizes.
+- **Bodoni Moda** (`display`) — masthead, headlines, titles, look numbers, stat figures, garment names, field values, deks in italic. Use its optical size axis: high contrast at display sizes, the text cut (`opsz` 14) for the dek, whose display hairlines break up at 20px.
 - **Hanken Grotesk** (`sans`) — interface: kickers, buttons, tabs, body, captions.
 - **IBM Plex Mono** (`mono`) — specs: prices, quantities, colour codes, week numbers, issue meta. Think photo credits.
 
@@ -104,7 +106,7 @@ Three families, all on Google Fonts:
 | `masthead` | 88 / 0.9, Bodoni 500 | App title, once per screen |
 | `headline` | 48 / 1.0 | View titles |
 | `title` | 28 / 1.1 | Look names, panel titles |
-| `dek` | 20 / 1.4 italic | Standfirst under a headline |
+| `dek` | 20 / 1.45 italic 450, `opsz` 14, `ink` | Standfirst under a headline |
 | `numeral` | 44 / 1.0 | Stats, "No. 04" |
 | `kicker` | 11 / 16, 600, +0.16em, uppercase | Category, day, section labels |
 | `body` | 15 / 24 | Running text, rows |

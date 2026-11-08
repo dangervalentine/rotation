@@ -36,7 +36,7 @@ export function LookEditor({ items, look, onChange }: { items: Item[]; look: Loo
                     label="Keep"
                     title="Keep this piece when shuffling"
                     checked={!!locked[slot]}
-                    onChange={(e) => setLocked({ ...locked, [slot]: e.target.checked })}
+                    onCheckedChange={(v) => setLocked({ ...locked, [slot]: v })}
                   />
                 }
               />

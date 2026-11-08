@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Button, Field, LookCard, SectionHead } from "../design-system/index.ts";
+import { Button, Field, LookCard, Notice, SectionHead } from "../design-system/index.ts";
 import { clone, EMPTY_LOOK, same, shuffleLook, uniqueId } from "../lib/model.ts";
 import type { Look, Outfit, WardrobeData } from "../lib/types.ts";
 import { lookPieces, OutfitFigure } from "./common.tsx";
@@ -51,6 +51,11 @@ export function OutfitsView({ data, setData }: { data: WardrobeData; setData: (d
           title="Mix and match"
           aside={<span className="lede">{base ? "Change the pieces, then save." : "Build a look, then save it to your outfits."}</span>}
         />
+        {items.length ? null : (
+          <Notice tone="neutral">
+            No pieces yet. Start in <a href="#wardrobe">Wardrobe &amp; costs</a>.
+          </Notice>
+        )}
         <LookEditor items={items} look={look} onChange={setLook} />
         <div className="actions">
           <Field className="f-name" label="Name" value={name} placeholder="Rainy Monday" onChange={(e) => setName(e.target.value)} />

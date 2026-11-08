@@ -31,10 +31,20 @@ main{display:grid;gap:var(--space-7)}
 .week+.week{margin-top:var(--space-4);padding-top:var(--space-4);border-top:var(--rule-hair) solid var(--rule)}
 .wklabel{padding-top:var(--space-3)}
 .lede+.week{margin-top:var(--space-5)}
-@media (max-width:1000px){.week{grid-template-columns:repeat(3,minmax(0,1fr))}.wklabel{grid-column:1/-1;padding-top:0}}
-@media (max-width:640px){.week{grid-template-columns:repeat(2,minmax(0,1fr))}}
-@media (max-width:420px){.week{grid-template-columns:1fr}}
+/* The calendar responds to its own width, so it reflows cleanly beside the docked day panel. */
+.days{container-type:inline-size}
+@container (max-width:940px){.week{grid-template-columns:repeat(3,minmax(0,1fr))}.wklabel{grid-column:1/-1;padding-top:0}}
+@container (max-width:600px){.week{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@container (max-width:380px){.week{grid-template-columns:1fr}}
 .wear-saved{max-width:320px;margin-bottom:var(--space-5)}
+
+/* Day panel (Sheet) contents */
+.rt-sheet .builder-grid{grid-template-columns:112px 1fr;gap:var(--space-4)}
+.rt-sheet .fields{grid-template-columns:1fr;gap:var(--space-4)}
+.rt-sheet .actions{margin-top:var(--space-5)}
+.rt-sheet[data-mode="bottom"] .rt-sheet-back{display:none}
+.sheet-nav{display:inline-flex;gap:var(--space-2);margin-left:auto}
+@media (max-width:640px){.rt-sheet .builder-grid{grid-template-columns:1fr}.rt-sheet .builder-figure{width:112px}}
 
 /* ---------- Look editor ---------- */
 .builder-grid{display:grid;grid-template-columns:180px 1fr;gap:var(--space-6);align-items:start}

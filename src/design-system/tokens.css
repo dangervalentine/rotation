@@ -22,6 +22,7 @@
   --navy: #1d2838;
   --on-navy: #fbf9f4;
   --focus: var(--oxblood);
+  --scrim: rgba(20,19,18,.32);
   --shadow-none: none;
   --shadow-float: 0 1px 0 #141312, 0 12px 32px -16px rgba(20,19,18,0.35);
 }
@@ -47,6 +48,7 @@
   --navy: #2c3a52;
   --on-navy: #ede7da;
   --focus: var(--oxblood);
+  --scrim: rgba(0,0,0,.5);
   --shadow-none: none;
   --shadow-float: 0 1px 0 #ede7da, 0 12px 32px -16px rgba(0,0,0,0.7);
 }
@@ -73,6 +75,7 @@
     --navy: #2c3a52;
     --on-navy: #ede7da;
     --focus: var(--oxblood);
+    --scrim: rgba(0,0,0,.5);
     --shadow-none: none;
     --shadow-float: 0 1px 0 #ede7da, 0 12px 32px -16px rgba(0,0,0,0.7);
   }
@@ -93,6 +96,9 @@
   --rule-hair: 1px;
   --rule-heavy: 2px;
   --rule-double: 4px;
+  --sheet-width: 420px;
+  --motion-sheet-duration: 220ms;
+  --motion-sheet-ease: cubic-bezier(.2, .8, .2, 1);
   --font-display: "Bodoni Moda", "Didot", "Bodoni 72", Georgia, serif;
   --font-sans: "Hanken Grotesk", "Helvetica Neue", Arial, sans-serif;
   --font-mono: "IBM Plex Mono", ui-monospace, Menlo, monospace;
@@ -104,7 +110,7 @@
 
 .type-title { font-family: var(--font-display); font-size: 28px; line-height: 1.1; font-weight: 500; letter-spacing: -0.01em; }
 
-.type-dek { font-family: var(--font-display); font-size: 20px; line-height: 1.4; font-weight: 400; font-style: italic; }
+.type-dek { font-family: var(--font-display); font-size: 20px; line-height: 1.45; font-weight: 450; font-style: italic; }
 
 .type-numeral { font-family: var(--font-display); font-size: 44px; line-height: 1; font-weight: 400; }
 

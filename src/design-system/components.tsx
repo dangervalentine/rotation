@@ -2,8 +2,12 @@
  * Rotation design system — React components.
  * Guidelines for each live in design-system/components/<Name>.md; styles in ./components.css.
  */
+import * as RAlert from "@radix-ui/react-alert-dialog";
+import * as RCheckbox from "@radix-ui/react-checkbox";
+import * as RDialog from "@radix-ui/react-dialog";
 import * as RSelect from "@radix-ui/react-select";
-import { useId, type ButtonHTMLAttributes, type InputHTMLAttributes, type ReactNode, type TextareaHTMLAttributes } from "react";
+import * as RToggleGroup from "@radix-ui/react-toggle-group";
+import { forwardRef, useEffect, useId, useLayoutEffect, useRef, useSyncExternalStore, type ButtonHTMLAttributes, type InputHTMLAttributes, type ReactNode, type RefObject, type TextareaHTMLAttributes } from "react";
 
 export type Category = "layer" | "shirt" | "belt" | "pants" | "shoes" | "other";
 export type Slot = "layer" | "shirt" | "belt" | "pants" | "shoes";
@@ -75,9 +79,17 @@ export function Tabs({ items, value, onChange, numbered = true, label = "Section
       {it.label}
     </>
   );
+  const navRef = useRef<HTMLElement>(null);
+  // On narrow screens the strip scrolls sideways: keep the current tab in view (without moving the page).
+  useEffect(() => {
+    const nav = navRef.current;
+    const cur = nav?.querySelector<HTMLElement>('[aria-current="page"]');
+    if (!nav || !cur) return;
+    if (cur.offsetLeft < nav.scrollLeft || cur.offsetLeft + cur.offsetWidth > nav.scrollLeft + nav.clientWidth) nav.scrollLeft = cur.offsetLeft - 16;
+  }, [value]);
   if (items.some((it) => it.href)) {
     return (
-      <nav className={cx("rt-tabs", className)} aria-label={label}>
+      <nav ref={navRef} className={cx("rt-tabs", className)} aria-label={label}>
         {items.map((it, i) => (
           <a key={it.id} href={it.href} className="rt-tab" aria-current={it.id === value ? "page" : undefined} onClick={() => onChange?.(it.id)}>
             {body(it, i)}
@@ -262,15 +274,19 @@ export interface RotationDayProps {
   pieces: Piece[];
   figure?: ReactNode;
   selected?: boolean;
+  /** Set when selecting the day opens an editing panel: true while that panel shows this day. */
+  expanded?: boolean;
   edited?: boolean;
   flags?: string[];
   onClick?: () => void;
   className?: string;
 }
 
-export function RotationDay(p: RotationDayProps) {
+export const RotationDay = forwardRef<HTMLButtonElement, RotationDayProps>(function RotationDay(p, ref) {
+  // With `expanded` the day opens an editing panel, so it is a disclosure (aria-expanded) rather than a toggle.
+  const state = p.expanded === undefined ? { "aria-pressed": !!p.selected } : { "aria-haspopup": "dialog" as const, "aria-expanded": p.expanded };
   return (
-    <button type="button" className={cx("rt-day", p.figure != null && "has-figure", p.className)} aria-pressed={!!p.selected} onClick={p.onClick}>
+    <button ref={ref} type="button" className={cx("rt-day", p.figure != null && "has-figure", p.selected && "is-selected", p.className)} {...state} onClick={p.onClick}>
       {p.figure != null ? <span className="rt-day-figure">{p.figure}</span> : null}
       <span className="rt-day-body">
         <span className="rt-day-head">
@@ -294,7 +310,7 @@ export function RotationDay(p: RotationDayProps) {
       </span>
     </button>
   );
-}
+});
 
 /* ---------- Field ---------- */
 
@@ -383,12 +399,32 @@ export function Select({ id, label, value, onChange, options, extra, hint, class
 
 /* ---------- Check (checkbox with a label) ---------- */
 
-export function Check({ label, className, ...rest }: { label: ReactNode; className?: string } & Omit<InputHTMLAttributes<HTMLInputElement>, "type">) {
+interface CheckboxProps {
+  checked: boolean;
+  onCheckedChange: (checked: boolean) => void;
+  disabled?: boolean;
+  id?: string;
+  /** Required when there is no visible label (e.g. a table cell). */
+  "aria-label"?: string;
+}
+
+/** The bare box. Prefer `Check`, which adds a visible label. */
+export function Checkbox({ checked, onCheckedChange, ...rest }: CheckboxProps) {
   return (
-    <label className={cx("rt-check", className)}>
-      <input type="checkbox" {...rest} />
-      <span>{label}</span>
-    </label>
+    <RCheckbox.Root {...rest} className="rt-checkbox" checked={checked} onCheckedChange={(v) => onCheckedChange(v === true)}>
+      <RCheckbox.Indicator className="rt-checkbox-mark" />
+    </RCheckbox.Root>
+  );
+}
+
+export function Check({ label, title, id, className, ...rest }: { label: ReactNode; title?: string; className?: string } & Omit<CheckboxProps, "aria-label">) {
+  const auto = useId();
+  const cid = id || auto;
+  return (
+    <span className={cx("rt-check", className)} title={title}>
+      <Checkbox {...rest} id={cid} />
+      <label htmlFor={cid}>{label}</label>
+    </span>
   );
 }
 
@@ -396,13 +432,14 @@ export function Check({ label, className, ...rest }: { label: ReactNode; classNa
 
 export function Segmented<T extends string>({ options, value, onChange, label }: { options: [T, string][]; value: T; onChange: (v: T) => void; label: string }) {
   return (
-    <div className="rt-seg" role="group" aria-label={label}>
+    // Ignore deselection: one option is always chosen.
+    <RToggleGroup.Root type="single" className="rt-seg" aria-label={label} value={value} onValueChange={(v) => { if (v) onChange(v as T); }}>
       {options.map(([v, l]) => (
-        <button key={v} type="button" aria-pressed={v === value} onClick={() => onChange(v)}>
+        <RToggleGroup.Item key={v} value={v} className="rt-seg-item">
           {l}
-        </button>
+        </RToggleGroup.Item>
       ))}
-    </div>
+    </RToggleGroup.Root>
   );
 }
 
@@ -428,5 +465,120 @@ export function SaveBar({ dirty, message, error, onSave, onDiscard, saveLabel = 
       <Button variant="ghost" size="sm" disabled={!dirty} onClick={onDiscard}>{discardLabel}</Button>
       <Button variant="primary" size="sm" disabled={!dirty} onClick={onSave}>{saveLabel}</Button>
     </div>
+  );
+}
+
+/* ---------- Sheet (side panel on wide screens, bottom sheet on narrow ones) ---------- */
+
+const WIDE = "(min-width: 1024px)";
+function useMedia(query: string) {
+  return useSyncExternalStore(
+    (cb) => {
+      const m = matchMedia(query);
+      m.addEventListener("change", cb);
+      return () => m.removeEventListener("change", cb);
+    },
+    () => matchMedia(query).matches,
+    () => true,
+  );
+}
+
+export interface SheetProps {
+  open: boolean;
+  /** Called with false on Escape, the close button, or the backdrop (bottom sheet only). The consumer may refuse. */
+  onOpenChange: (open: boolean) => void;
+  title: ReactNode;
+  kicker?: ReactNode;
+  description?: ReactNode;
+  /** Extra controls in the head, beside Close. */
+  headActions?: ReactNode;
+  /** Sticky action row. */
+  footer?: ReactNode;
+  /** Receives focus when the sheet closes (normally the item that opened it). */
+  returnFocusRef?: RefObject<HTMLElement | null>;
+  children?: ReactNode;
+  className?: string;
+}
+
+export function Sheet(p: SheetProps) {
+  const docked = useMedia(WIDE);
+  const titleRef = useRef<HTMLHeadingElement>(null);
+
+  // Docked, the page makes room so nothing sits under the panel (see html[data-sheet] in components.css).
+  // A layout effect, so a page opened on a day (#rotation/day/3) lays out once instead of shifting.
+  useLayoutEffect(() => {
+    if (!(p.open && docked)) return;
+    document.documentElement.dataset.sheet = "side";
+    return () => { delete document.documentElement.dataset.sheet; };
+  }, [p.open, docked]);
+
+  // Docked, the calendar beside the panel stays usable: clicks and focus there must not close it.
+  const keepOpen = (e: Event) => { if (docked) e.preventDefault(); };
+  return (
+    <RDialog.Root open={p.open} onOpenChange={p.onOpenChange} modal={!docked}>
+      <RDialog.Portal>
+        {docked ? null : <RDialog.Overlay className="rt-sheet-overlay" />}
+        <RDialog.Content
+          className={cx("rt-sheet", p.className)}
+          data-mode={docked ? "side" : "bottom"}
+          {...(p.description ? {} : { "aria-describedby": undefined })}
+          onOpenAutoFocus={(e) => { e.preventDefault(); titleRef.current?.focus(); }}
+          onCloseAutoFocus={(e) => { if (p.returnFocusRef?.current) { e.preventDefault(); p.returnFocusRef.current.focus(); } }}
+          onInteractOutside={keepOpen}
+        >
+          <div className="rt-sheet-head">
+            <div className="rt-sheet-titles">
+              {p.kicker ? <Kicker tone="accent">{p.kicker}</Kicker> : null}
+              <RDialog.Title ref={titleRef} tabIndex={-1} className="rt-sheet-title">{p.title}</RDialog.Title>
+            </div>
+            <div className="rt-sheet-tools">
+              {p.headActions}
+              <RDialog.Close asChild>
+                <button type="button" className="rt-sheet-close" aria-label="Close">
+                  <svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><path d="M1 1l12 12M13 1L1 13" stroke="currentColor" strokeWidth="1.5" /></svg>
+                </button>
+              </RDialog.Close>
+            </div>
+          </div>
+          {p.description ? <RDialog.Description className="rt-sheet-desc">{p.description}</RDialog.Description> : null}
+          <div className="rt-sheet-body">{p.children}</div>
+          {p.footer ? <div className="rt-sheet-foot">{p.footer}</div> : null}
+        </RDialog.Content>
+      </RDialog.Portal>
+    </RDialog.Root>
+  );
+}
+
+/* ---------- ConfirmDialog ---------- */
+
+export interface ConfirmAction {
+  label: string;
+  variant?: ButtonProps["variant"];
+  onSelect: () => void;
+}
+
+/** A short question with two or three answers. The last action is the safe one (cancel). */
+export function ConfirmDialog({ open, onOpenChange, title, description, actions, onCloseAutoFocus }: { open: boolean; onOpenChange: (open: boolean) => void; title: ReactNode; description: ReactNode; actions: ConfirmAction[]; /** Choose where focus goes when it closes (call preventDefault first). */ onCloseAutoFocus?: (e: Event) => void }) {
+  const last = actions.length - 1;
+  return (
+    <RAlert.Root open={open} onOpenChange={onOpenChange}>
+      <RAlert.Portal>
+        <RAlert.Overlay className="rt-confirm-overlay" />
+        <RAlert.Content className="rt-confirm" onCloseAutoFocus={onCloseAutoFocus}>
+          <RAlert.Title className="rt-confirm-title">{title}</RAlert.Title>
+          <RAlert.Description className="rt-confirm-desc">{description}</RAlert.Description>
+          <div className="rt-confirm-actions">
+            {actions.map((a, i) => {
+              const W = i === last ? RAlert.Cancel : RAlert.Action;
+              return (
+                <W key={a.label} asChild>
+                  <Button variant={a.variant} onClick={a.onSelect}>{a.label}</Button>
+                </W>
+              );
+            })}
+          </div>
+        </RAlert.Content>
+      </RAlert.Portal>
+    </RAlert.Root>
   );
 }
