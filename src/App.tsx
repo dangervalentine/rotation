@@ -10,6 +10,13 @@ import { DATA_CHANGED, fingerprint, loadDraft, saveDraft, type Backend } from ".
 import type { WardrobeData } from "./lib/types.ts";
 
 const LABELS: Record<ViewId, string> = { wardrobe: "Wardrobe & costs", outfits: "Outfits", rotation: "Rotation", print: "Print" };
+/** The masthead's dek says what the current step is for. */
+const DEKS: Record<ViewId, string> = {
+  wardrobe: "Everything you own or mean to buy, and what it all costs.",
+  outfits: "Put pieces together into looks, and keep the ones you like.",
+  rotation: "Plan what to wear each day, for as many days and weeks as you like.",
+  print: "Your plan on paper, to pin up by the closet.",
+};
 const content = (d: WardrobeData) => ({ ...d, savedAt: 0 });
 
 type Theme = "system" | "light" | "dark";
@@ -202,8 +209,8 @@ export function App({ backend, initial }: { backend: Backend; initial: WardrobeD
       <Masthead
         className="no-print"
         meta={meta}
-        title={<input className="title-input" value={data.title} aria-label="Wardrobe name" onChange={(e) => setData({ ...data, title: e.target.value })} />}
-        dek={<textarea className="dek-input" rows={1} value={data.subtitle} placeholder="Add a note: what this wardrobe is for, or rules you dress by" aria-label="Wardrobe description" onChange={(e) => setData({ ...data, subtitle: e.target.value.replace(/\n/g, " ") })} />}
+        title="Rotation"
+        dek={DEKS[view]}
         tools={<Segmented label="Theme" options={[["system", "Auto"], ["light", "Light"], ["dark", "Dark"]]} value={theme} onChange={setTheme} />}
       >
         <Tabs label="Views" value={view} items={VIEW_ORDER.map((id, i) => ({ id, label: LABELS[id], href: "#" + id, step: (i + 1) as 1 | 2 | 3 | 4 }))} />

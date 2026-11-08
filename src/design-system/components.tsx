@@ -125,10 +125,10 @@ export function Masthead({ title, section = "The Wardrobe", meta, tools, dek, ch
           {tools}
         </span>
       </div>
+      {children ? <div className="rt-mast-nav">{children}</div> : null}
       {typeof title === "string" ? <h1 className="rt-mast-title">{title}</h1> : <div className="rt-mast-title">{title}</div>}
       {dek ? <p className="rt-mast-dek">{dek}</p> : null}
       <div className="rt-mast-rule" aria-hidden="true" />
-      {children ? <div className="rt-mast-nav">{children}</div> : null}
     </header>
   );
 }

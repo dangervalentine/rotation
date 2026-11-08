@@ -8,3 +8,4 @@ Section navigation set like a magazine's contents line: numbered, tracked upperc
 - Labels are nouns in title case; the component uppercases them.
 - No pill or filled background on the active tab — the underline is the state.
 - Give each tab its `step` (1–4) in the app's view nav: the number sits on a chip of the step colour and the active underline takes it.
+- Hover darkens the label and shows the underline: in `rule-strong`, or the step colour for a step tab, whose chip also lifts 2px (no lift under reduced motion). The active tab keeps its own underline.

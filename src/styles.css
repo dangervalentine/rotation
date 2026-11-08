@@ -16,16 +16,6 @@ main{display:grid;gap:var(--space-7)}
 .empty{margin:0;padding:var(--space-7) var(--space-5);text-align:center;border-top:var(--rule-hair) solid var(--rule);border-bottom:var(--rule-hair) solid var(--rule);font:italic 400 20px/1.4 var(--font-display);color:var(--ink-muted)}
 @media (max-width:720px){.wrap{padding:var(--space-4) var(--space-4) var(--space-8);gap:var(--space-6)}.view{gap:var(--space-7)}}
 
-/* Masthead title doubles as the wardrobe-name input */
-.title-input{display:block;width:100%;min-width:0;margin:0;padding:0;border:0;border-bottom:var(--rule-hair) solid transparent;background:transparent;color:var(--ink);font:inherit;letter-spacing:inherit;font-variation-settings:inherit;text-overflow:ellipsis}
-.title-input:hover{border-bottom-color:var(--rule)}
-.title-input:focus{outline:none;border-bottom-color:var(--oxblood)}
-/* The dek (description) is edited in place too, and grows to fit its text. */
-.dek-input{display:block;width:100%;margin:0;padding:0;border:0;border-bottom:var(--rule-hair) solid transparent;background:transparent;color:inherit;font:inherit;letter-spacing:inherit;resize:none;overflow:hidden;field-sizing:content}
-.dek-input::placeholder{color:var(--ink-muted);opacity:.7}
-.dek-input:hover{border-bottom-color:var(--rule)}
-.dek-input:focus{outline:none;border-bottom-color:var(--oxblood)}
-
 /* Save bar sticks to the bottom right of the page */
 .savebar{position:sticky;bottom:var(--space-4);justify-self:end;z-index:5}
 
