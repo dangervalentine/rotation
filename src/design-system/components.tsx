@@ -211,6 +211,9 @@ export interface GarmentCardProps {
   status?: "owned" | "tobuy" | "sketch";
   worn?: number;
   onSelect?: () => void;
+  /** Makes the whole card a link (the app links to the item's detail page). Takes precedence over `onSelect`. */
+  href?: string;
+  id?: string;
   className?: string;
 }
 
@@ -239,12 +242,13 @@ export function GarmentCard(p: GarmentCardProps) {
       </div>
     </>
   );
+  if (p.href) return <a id={p.id} className={cx("rt-garment", p.className)} href={p.href}>{inner}</a>;
   return p.onSelect ? (
-    <button type="button" className={cx("rt-garment", p.className)} onClick={p.onSelect}>
+    <button type="button" id={p.id} className={cx("rt-garment", p.className)} onClick={p.onSelect}>
       {inner}
     </button>
   ) : (
-    <article className={cx("rt-garment", p.className)}>{inner}</article>
+    <article id={p.id} className={cx("rt-garment", p.className)}>{inner}</article>
   );
 }
 

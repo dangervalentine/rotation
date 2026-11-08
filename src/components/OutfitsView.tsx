@@ -60,7 +60,7 @@ export function OutfitsView({ data, setData }: { data: WardrobeData; setData: (d
         />
         {items.length ? null : (
           <Notice tone="neutral">
-            No pieces yet. Start in <a href="#wardrobe">Wardrobe &amp; costs</a>.
+            No pieces yet. Start in <a href="#wardrobe">Wardrobe</a>.
           </Notice>
         )}
         <LookEditor items={items} look={look} onChange={setLook} onCreateItem={createItem} historyKey={editing ?? "new"} onCreatingChange={setCreating} />

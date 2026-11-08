@@ -9,10 +9,10 @@ import { formatHash, parseHash, VIEW_ORDER, type Route, type ViewId } from "./li
 import { DATA_CHANGED, fingerprint, loadDraft, saveDraft, type Backend } from "./lib/storage.ts";
 import type { WardrobeData } from "./lib/types.ts";
 
-const LABELS: Record<ViewId, string> = { wardrobe: "Wardrobe & costs", outfits: "Outfits", rotation: "Rotation", print: "Print" };
+const LABELS: Record<ViewId, string> = { wardrobe: "Wardrobe", outfits: "Outfits", rotation: "Rotation", print: "Print" };
 /** The masthead's dek says what the current step is for. */
 const DEKS: Record<ViewId, string> = {
-  wardrobe: "Everything you own or mean to buy, and what it all costs.",
+  wardrobe: "Everything you own or mean to buy.",
   outfits: "Put pieces together into looks, and keep the ones you like.",
   rotation: "Plan what to wear each day, for as many days and weeks as you like.",
   print: "Your plan on paper, to pin up by the closet.",
@@ -68,7 +68,7 @@ export function App({ backend, initial }: { backend: Backend; initial: WardrobeD
     const onNav = () => {
       const prev = routeRef.current;
       const next = parseHash(location.hash, looks);
-      if (next.view === prev.view && next.day === prev.day) return;
+      if (next.view === prev.view && next.day === prev.day && next.item === prev.item) return;
       if (prev.day !== null && !bypassGuard.current && closeGuard.current && !closeGuard.current(location.hash)) {
         history.pushState(null, "", formatHash(prev));
         return;
@@ -217,7 +217,7 @@ export function App({ backend, initial }: { backend: Backend; initial: WardrobeD
       </Masthead>
 
       <main>
-        {view === "wardrobe" ? <WardrobeView data={data} setData={setData} backend={backend} /> : null}
+        {view === "wardrobe" ? <WardrobeView data={data} setData={setData} backend={backend} item={route.item} /> : null}
         {view === "outfits" ? <OutfitsView data={data} setData={setData} /> : null}
         {view === "rotation" ? <RotationView data={data} setData={setData} day={route.day} navigate={navigate} exitDay={exitDay} closeGuard={closeGuard} /> : null}
         {view === "print" ? <PrintView data={data} setData={setData} /> : null}

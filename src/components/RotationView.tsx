@@ -168,7 +168,7 @@ export function RotationView({ data, setData, day, navigate, exitDay, closeGuard
         />
         {items.length ? null : (
           <Notice tone="neutral">
-            No pieces yet. Start in <a href="#wardrobe">Wardrobe &amp; costs</a>.
+            No pieces yet. Start in <a href="#wardrobe">Wardrobe</a>.
           </Notice>
         )}
         <p className="lede">Select a day to edit its outfit. Flags mark the same pants, shirt or leather shoes two days running.</p>
