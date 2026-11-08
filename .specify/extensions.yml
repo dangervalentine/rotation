@@ -1,0 +1,62 @@
+# Spec Kit hook chain: running /speckit-specify drives the full SDD cycle.
+#
+#   specify -> plan -> [gate] -> tasks -> analyze -> [gate] -> implement
+#                        |                             |
+#                        +-- open questions? ----------+--> clarify -> plan -> [gate] ...
+#
+# Each after_* hook is mandatory (optional: false), so the agent invokes the
+# next skill automatically. The gate (.claude/skills/speckit-chain-gate) only
+# stops for /speckit-clarify when the spec, plan or analysis has questions
+# worth asking; otherwise it continues straight to the next phase.
+# To stop the chain at a phase, set `enabled: false` on that hook or flip it
+# to `optional: true` to get a prompt instead.
+# /speckit-constitution is a one-time setup step and is not part of the chain.
+installed: []
+settings:
+  auto_execute_hooks: true
+hooks:
+  after_specify:
+    - extension: chain
+      command: speckit.plan
+      enabled: true
+      optional: false
+      priority: 10
+      prompt: Create the implementation plan?
+      description: Generate the technical implementation plan from the spec
+      condition: null
+  after_plan:
+    - extension: chain
+      command: speckit.chain.gate
+      enabled: true
+      optional: false
+      priority: 10
+      prompt: Check for open questions before generating tasks?
+      description: Route to clarify if questions would benefit from answers, otherwise continue to tasks
+      condition: null
+  after_clarify:
+    - extension: chain
+      command: speckit.plan
+      enabled: true
+      optional: false
+      priority: 10
+      prompt: Re-plan with the clarified spec?
+      description: Regenerate the plan so it reflects the clarification answers
+      condition: null
+  after_tasks:
+    - extension: chain
+      command: speckit.analyze
+      enabled: true
+      optional: false
+      priority: 10
+      prompt: Run the cross-artifact consistency analysis?
+      description: Check spec, plan and tasks for gaps and contradictions before implementing
+      condition: null
+  after_analyze:
+    - extension: chain
+      command: speckit.chain.gate
+      enabled: true
+      optional: false
+      priority: 10
+      prompt: Check analysis findings before implementing?
+      description: Route to clarify if analysis surfaced open questions, otherwise continue to implement
+      condition: null
