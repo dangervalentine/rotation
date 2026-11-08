@@ -1,7 +1,7 @@
-import * as RSelect from "@radix-ui/react-select";
 import { figureSvg, VIEWBOX } from "../lib/figure.ts";
-import { findItem } from "../lib/model.ts";
+import { findItem, shortName, SLOTS } from "../lib/model.ts";
 import type { Figure, Item, Look } from "../lib/types.ts";
+import { Swatch as DsSwatch, type Piece, type SelectOption } from "../design-system/index.ts";
 
 export function OutfitFigure({ items, look, width, cartoon, figure }: { items: Item[]; look: Look; width?: number | string; cartoon?: boolean; figure?: Figure }) {
   const label = [look.layer, look.shirt, look.pants, look.shoes]
@@ -19,48 +19,18 @@ export function OutfitFigure({ items, look, width, cartoon, figure }: { items: I
   );
 }
 
+/** Swatch for a wardrobe item (or the empty-slot ring for null). */
 export function Swatch({ it }: { it: Item | null }) {
-  if (!it) return <span className="sw sw-none" aria-hidden="true" />;
-  const bg = it.stripe ? `repeating-linear-gradient(90deg,${it.color} 0 4px,${it.stripe} 4px 6px)` : it.color;
-  return <span className="sw" style={{ background: bg }} aria-hidden="true" />;
+  return <DsSwatch color={it?.color} stripe={it?.stripe} />;
 }
 
-export interface SelectOption {
-  value: string;
-  label: string;
-  swatch?: Item | null;
+/** A look as design-system pieces, one per slot. */
+export function lookPieces(items: Item[], look: Look): Piece[] {
+  return SLOTS.map(([slot]) => {
+    const it = findItem(items, look[slot]);
+    return { slot, name: it ? shortName(it) : null, color: it?.color ?? null, stripe: it?.stripe };
+  });
 }
 
-export function Select({ id, label, value, onChange, options, extra }: { id: string; label: string; value: string; onChange: (v: string) => void; options: SelectOption[]; extra?: React.ReactNode }) {
-  return (
-    <div className="field">
-      <div className="field-head">
-        <label htmlFor={id}>{label}</label>
-        {extra}
-      </div>
-      <RSelect.Root value={value} onValueChange={onChange}>
-        <RSelect.Trigger id={id} className="sel-trigger" aria-label={label}>
-          <RSelect.Value />
-          <RSelect.Icon className="sel-icon">▾</RSelect.Icon>
-        </RSelect.Trigger>
-        <RSelect.Portal>
-          <RSelect.Content className="sel-content" position="popper" sideOffset={4}>
-            <RSelect.Viewport className="sel-viewport">
-              {options.map((o) => (
-                <RSelect.Item key={o.value} value={o.value} className="sel-item">
-                  <RSelect.ItemText>
-                    <span className="sel-row">
-                      {o.swatch !== undefined ? <Swatch it={o.swatch} /> : null}
-                      {o.label}
-                    </span>
-                  </RSelect.ItemText>
-                  <RSelect.ItemIndicator className="sel-check">✓</RSelect.ItemIndicator>
-                </RSelect.Item>
-              ))}
-            </RSelect.Viewport>
-          </RSelect.Content>
-        </RSelect.Portal>
-      </RSelect.Root>
-    </div>
-  );
-}
+/** A select option for an item, with its swatch. */
+export const itemOption = (it: Item): SelectOption => ({ value: it.id, label: shortName(it), swatch: { color: it.color, stripe: it.stripe } });

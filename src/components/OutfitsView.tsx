@@ -1,7 +1,8 @@
 import { useState } from "react";
-import { clone, EMPTY_LOOK, findItem, same, shortName, shuffleLook, uniqueId } from "../lib/model.ts";
+import { Button, Field, LookCard, SectionHead } from "../design-system/index.ts";
+import { clone, EMPTY_LOOK, same, shuffleLook, uniqueId } from "../lib/model.ts";
 import type { Look, Outfit, WardrobeData } from "../lib/types.ts";
-import { OutfitFigure } from "./common.tsx";
+import { lookPieces, OutfitFigure } from "./common.tsx";
 import { LookEditor } from "./LookEditor.tsx";
 
 /** Saved outfit library plus a mix-and-match workspace. */
@@ -42,54 +43,54 @@ export function OutfitsView({ data, setData }: { data: WardrobeData; setData: (d
   }
 
   return (
-    <div className="rot-layout">
-      <section className="panel" aria-labelledby="mm-h">
-        <div className="panel-head">
-          <h2 id="mm-h">Mix and match</h2>
-          <span className="hint">{base ? <>Editing <b>{base.name}</b></> : "Build a look, then save it to your outfits."}</span>
-        </div>
+    <div className="view">
+      <section aria-labelledby="mm-h">
+        <SectionHead
+          id="mm-h"
+          kicker={base ? <>Editing {base.name}</> : "Workspace"}
+          title="Mix and match"
+          aside={<span className="lede">{base ? "Change the pieces, then save." : "Build a look, then save it to your outfits."}</span>}
+        />
         <LookEditor items={items} look={look} onChange={setLook} />
         <div className="actions">
-          <div className="toolbar">
-            <label>
-              Name
-              <input type="text" value={name} placeholder="e.g. Rainy Monday" onChange={(e) => setName(e.target.value)} />
-            </label>
-          </div>
+          <Field className="f-name" label="Name" value={name} placeholder="Rainy Monday" onChange={(e) => setName(e.target.value)} />
           {base ? (
-            <button className="btn primary" onClick={saveExisting} disabled={!dirty}>Save changes to {base.name}</button>
+            <Button variant="primary" onClick={saveExisting} disabled={!dirty}>Save changes to {base.name}</Button>
           ) : null}
-          <button className={"btn" + (base ? "" : " primary")} onClick={saveNew}>Save as new outfit</button>
+          <Button variant={base ? "secondary" : "primary"} onClick={saveNew}>Save as new outfit</Button>
           {base ? (
-            <button className="btn ghost" onClick={() => { setEditing(null); setName(""); }}>Stop editing</button>
+            <Button variant="ghost" onClick={() => { setEditing(null); setName(""); }}>Stop editing</Button>
           ) : null}
         </div>
       </section>
 
-      <section className="panel" aria-labelledby="lib-h">
-        <div className="panel-head">
-          <h2 id="lib-h">Saved outfits</h2>
-          <span className="hint">{outfits.length} saved. Use them from the Rotation tab with “Wear a saved outfit”.</span>
-        </div>
+      <section aria-labelledby="lib-h">
+        <SectionHead
+          id="lib-h"
+          kicker={`${outfits.length} saved`}
+          title="The lookbook"
+          aside={<span className="lede">Wear them from the Rotation tab with “Wear a saved outfit”.</span>}
+        />
         {outfits.length ? (
-          <div className="outfit-grid">
-            {outfits.map((o) => (
-              <article key={o.id} className="outfit-card">
-                <input className="name" value={o.name} aria-label="Outfit name" onChange={(e) => rename(o.id, e.target.value)} />
-                <OutfitFigure items={items} look={o.look} width={110} />
-                <ul>
-                  {(["layer", "shirt", "pants", "shoes"] as const).map((s) => (o.look[s] ? <li key={s}>{shortName(findItem(items, o.look[s]))}</li> : null))}
-                </ul>
-                <div className="actions" style={{ marginTop: 4 }}>
-                  <button className="btn small" onClick={() => edit(o)}>Edit</button>
-                  <button className="btn small" onClick={() => duplicate(o)}>Duplicate</button>
-                  <button className="btn small danger" onClick={() => remove(o.id)}>Delete</button>
-                </div>
-              </article>
+          <div className="look-grid">
+            {outfits.map((o, i) => (
+              <LookCard
+                key={o.id}
+                number={i + 1}
+                selected={o.id === editing}
+                kicker={o.id === editing ? "Editing" : "Look"}
+                name={<input value={o.name} aria-label="Outfit name" onChange={(e) => rename(o.id, e.target.value)} />}
+                figure={<OutfitFigure items={items} look={o.look} />}
+                pieces={lookPieces(items, o.look)}
+              >
+                <Button size="sm" onClick={() => edit(o)}>Edit</Button>
+                <Button size="sm" onClick={() => duplicate(o)}>Duplicate</Button>
+                <Button size="sm" variant="danger" onClick={() => remove(o.id)}>Delete</Button>
+              </LookCard>
             ))}
           </div>
         ) : (
-          <p className="empty">No saved outfits yet. Build one above and save it.</p>
+          <p className="empty">No looks yet. Shuffle a few pieces above and save the one you’d wear.</p>
         )}
       </section>
     </div>

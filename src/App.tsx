@@ -3,6 +3,7 @@ import { OutfitsView } from "./components/OutfitsView.tsx";
 import { PrintView } from "./components/PrintView.tsx";
 import { RotationView } from "./components/RotationView.tsx";
 import { WardrobeView } from "./components/WardrobeView.tsx";
+import { Masthead, SaveBar, Tabs } from "./design-system/index.ts";
 import { clone, same } from "./lib/model.ts";
 import { loadDraft, saveDraft, type Backend } from "./lib/storage.ts";
 import type { WardrobeData } from "./lib/types.ts";
@@ -10,7 +11,7 @@ import type { WardrobeData } from "./lib/types.ts";
 const VIEWS = [
   ["rotation", "Rotation"],
   ["outfits", "Outfits"],
-  ["wardrobe", "Wardrobe and costs"],
+  ["wardrobe", "Wardrobe & costs"],
   ["print", "Print"],
 ] as const;
 type View = (typeof VIEWS)[number][0];
@@ -51,40 +52,43 @@ export function App({ backend, initial }: { backend: Backend; initial: WardrobeD
     }
   }
 
+  const pieces = data.items.length;
+  const meta = (
+    <>
+      {backend.kind === "file" ? <>Local · saving to <b>data/wardrobe.json</b></> : <>Saved in <b>this browser</b></>}
+      {" · "}
+      {pieces} {pieces === 1 ? "piece" : "pieces"} · {data.rotation.days.length * data.rotation.weeks} days
+    </>
+  );
+
   return (
     <div className="wrap">
-      <header>
-        <div className="titles">
-          <input className="title-input" value={data.title} aria-label="Wardrobe name" onChange={(e) => setData({ ...data, title: e.target.value })} />
-          {data.subtitle ? <p className="sub">{data.subtitle}</p> : null}
-          <span className="mode">
-            <span className={"dot " + backend.kind} />
-            {backend.kind === "file" ? <>Local mode, saving to <b>data/wardrobe.json</b></> : <>Saved in <b>this browser</b></>}
-          </span>
-        </div>
-        <nav className="tabs" aria-label="Views">
-          {VIEWS.map(([v, label]) => (
-            <a key={v} href={"#" + v} className={"tab" + (view === v ? " on" : "")} aria-current={view === v ? "page" : undefined}>
-              {label}
-            </a>
-          ))}
-        </nav>
-      </header>
+      <Masthead
+        className="no-print"
+        meta={meta}
+        title={<input className="title-input" value={data.title} aria-label="Wardrobe name" onChange={(e) => setData({ ...data, title: e.target.value })} />}
+        dek={data.subtitle || undefined}
+      >
+        <Tabs label="Views" value={view} items={VIEWS.map(([id, label]) => ({ id, label, href: "#" + id }))} />
+      </Masthead>
 
-      {view === "rotation" ? <RotationView data={data} setData={setData} /> : null}
-      {view === "outfits" ? <OutfitsView data={data} setData={setData} /> : null}
-      {view === "wardrobe" ? <WardrobeView data={data} setData={setData} backend={backend} /> : null}
-      {view === "print" ? <PrintView data={data} setData={setData} /> : null}
+      <main>
+        {view === "rotation" ? <RotationView data={data} setData={setData} /> : null}
+        {view === "outfits" ? <OutfitsView data={data} setData={setData} /> : null}
+        {view === "wardrobe" ? <WardrobeView data={data} setData={setData} backend={backend} /> : null}
+        {view === "print" ? <PrintView data={data} setData={setData} /> : null}
+      </main>
 
-      <div className="savebar" role="region" aria-label="Save">
-        <span className={"status " + (status.kind || (dirty ? "dirty" : "saved"))}>{status.text || (dirty ? "Unsaved changes" : "All changes saved")}</span>
-        <button className="btn" onClick={() => { setData(clone(saved)); setStatus({ text: "", kind: "" }); }} disabled={!dirty}>
-          Discard unsaved changes
-        </button>
-        <button className="btn primary" onClick={save} disabled={!dirty}>
-          Save changes
-        </button>
-      </div>
+      <SaveBar
+        className="savebar"
+        dirty={dirty}
+        error={status.kind === "dirty"}
+        message={status.text || undefined}
+        discardLabel="Discard changes"
+        saveLabel="Save changes"
+        onDiscard={() => { setData(clone(saved)); setStatus({ text: "", kind: "" }); }}
+        onSave={save}
+      />
     </div>
   );
 }

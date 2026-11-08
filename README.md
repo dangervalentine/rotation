@@ -22,12 +22,16 @@ Both modes have the same save bar. Unsaved edits are kept as a draft in the brow
 On the Wardrobe tab, **Export / Import JSON** moves data between modes and devices. Files in the original single-file format import too.
 `npm run preview` serves the built site, so you can try the published (browser) mode locally.
 
+## Design system
+
+The app is styled by **Rotation**, an editorial menswear design system: ink on newsprint, Bodoni headlines, tracked uppercase labels, hairline rules and one oxblood accent, with light and dark themes. Tokens live in `design-system/tokens.json`; components and styles in `src/design-system/`. See [`design-system/README.md`](design-system/README.md) for the rules, and run `npm run tokens` after editing tokens.
+
 ## Views
 
 - **Rotation**: any days per week (comma-separated names) and 1–8 weeks. It flags same pants, shirt or leather shoes on back-to-back days. **Generate rotation** fills every day, spreading wear evenly and avoiding those repeats.
 - **Outfits**: a mix-and-match workspace. Shuffle the pieces you didn't mark "keep", or use "Try every" to see one slot swapped through every item. Save looks to a library, then wear them on any rotation day.
 - **Wardrobe and costs**: items, costs, owned vs. to buy, and how many days each item is worn. **Add from link** fills in an item from a product URL.
-- **Print**: the rotation as cartoon figures, one landscape page per week. You can set skin tone, hair color and hair style.
+- **Print**: the rotation as cartoon figures on an editorial sheet, one landscape page per week. You can set skin tone, hair color and hair style.
 
 ## Add from link
 
@@ -42,4 +46,4 @@ A look is `{ layer, shirt, belt, pants, shoes }`, each an item id or null.
 
 ## Scripts
 
-`npm test` (Vitest: model rules, generator, URL parsing) · `npm run typecheck` · `npm run build`
+`npm test` (Vitest: model rules, generator, URL parsing, design tokens) · `npm run tokens` · `npm run typecheck` · `npm run build`
