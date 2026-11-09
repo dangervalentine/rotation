@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "savedAt": 1794169509574,
+  "savedAt": 1794234854828,
   "title": "Workweek Wardrobe",
   "subtitle": "",
   "items": [
@@ -112,7 +112,7 @@
       "qty": 1,
       "owned": false,
       "link": "https://www.levi.com/US/en_US/clothing/men/jeans/straight/501-original-mens-jeans/p/005010101",
-      "image": "https://lsco.scene7.com/is/image/lsco/005010101-front-pdp"
+      "image": "https://lscoglobal.scene7.com/is/image/lscoglobal/MB_00501-0101_GLO_CM_D1?fmt=webp&qlt=70&resMode=sharp2&fit=crop,1&op_usm=0.6,0.6,8&wid=1760&hei=1760"
     },
     {
       "id": "stone",
@@ -159,7 +159,8 @@
       "price": 198,
       "qty": 1,
       "owned": false,
-      "link": "https://www.spierandmackay.com/product/product-detail/charcoal-flannel-ellis-trousers-cashmere"
+      "link": "https://www.spierandmackay.com/product/product-detail/charcoal-flannel-ellis-trousers-cashmere",
+      "image": "https://rwt-storage.s3.ca-central-1.amazonaws.com/_Product%20Images/SM-Charcoal%20Flannel%20Ellis%20Trousers-17707-TR-EL01_002-model-1438x1648.webp"
     },
     {
       "id": "belt-black",
@@ -223,9 +224,9 @@
     },
     {
       "id": "socks-white",
-      "cat": "other",
+      "cat": "basics",
       "name": "Darn Tough socks, white",
-      "style": "other",
+      "style": "socks",
       "color": "#f4f4f4",
       "price": 24,
       "qty": 5,
@@ -235,9 +236,9 @@
     },
     {
       "id": "socks-black",
-      "cat": "other",
+      "cat": "basics",
       "name": "Darn Tough socks, black",
-      "style": "other",
+      "style": "socks",
       "color": "#222222",
       "price": 24,
       "qty": 5,
@@ -247,9 +248,9 @@
     },
     {
       "id": "undershirt",
-      "cat": "other",
+      "cat": "undershirt",
       "name": "Uniqlo AIRism undershirt",
-      "style": "other",
+      "style": "crew",
       "color": "#ffffff",
       "price": 14.9,
       "qty": 5,
@@ -277,6 +278,7 @@
       "look": {
         "layer": null,
         "shirt": "polo",
+        "undershirt": null,
         "belt": "belt-brown",
         "pants": "olive",
         "shoes": "sneakers"
@@ -288,6 +290,7 @@
       "look": {
         "layer": "blazer",
         "shirt": "white-ox",
+        "undershirt": null,
         "belt": "belt-black",
         "pants": "wool",
         "shoes": "beckman"
@@ -299,6 +302,7 @@
       "look": {
         "layer": "sweater",
         "shirt": "chambray",
+        "undershirt": null,
         "belt": "belt-brown",
         "pants": "stone",
         "shoes": "sneakers"
@@ -318,6 +322,7 @@
       {
         "layer": null,
         "shirt": "white-ox",
+        "undershirt": null,
         "belt": "belt-brown",
         "pants": "jeans",
         "shoes": "iron-ranger"
@@ -325,6 +330,7 @@
       {
         "layer": "sweater",
         "shirt": "chambray",
+        "undershirt": null,
         "belt": "belt-brown",
         "pants": "stone",
         "shoes": "sneakers"
@@ -332,6 +338,7 @@
       {
         "layer": null,
         "shirt": "blue-ox",
+        "undershirt": null,
         "belt": "belt-black",
         "pants": "wool",
         "shoes": "beckman"
@@ -339,6 +346,7 @@
       {
         "layer": "sweater",
         "shirt": "pink-ox",
+        "undershirt": null,
         "belt": "belt-brown",
         "pants": "navy-chino",
         "shoes": "iron-ranger"
@@ -346,6 +354,7 @@
       {
         "layer": null,
         "shirt": "polo",
+        "undershirt": null,
         "belt": "belt-brown",
         "pants": "olive",
         "shoes": "sneakers"
@@ -353,6 +362,7 @@
       {
         "layer": "sweater",
         "shirt": "bstripe-ox",
+        "undershirt": null,
         "belt": "belt-black",
         "pants": "jeans",
         "shoes": "beckman"
@@ -360,6 +370,7 @@
       {
         "layer": null,
         "shirt": "white-ox",
+        "undershirt": null,
         "belt": "belt-brown",
         "pants": "stone",
         "shoes": "iron-ranger"
@@ -367,6 +378,7 @@
       {
         "layer": "sweater",
         "shirt": "pink-ox",
+        "undershirt": null,
         "belt": "belt-black",
         "pants": "wool",
         "shoes": "beckman"
@@ -374,6 +386,7 @@
       {
         "layer": null,
         "shirt": "chambray",
+        "undershirt": null,
         "belt": "belt-brown",
         "pants": "navy-chino",
         "shoes": "iron-ranger"
@@ -381,6 +394,7 @@
       {
         "layer": null,
         "shirt": "blue-ox",
+        "undershirt": null,
         "belt": "belt-brown",
         "pants": "olive",
         "shoes": "sneakers"
@@ -390,6 +404,7 @@
   "figure": {
     "skin": "#f8d9c0",
     "hair": "#ea732a",
-    "hairStyle": "short"
+    "hairStyle": "none",
+    "show": "faceless"
   }
 }

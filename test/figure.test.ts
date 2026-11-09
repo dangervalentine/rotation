@@ -118,6 +118,17 @@ describe("accessories on the figure", () => {
   const acc = (style: string, color = "#123456") => item("other", style, { color });
   const fig = { skin: "#d9a07a", hair: "#2a1d14", hairStyle: "short" as const };
 
+  it("leaves the face off a faceless figure but keeps the head and hair", () => {
+    const fig = { skin: "#d9a07a", hair: "#2a1d14", hairStyle: "short" as const };
+    const face = figureSvg([], EMPTY_LOOK, { cartoon: true, figure: fig });
+    const blank = figureSvg([], EMPTY_LOOK, { cartoon: true, figure: { ...fig, show: "faceless" } });
+    expect(face).toContain("#f19aa6");
+    expect(blank).not.toContain("#f19aa6");
+    expect(blank).not.toContain('r="0.6"');
+    expect(blank).toContain("#d9a07a");
+    expect(blank).toContain("#2a1d14");
+  });
+
   it("puts head-worn accessories on the cartoon only", () => {
     for (const style of ["glasses", "sunglasses", "hat"]) {
       const items = [...base, acc(style)];

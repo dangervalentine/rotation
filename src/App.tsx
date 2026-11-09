@@ -3,20 +3,13 @@ import { OutfitsView } from "./components/OutfitsView.tsx";
 import { PrintView } from "./components/PrintView.tsx";
 import { RotationView } from "./components/RotationView.tsx";
 import { WardrobeView } from "./components/WardrobeView.tsx";
-import { ConfirmDialog, Masthead, SaveBar, Segmented, Tabs } from "./design-system/index.ts";
+import { Button, ConfirmDialog, Masthead, Segmented, Tabs } from "./design-system/index.ts";
 import { clone, same } from "./lib/model.ts";
 import { formatHash, parseHash, VIEW_ORDER, type Route, type ViewId } from "./lib/route.ts";
 import { DATA_CHANGED, fingerprint, loadDraft, saveDraft, type Backend } from "./lib/storage.ts";
 import type { WardrobeData } from "./lib/types.ts";
 
 const LABELS: Record<ViewId, string> = { wardrobe: "Wardrobe", outfits: "Outfits", rotation: "Rotation", print: "Print" };
-/** The masthead's dek says what the current step is for. */
-const DEKS: Record<ViewId, string> = {
-  wardrobe: "Everything you own or mean to buy.",
-  outfits: "Put pieces together into looks, and keep the ones you like.",
-  rotation: "Plan what to wear each day, for as many days and weeks as you like.",
-  print: "Your plan on paper, to pin up by the closet.",
-};
 const content = (d: WardrobeData) => ({ ...d, savedAt: 0 });
 
 type Theme = "system" | "light" | "dark";
@@ -24,6 +17,8 @@ const THEME_KEY = "wardrobe-rotation:theme"; // read before first paint by the s
 
 /** Why the saved version on disk turned out to differ from the one the unsaved edits were made against. */
 type Conflict = "startup" | "focus" | "save";
+/** Edits are saved this long after the last change, so a run of quick changes is written once. */
+const AUTOSAVE_MS = 500;
 
 export function App({ backend, initial }: { backend: Backend; initial: WardrobeData }) {
   const [saved, setSaved] = useState(initial);
@@ -102,6 +97,7 @@ export function App({ backend, initial }: { backend: Backend; initial: WardrobeD
       navigate({ view: "rotation", day: null }, "replace");
     }
   }
+  // Until a change is saved it is also kept as a draft, so a failed save or a closed tab doesn't lose it.
   useEffect(() => saveDraft(savedPrint, dirty ? data : null), [data, dirty, savedPrint]);
 
   // Coming back to the tab (or, in development, the data file changing): pick up changes made elsewhere.
@@ -155,9 +151,18 @@ export function App({ backend, initial }: { backend: Backend; initial: WardrobeD
     return () => window.removeEventListener("beforeunload", warn);
   }, [dirty]);
 
+  // Every change saves itself. Not while a conflict is open, and not again for the same data after a failure (Retry does that).
+  const saving = useRef(false);
+  const failedFor = useRef<WardrobeData | null>(null);
+  useEffect(() => {
+    if (!dirty || conflict || saving.current || failedFor.current === data) return;
+    const t = setTimeout(() => save(), AUTOSAVE_MS);
+    return () => clearTimeout(t);
+  }, [data, saved, dirty, conflict]);
+
   async function save(force = false) {
     const next = { ...data, savedAt: Date.now() };
-    setStatus({ text: "Saving…", kind: "" });
+    saving.current = true;
     checking.current = true; // our own write must not look like a change made elsewhere
     try {
       // Never overwrite a version this tab hasn't seen without asking.
@@ -171,37 +176,41 @@ export function App({ backend, initial }: { backend: Backend; initial: WardrobeD
         }
       }
       await backend.save(next);
-      saveDraft("", null);
+      // Only `saved` moves: edits made while the write was in flight stay in `data` and save next.
+      failedFor.current = null;
       setSaved(next);
-      setData(next);
       setStatus({ text: "", kind: "" });
     } catch (e) {
+      failedFor.current = data;
       setStatus({ text: "Couldn't save: " + String((e as Error)?.message || e), kind: "dirty" });
     } finally {
+      saving.current = false;
       checking.current = false;
     }
   }
 
   function loadNewer() {
     setConflict(null);
-    showLoaded(clone(saved), "Loaded the newer version. Your unsaved changes were discarded.");
+    showLoaded(clone(saved), "Loaded the newer version. Your unsaved changes were dropped.");
+  }
+  function keepMine() {
+    setConflict(null);
+    save(true);
   }
 
   const where = backend.kind === "file" ? "data/wardrobe.json" : "this browser";
   const changedText = backend.kind === "file" ? "data/wardrobe.json changed on disk." : "Your wardrobe changed in another tab.";
   const conflictText: Record<Conflict, string> = {
-    startup: "Your unsaved changes were made against an older version of " + where + ". Keep working on them, or load the newer version and discard them?",
-    focus: changedText + " You have unsaved changes. Keep working on them, or load the newer version and discard them?",
-    save: changedText + " Saving now would replace that newer version with yours.",
+    startup: "Your unsaved changes were made against an older version of " + where + ". Keep yours and save them over it, or load the newer version and drop yours?",
+    focus: changedText + " You have unsaved changes. Keep yours and save them over it, or load the newer version and drop yours?",
+    save: changedText + " Keep yours and save them over it, or load the newer version and drop yours?",
   };
 
-  const pieces = data.items.length;
+  // Saving is quiet; the bar only speaks up when a save fails.
   const meta = (
-    <>
-      {backend.kind === "file" ? <>Local · saving to <b>data/wardrobe.json</b></> : <>Saved in <b>this browser</b></>}
-      {" · "}
-      {pieces} {pieces === 1 ? "piece" : "pieces"} · {data.rotation.days.length * data.rotation.weeks} days
-    </>
+    <span className="save-status is-error" role="status">
+      {status.kind === "dirty" ? <>{status.text} <Button variant="ghost" size="sm" onClick={() => save()}>Retry</Button></> : null}
+    </span>
   );
 
   return (
@@ -209,8 +218,6 @@ export function App({ backend, initial }: { backend: Backend; initial: WardrobeD
       <Masthead
         className="no-print"
         meta={meta}
-        title="Rotation"
-        dek={DEKS[view]}
         tools={<Segmented label="Theme" options={[["system", "Auto"], ["light", "Light"], ["dark", "Dark"]]} value={theme} onChange={setTheme} />}
       >
         <Tabs label="Views" value={view} items={VIEW_ORDER.map((id, i) => ({ id, label: LABELS[id], href: "#" + id, step: (i + 1) as 1 | 2 | 3 | 4 }))} />
@@ -223,34 +230,16 @@ export function App({ backend, initial }: { backend: Backend; initial: WardrobeD
         {view === "print" ? <PrintView data={data} setData={setData} /> : null}
       </main>
 
-      <SaveBar
-        className="savebar"
-        dirty={dirty}
-        error={status.kind === "dirty"}
-        message={status.text || undefined}
-        discardLabel="Discard changes"
-        saveLabel="Save changes"
-        onDiscard={() => { setData(clone(saved)); setStatus({ text: "", kind: "" }); }}
-        onSave={() => save()}
-      />
-
       <ConfirmDialog
         open={conflict !== null}
-        onOpenChange={(o) => { if (!o) setConflict(null); }}
         title={conflict === "save" ? "A newer version is saved" : "The saved wardrobe changed"}
         description={conflict ? conflictText[conflict] : ""}
-        actions={
-          conflict === "save"
-            ? [
-                { label: "Save mine anyway", variant: "danger", onSelect: () => { setConflict(null); save(true); } },
-                { label: "Load the newer version", onSelect: loadNewer },
-                { label: "Cancel", variant: "ghost", onSelect: () => setConflict(null) },
-              ]
-            : [
-                { label: "Load the newer version", onSelect: loadNewer },
-                { label: "Keep my changes", variant: "primary", onSelect: () => setConflict(null) },
-              ]
-        }
+        // Escape or closing keeps your changes, which autosave then writes over the newer version.
+        onOpenChange={(o) => { if (!o) setConflict(null); }}
+        actions={[
+          { label: "Load the newer version", onSelect: loadNewer },
+          { label: "Keep mine", variant: "primary", onSelect: keepMine },
+        ]}
       />
     </div>
   );

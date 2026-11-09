@@ -1,9 +1,9 @@
 import { useEffect, useRef, useState, type RefObject } from "react";
-import { Button, ConfirmDialog, Field, Kicker, Notice, RotationDay, SectionHead, Select, Sheet } from "../design-system/index.ts";
+import { Button, ConfirmDialog, Field, Kicker, Notice, RotationDay, Select, Sheet } from "../design-system/index.ts";
 import { clone, dayLabel, dayWarnings, generateRotation, resizeRotation, same, uniqueId } from "../lib/model.ts";
 import type { Route } from "../lib/route.ts";
 import type { Item, Look, WardrobeData } from "../lib/types.ts";
-import { lookPieces, OutfitFigure } from "./common.tsx";
+import { lookPieces, OutfitFigure, PageHead } from "./common.tsx";
 import { LookEditor } from "./LookEditor.tsx";
 
 const PICK = "__pick";
@@ -134,38 +134,30 @@ export function RotationView({ data, setData, day, navigate, exitDay, closeGuard
   }
 
   const shown = rot.looks.map((l, i) => (i === cur ? draft : l));
-  const span = rot.weeks === 1 ? "One-week" : rot.weeks === 2 ? "Two-week" : `${rot.weeks}-week`;
   const prev = (cur + total - 1) % total;
   const next = (cur + 1) % total;
 
   return (
     <div className="view">
-      <section aria-labelledby="rot-h">
-        <SectionHead
-          id="rot-h"
-          number={3}
-          kicker={`${per} days × ${rot.weeks} ${rot.weeks === 1 ? "week" : "weeks"}`}
-          title={`The ${span.toLowerCase()} rotation`}
-          aside={
-            <>
-              <Field
-                className="f-days"
-                label="Days, comma separated"
-                value={daysText}
-                onChange={(e) => setDaysText(e.target.value)}
-                onBlur={() => {
-                  const days = daysText.split(",").map((d) => d.trim()).filter(Boolean);
-                  if (!same(days, rot.days)) setShape(days, rot.weeks);
-                }}
-              />
-              <Field className="f-weeks" label="Weeks" type="number" min={1} max={8} value={rot.weeks} onChange={(e) => setShape(rot.days, Math.min(8, Math.max(1, +e.target.value || 1)))} />
-              {/* One accent per screen: while a day is open, its Apply button is the primary action. */}
-              <Button variant={open ? "secondary" : "primary"} onClick={generate} title="Fill every day, spreading wear evenly and avoiding repeats">
-                Generate rotation
-              </Button>
-            </>
-          }
-        />
+      <section aria-label="The rotation">
+        <PageHead view="rotation" />
+        <div className="rot-controls">
+          <Field
+            className="f-days"
+            label="Days, comma separated"
+            value={daysText}
+            onChange={(e) => setDaysText(e.target.value)}
+            onBlur={() => {
+              const days = daysText.split(",").map((d) => d.trim()).filter(Boolean);
+              if (!same(days, rot.days)) setShape(days, rot.weeks);
+            }}
+          />
+          <Field className="f-weeks" label="Weeks" type="number" min={1} max={8} value={rot.weeks} onChange={(e) => setShape(rot.days, Math.min(8, Math.max(1, +e.target.value || 1)))} />
+          {/* One accent per screen: while a day is open, its Apply button is the primary action. */}
+          <Button variant={open ? "secondary" : "primary"} onClick={generate} title="Fill every day, spreading wear evenly and avoiding repeats">
+            Generate rotation
+          </Button>
+        </div>
         {items.length ? null : (
           <Notice tone="neutral">
             No pieces yet. Start in <a href="#wardrobe">Wardrobe</a>.

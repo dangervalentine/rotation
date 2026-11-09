@@ -37,7 +37,7 @@ export const PIECE_VIEWBOX: Record<Slot, string> = {
   undershirt: "10 20 100 100",
   belt: "30 101 60 20",
   pants: "16 104 88 82",
-  shoes: "14 164 92 34",
+  shoes: "20 160 80 36",
 };
 
 /** Styles that reach past their slot's usual crop. */

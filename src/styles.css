@@ -17,7 +17,7 @@ main{display:grid;gap:var(--space-7)}
 @media (max-width:720px){.wrap{padding:var(--space-4) var(--space-4) var(--space-8);gap:var(--space-6)}.view{gap:var(--space-7)}}
 
 /* Save bar sticks to the bottom right of the page */
-.savebar{position:sticky;bottom:var(--space-4);justify-self:end;z-index:5}
+.save-status.is-error{color:var(--oxblood)}
 
 /* ---------- Rotation ---------- */
 .f-days{width:240px}
@@ -126,12 +126,12 @@ tbody tr:not(.cat):not(.tot):hover td{background:var(--paper-raised)}
 .thumb{width:28px;height:35px;object-fit:cover;border:var(--rule-hair) solid var(--rule);flex:none}
 
 /* ---------- Print ---------- */
-.print-controls{display:flex;flex-wrap:wrap;gap:var(--space-5) var(--space-6);align-items:flex-end;margin-bottom:var(--space-4)}
+.print-controls,.rot-controls{display:flex;flex-wrap:wrap;gap:var(--space-5) var(--space-6);align-items:flex-end;margin-bottom:var(--space-4)}
 .skin-row{display:flex;gap:var(--space-2);align-items:center;height:40px}
 .skin{appearance:none;width:24px;height:24px;padding:0;border:0;border-radius:var(--radius-full);box-shadow:inset 0 0 0 1px rgba(128,124,116,.6);cursor:pointer}
 .skin[aria-pressed="true"]{outline:2px solid var(--oxblood);outline-offset:2px}
-.f-color{width:72px}
 .f-hair{width:150px}
+.f-show{width:160px}
 
 .sheet{display:grid;gap:var(--space-8)}
 .cpage{display:grid;gap:var(--space-5);background:var(--paper-raised);border:var(--rule-hair) solid var(--rule);padding:var(--space-6)}
@@ -142,7 +142,10 @@ tbody tr:not(.cat):not(.tot):hover td{background:var(--paper-raised)}
 .cday{display:grid;justify-items:center;align-content:start;gap:var(--space-2);padding:var(--space-2) var(--space-3) var(--space-3);border-left:var(--rule-hair) solid var(--rule);break-inside:avoid}
 .cday:first-child{border-left:0}
 .cday .dname{justify-self:stretch;padding-bottom:var(--space-2);border-bottom:var(--rule-hair) solid var(--rule);font:600 24px/1 var(--font-display);text-align:center}
-.cday ul{margin:0;padding:0;list-style:none;font:400 12px/17px var(--font-sans);text-align:center;color:var(--ink-muted)}
+.cday ul{max-width:100%;margin:0;padding:0;list-style:none;font:400 12px/17px var(--font-sans);color:var(--ink-muted)}
+.cday li{display:flex;align-items:center;gap:4px;min-width:0}
+.cday li span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.cpiece{flex:none;width:1.5em;height:1.5em}
 @media (max-width:900px){.cdays{grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--space-4) 0}.cday:nth-child(odd){border-left:0}}
 
 @media print{
@@ -150,7 +153,7 @@ tbody tr:not(.cat):not(.tot):hover td{background:var(--paper-raised)}
   :root{color-scheme:light}
   body{background:#fff}
   .wrap{padding:0;max-width:none;gap:0}
-  .no-print,.savebar{display:none!important}
+  .no-print{display:none!important}
   .view{gap:0}
   .sheet{gap:0}
   /* Sized for the shorter of A4 and Letter landscape: ~190mm of height inside the margins. */
@@ -166,11 +169,12 @@ tbody tr:not(.cat):not(.tot):hover td{background:var(--paper-raised)}
   .cday:first-child{border-left:0}
   .cday .dname{padding-bottom:1mm;font-size:14px}
   /* The figure is sized by height so each row of weeks shares the page: the page less the footer mark, split by rows, minus the day name and labels. */
-  .cday svg{width:auto;max-width:100%;height:calc((176mm - (var(--rows,2) - 1) * 4mm) / var(--rows,2) - 28mm)}
+  .cday>svg{width:auto;max-width:100%;height:calc((176mm - (var(--rows,2) - 1) * 4mm) / var(--rows,2) - 28mm)}
   .cday ul{justify-self:stretch;font-size:9px;line-height:12px}
-  .cday li{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 }
 .view>*{min-width:0}
+/* A page head straight in the view (not inside its first section) is spaced by the view's gap. */
+.view>.rt-shead{margin-bottom:0}
 
 /* Accessories row in the outfit builder: chips for what's on, then a picker to add more. */
 .piece-row.is-acc{display:grid;gap:var(--space-2)}

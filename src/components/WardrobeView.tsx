@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import { Button, Checkbox, Field, GarmentCard, Kicker, Notice, Segmented, SectionHead, Select, Stat, Tag, TextArea } from "../design-system/index.ts";
+import { Button, Checkbox, ConfirmDialog, Field, GarmentCard, Kicker, Notice, Segmented, SectionHead, Select, Stat, Tag, TextArea } from "../design-system/index.ts";
 import { CATEGORIES, clone, daysWorn, EMPTY_LOOK, isSlot, migrate, money, shortName, SLOTS, STYLES, uniqueId, wardrobeTotals } from "../lib/model.ts";
 import type { ProductGuess } from "../lib/productParse.ts";
 import { itemHash } from "../lib/route.ts";
@@ -8,7 +8,7 @@ import type { Backend } from "../lib/storage.ts";
 import { downloadJson, sampleData } from "../lib/storage.ts";
 import { cleanDetails, DETAIL_KEYS, detailOptions, detailsOf } from "../lib/styles.ts";
 import type { Category, Item, Look, WardrobeData } from "../lib/types.ts";
-import { ItemArt, Swatch } from "./common.tsx";
+import { ItemArt, PageHead, Swatch } from "./common.tsx";
 import { DetailFields } from "./DetailFields.tsx";
 
 /** Whole dollars for headline figures ("$2,885"). */
@@ -124,6 +124,7 @@ function ItemDetail({ it, data, onSave, onDelete, promoteButtons }: { it: Item; 
   const label = CATEGORIES.find(([c]) => c === it.cat)?.[1] ?? it.cat;
   return (
     <div className="view">
+      <PageHead view="wardrobe" />
       <a className="backlink" href="#wardrobe">← Wardrobe</a>
       <section className="detail" aria-labelledby="i-h">
         <GarmentCard
@@ -179,6 +180,8 @@ export function WardrobeView({ data, setData, backend, item }: { data: WardrobeD
   const [url, setUrl] = useState("");
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState("");
+  /** A whole-wardrobe replacement waiting for a yes: changes save at once, so these ask first. */
+  const [replacing, setReplacing] = useState<{ title: string; label: string; next: WardrobeData; done: string } | null>(null);
   const [layout, setLayout] = useState<"table" | "cards">("table");
   const fileRef = useRef<HTMLInputElement>(null);
   const totals = useMemo(() => wardrobeTotals(items), [items]);
@@ -234,8 +237,7 @@ export function WardrobeView({ data, setData, backend, item }: { data: WardrobeD
   async function importFile(file: File) {
     try {
       const next = migrate(JSON.parse(await file.text()));
-      setData({ ...next, savedAt: data.savedAt });
-      setMsg(`Loaded ${next.items.length} items from ${file.name}. Save to keep them.`);
+      setReplacing({ title: `Replace your wardrobe with ${file.name}?`, label: "Import", next: { ...next, savedAt: data.savedAt }, done: `Loaded ${next.items.length} items from ${file.name}.` });
     } catch (e) {
       setMsg("That file isn't a wardrobe file: " + String((e as Error).message));
     }
@@ -292,25 +294,22 @@ export function WardrobeView({ data, setData, backend, item }: { data: WardrobeD
   const plural = (n: number, one: string, many: string) => `${n} ${n === 1 ? one : many}`;
   return (
     <div className="view">
+      <PageHead
+        view="wardrobe"
+        aside={
+          <>
+            <Segmented label="Show as" options={[["table", "Table"], ["cards", "Cards"]]} value={layout} onChange={setLayout} />
+            <Button variant="primary" onClick={() => { setNote(""); setEditing({ isNew: true, item: BLANK }); }}>Add an item</Button>
+          </>
+        }
+      />
       <div className="stats">
         <Stat value={real} label="In the collection" note={sketches.length ? `Plus ${plural(sketches.length, "sketch", "sketches")}` : undefined} />
         <Stat value={owned} label="Owned" note={real - owned ? `${real - owned} still to buy` : "Nothing left to buy"} />
         <Stat value={dollars(totals.all)} label="Value" note={toBuy ? `${dollars(toBuy)} of it still to buy` : undefined} />
       </div>
 
-      <section aria-labelledby="w-h">
-        <SectionHead
-          id="w-h"
-          number={1}
-          kicker="Collection"
-          title="Wardrobe"
-          aside={
-            <>
-              <Segmented label="Show as" options={[["table", "Table"], ["cards", "Cards"]]} value={layout} onChange={setLayout} />
-              <Button variant="primary" onClick={() => { setNote(""); setEditing({ isNew: true, item: BLANK }); }}>Add an item</Button>
-            </>
-          }
-        />
+      <section aria-label="Collection">
         <form className="urlbar" onSubmit={fromUrl}>
           <Field type="url" label="Add from a product link" placeholder="Paste a link to fill in an item" value={url} onChange={(e) => setUrl(e.target.value)} />
           <Button type="submit" disabled={busy || !url.trim()}>{busy ? "Reading…" : "Add from link"}</Button>
@@ -461,10 +460,20 @@ export function WardrobeView({ data, setData, backend, item }: { data: WardrobeD
           <Button onClick={() => downloadJson(data)}>Export JSON</Button>
           <Button onClick={() => fileRef.current?.click()}>Import JSON</Button>
           <input ref={fileRef} type="file" accept="application/json,.json" hidden onChange={(e) => { const f = e.target.files?.[0]; if (f) importFile(f); e.target.value = ""; }} />
-          <Button variant="ghost" onClick={() => { setData({ ...sampleData(), savedAt: data.savedAt }); setMsg("Loaded the sample wardrobe. Save to keep it."); }}>Load sample wardrobe</Button>
-          <Button variant="danger" onClick={() => { setData({ ...data, items: [], outfits: [], rotation: { ...rot, looks: rot.looks.map(() => clone(EMPTY_LOOK)) } }); setMsg("Cleared. Save to keep the empty wardrobe, or discard to undo."); }}>Start empty</Button>
+          <Button variant="ghost" onClick={() => setReplacing({ title: "Replace your wardrobe with the sample?", label: "Load sample", next: { ...sampleData(), savedAt: data.savedAt }, done: "Loaded the sample wardrobe." })}>Load sample wardrobe</Button>
+          <Button variant="danger" onClick={() => setReplacing({ title: "Clear your wardrobe?", label: "Start empty", next: { ...data, items: [], outfits: [], rotation: { ...rot, looks: rot.looks.map(() => clone(EMPTY_LOOK)) } }, done: "Cleared. You're starting empty." })}>Start empty</Button>
         </div>
         {msg ? <Notice tone="neutral">{msg}</Notice> : null}
+        <ConfirmDialog
+          open={replacing !== null}
+          onOpenChange={(o) => { if (!o) setReplacing(null); }}
+          title={replacing?.title ?? ""}
+          description={`This removes your ${items.length} ${items.length === 1 ? "piece" : "pieces"}, outfits and rotation, and saves straight away. Export JSON first if you want a copy.`}
+          actions={[
+            { label: replacing?.label ?? "Replace", variant: "danger", onSelect: () => { if (replacing) { setData(replacing.next); setMsg(replacing.done); } setReplacing(null); } },
+            { label: "Cancel", variant: "ghost", onSelect: () => setReplacing(null) },
+          ]}
+        />
       </section>
     </div>
   );

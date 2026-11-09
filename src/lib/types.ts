@@ -53,11 +53,15 @@ export interface Rotation {
 }
 
 export type HairStyle = "short" | "long" | "bun" | "curly" | "none";
+/** How much of the person the printed figure shows: a full cartoon, a cartoon with a blank face, or just the outfit on the plain mannequin. */
+export type FigureShow = "face" | "faceless" | "outfit";
 
 export interface Figure {
   skin: string;
   hair: string;
   hairStyle: HairStyle;
+  /** Missing means "face". */
+  show?: FigureShow;
 }
 
 export interface WardrobeData {

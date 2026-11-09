@@ -138,36 +138,52 @@ export function Tabs({ items, value, onChange, numbered = true, label = "Section
 
 /* ---------- Masthead ---------- */
 
-export function Masthead({ title, section = "The Wardrobe", meta, tools, dek, children, className }: { title: ReactNode; section?: ReactNode; meta?: ReactNode; /** Small controls at the end of the top line (e.g. the theme switch). */ tools?: ReactNode; dek?: ReactNode; children?: ReactNode; className?: string }) {
+/**
+ * The nav bar renders beside the header, not inside it, so it can stay stuck to the top
+ * of the page after the title scrolls away.
+ */
+export function Masthead({ title, meta, tools, dek, children, className }: { /** Omit to render the bar alone, when each view opens with its own `SectionHead level={1}`. */ title?: ReactNode; /** A short status line in the bar, before the tools (e.g. a save error). */ meta?: ReactNode; /** Small controls at the end of the nav bar (e.g. the theme switch). */ tools?: ReactNode; dek?: ReactNode; children?: ReactNode; className?: string }) {
   return (
-    <header className={cx("rt-mast", className)}>
-      <div className="rt-mast-top">
-        <Kicker tone="ink">{section}</Kicker>
-        <span className="rt-mast-end">
-          {meta ? <span className="rt-mast-meta">{meta}</span> : null}
-          {tools}
-        </span>
-      </div>
-      {children ? <div className="rt-mast-nav">{children}</div> : null}
-      {typeof title === "string" ? <h1 className="rt-mast-title">{title}</h1> : <div className="rt-mast-title">{title}</div>}
-      {dek ? <p className="rt-mast-dek">{dek}</p> : null}
-      <div className="rt-mast-rule" aria-hidden="true" />
-    </header>
+    <>
+      {children || tools ? (
+        <div className={cx("rt-mast-bar", className)}>
+          <div className="rt-mast-nav">{children}</div>
+          {meta || tools ? (
+            <span className="rt-mast-end">
+              {meta ? <span className="rt-mast-meta">{meta}</span> : null}
+              {tools}
+            </span>
+          ) : null}
+        </div>
+      ) : null}
+      {title ? (
+        <header className={cx("rt-mast", className)}>
+          {typeof title === "string" ? <h1 className="rt-mast-title">{title}</h1> : <div className="rt-mast-title">{title}</div>}
+          {dek ? <p className="rt-mast-dek">{dek}</p> : null}
+          <div className="rt-mast-rule" aria-hidden="true" />
+        </header>
+      ) : null}
+    </>
   );
 }
 
 /* ---------- Section head (view and panel titles) ---------- */
 
-export function SectionHead({ kicker, title, id, aside, level = 2, number, className }: { kicker?: ReactNode; title: ReactNode; id?: string; aside?: ReactNode; level?: 2 | 3; /** The view's step number, shown as a numeral block in the step colour. Once per view. */ number?: number; className?: string }) {
-  const H = level === 2 ? "h2" : "h3";
+const SHEAD_TITLE = { 1: "rt-shead-title rt-shead-title-lg", 2: "rt-shead-title", 3: "rt-shead-title rt-shead-title-sm" };
+
+/** `level={1}` is a view's page head: the `h1` at masthead size, with an italic `dek` under it. */
+export function SectionHead({ kicker, title, dek, id, aside, level = 2, number, className }: { kicker?: ReactNode; title: ReactNode; dek?: ReactNode; id?: string; aside?: ReactNode; level?: 1 | 2 | 3; /** The view's step number, shown as a numeral block in the step colour. Once per view. */ number?: number; className?: string }) {
+  const H = (["h1", "h2", "h3"] as const)[level - 1];
   const titles = (
     <div className="rt-shead-titles">
       {kicker ? <Kicker>{kicker}</Kicker> : null}
-      <H id={id} className={level === 2 ? "rt-shead-title" : "rt-shead-title rt-shead-title-sm"}>{title}</H>
+      <H id={id} className={SHEAD_TITLE[level]}>{title}</H>
+      {dek ? <p className="rt-shead-dek">{dek}</p> : null}
     </div>
   );
+  const Box = level === 1 ? "header" : "div";
   return (
-    <div className={cx("rt-shead", className)}>
+    <Box className={cx("rt-shead", level === 1 && "rt-shead-page", className)}>
       {number ? (
         <div className="rt-shead-lead">
           <div className="rt-shead-num" aria-hidden="true"><span>{pad2(number)}</span></div>
@@ -175,7 +191,7 @@ export function SectionHead({ kicker, title, id, aside, level = 2, number, class
         </div>
       ) : titles}
       {aside ? <div className="rt-shead-aside">{aside}</div> : null}
-    </div>
+    </Box>
   );
 }
 
@@ -220,7 +236,8 @@ export interface GarmentCardProps {
 export function GarmentCard(p: GarmentCardProps) {
   const inner = (
     <>
-      <div className="rt-garment-plate" style={{ background: p.color ? swatchBackground(p.color, p.stripe, 10, p.pattern) : "var(--paper-sunk)" }}>
+      {/* A photo may be a transparent cutout: keep it on a neutral ground so dark cloth doesn't vanish into its own colour. */}
+      <div className="rt-garment-plate" style={{ background: p.image ? "var(--garment-ground)" : p.color ? swatchBackground(p.color, p.stripe, 10, p.pattern) : "var(--paper-sunk)" }}>
         {p.art ? <span className="rt-garment-art" aria-hidden="true">{p.art}</span> : null}
         {p.image ? <img src={p.image} alt="" referrerPolicy="no-referrer" /> : null}
         {(() => {

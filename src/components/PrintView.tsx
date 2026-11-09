@@ -1,10 +1,17 @@
 import { useState } from "react";
-import { Button, Check, Field, Kicker, SectionHead, Select } from "../design-system/index.ts";
+import { Button, Check, Kicker, Select } from "../design-system/index.ts";
 import { findItem, shortName } from "../lib/model.ts";
-import type { HairStyle, WardrobeData } from "../lib/types.ts";
-import { OutfitFigure } from "./common.tsx";
+import type { FigureShow, HairStyle, WardrobeData } from "../lib/types.ts";
+import { OutfitFigure, PageHead, PieceIcon } from "./common.tsx";
 
 const HAIR: HairStyle[] = ["short", "long", "bun", "curly", "none"];
+const SHOW: { value: FigureShow; label: string }[] = [
+  { value: "face", label: "Full figure" },
+  { value: "faceless", label: "No face" },
+  { value: "outfit", label: "Outfit only" },
+];
+/** Black, dark brown, brown, auburn, blonde, grey. */
+const HAIR_COLOURS = ["#1f1a17", "#4a3426", "#7a5232", "#9a4a2a", "#d8b46a", "#b8b4ae"];
 const SKIN = ["#f8d9c0", "#f1c7a3", "#d9a47a", "#b07a52", "#7d5236", "#4f3324"];
 /** Weeks per printed page: two rows of a five-day week is ten outfits. */
 const WEEKS_PER_PAGE = 2;
@@ -17,23 +24,39 @@ export function PrintView({ data, setData }: { data: WardrobeData; setData: (d: 
   const perPage = WEEKS_PER_PAGE;
   const [names, setNames] = useState(true);
   const setFig = (p: Partial<typeof figure>) => setData({ ...data, figure: { ...figure, ...p } });
+  const show = figure.show ?? "face";
+  // "Outfit only" prints the plain mannequin, as on the Outfits and Rotation tabs.
+  const person = show !== "outfit";
 
   return (
     <div className="view">
-      <section className="no-print" aria-labelledby="pr-h">
-        <SectionHead id="pr-h" number={4} kicker="Print edition" title="Print your rotation" aside={<Button variant="primary" onClick={() => window.print()}>Print</Button>} />
+      <section className="no-print" aria-label="Print settings">
+        <PageHead view="print" aside={<Button variant="primary" onClick={() => window.print()}>Print</Button>} />
         <div className="print-controls">
-          <div className="rt-field">
-            <span className="rt-field-label">Skin</span>
-            <div className="skin-row">
-              {SKIN.map((c) => (
-                <button key={c} className="skin" title={c} aria-label={"Skin tone " + c} aria-pressed={figure.skin === c} onClick={() => setFig({ skin: c })} style={{ background: c }} />
-              ))}
-              <input className="rt-input rt-input-color" type="color" value={figure.skin} onChange={(e) => setFig({ skin: e.target.value })} aria-label="Custom skin colour" />
-            </div>
-          </div>
-          <Field className="f-color" type="color" label="Hair" value={figure.hair} onChange={(e) => setFig({ hair: e.target.value })} />
-          <Select className="f-hair" id="hair-style" label="Hair style" value={figure.hairStyle} options={HAIR.map((h) => ({ value: h, label: h[0].toUpperCase() + h.slice(1) }))} onChange={(v) => setFig({ hairStyle: v as HairStyle })} />
+          <Select className="f-show" id="figure-show" label="Figure" value={show} options={SHOW} onChange={(v) => setFig({ show: v as FigureShow })} />
+          {person ? (
+            <>
+              <div className="rt-field">
+                <span className="rt-field-label">Skin</span>
+                <div className="skin-row">
+                  {SKIN.map((c) => (
+                    <button key={c} className="skin" title={c} aria-label={"Skin tone " + c} aria-pressed={figure.skin === c} onClick={() => setFig({ skin: c })} style={{ background: c }} />
+                  ))}
+                  <input className="rt-input rt-input-color" type="color" value={figure.skin} onChange={(e) => setFig({ skin: e.target.value })} aria-label="Custom skin colour" />
+                </div>
+              </div>
+              <div className="rt-field">
+                <span className="rt-field-label">Hair</span>
+                <div className="skin-row">
+                  {HAIR_COLOURS.map((c) => (
+                    <button key={c} className="skin" title={c} aria-label={"Hair colour " + c} aria-pressed={figure.hair === c} onClick={() => setFig({ hair: c })} style={{ background: c }} />
+                  ))}
+                  <input className="rt-input rt-input-color" type="color" value={figure.hair} onChange={(e) => setFig({ hair: e.target.value })} aria-label="Custom hair colour" />
+                </div>
+              </div>
+              <Select className="f-hair" id="hair-style" label="Hair style" value={figure.hairStyle} options={HAIR.map((h) => ({ value: h, label: h[0].toUpperCase() + h.slice(1) }))} onChange={(v) => setFig({ hairStyle: v as HairStyle })} />
+            </>
+          ) : null}
           <div className="rt-field">
             <span className="rt-field-label">Labels</span>
             <Check label="Show item names" checked={names} onCheckedChange={setNames} />
@@ -56,10 +79,18 @@ export function PrintView({ data, setData }: { data: WardrobeData; setData: (d: 
                       return (
                         <div className="cday" key={di}>
                           <span className="dname">{d}</span>
-                          <OutfitFigure items={items} look={look} cartoon figure={figure} width="100%" />
+                          <OutfitFigure items={items} look={look} cartoon={person} figure={figure} width="100%" />
                           {names ? (
                             <ul>
-                              {(["layer", "shirt", "pants", "shoes"] as const).map((s) => (look[s] ? <li key={s}>{shortName(findItem(items, look[s]))}</li> : null))}
+                              {(["layer", "shirt", "pants", "shoes"] as const).map((s) => {
+                                const it = findItem(items, look[s]);
+                                return it ? (
+                                  <li key={s}>
+                                    <PieceIcon it={it} slot={s} className="cpiece" />
+                                    <span>{shortName(it)}</span>
+                                  </li>
+                                ) : null;
+                              })}
                             </ul>
                           ) : null}
                         </div>
@@ -69,10 +100,12 @@ export function PrintView({ data, setData }: { data: WardrobeData; setData: (d: 
                 </div>
               ))}
               <footer className="sheet-mark">
-                <svg viewBox="0 0 24 16" width="18" height="12" aria-hidden="true">
-                  <path d="M12 5.5V4.2a1.8 1.8 0 1 0-1.8-1.8M12 5.5 1.5 13.2c-.6.5-.3 1.3.5 1.3h20c.8 0 1.1-.8.5-1.3z" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinejoin="round" strokeLinecap="round" />
+                {/* The favicon mark: a display-face R on oxblood. */}
+                <svg viewBox="0 0 32 32" width="16" height="16" aria-hidden="true">
+                  <rect width="32" height="32" fill="var(--oxblood)" />
+                  <text x="16" y="25" textAnchor="middle" fontSize="24" fill="var(--on-oxblood)" style={{ fontFamily: "var(--font-display)" }}>R</text>
                 </svg>
-                <Kicker tone="ink">The Wardrobe</Kicker>
+                <Kicker tone="ink">Rotation</Kicker>
               </footer>
             </section>
           );

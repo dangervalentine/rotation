@@ -1,9 +1,12 @@
 # Masthead
 
-The magazine cover line for every screen: section kicker and issue meta over a hairline, the view nav, the title in Playfair Display at `masthead` size, an italic `dek`, then a double rule.
+The magazine cover line for every screen: a sticky nav bar, the title in Playfair Display at `masthead` size, an italic `dek`, then a double rule.
 
-**Consumer provides:** `title` (the app's name, "Rotation" — a string renders as the page's `h1`), optional `section` (kicker, default "The Wardrobe"), `meta` (a mono line: issue, cycle, piece count — uppercase, separated by ` · `), `dek` (one sentence on what the current view is for; it changes with the view), optional `tools` (small controls at the end of the top line, such as the Auto / Light / Dark `Segmented`), and `children` (normally a `Tabs`, rendered under the top line so the steps sit above the title).
+**Consumer provides:** `title` (the app's name, "Rotation" — a string renders as the page's `h1`), `dek` (one sentence on what the current view is for; it changes with the view), `children` (normally a `Tabs`), optional `tools` (small controls at the end of the bar, such as the Auto / Light / Dark `Segmented`) and optional `meta` (a short status before the tools, such as a save error).
 
+- The tabs and tools share one bar that sticks to the top of the page while the title scrolls away. It renders as a sibling of the `header`, so put the Masthead directly in the page's scrolling column, not inside a wrapper that would end the stickiness.
+
+- Omit `title` (and `dek`) to render the bar alone. The app does this: each view opens with its own `SectionHead level={1}` carrying the title, dek and step numeral, so the screen has one large head, not two.
 - One per screen, at the top. Never inside a card.
 - Keep `title` short — one or two words reads like a masthead; four reads like a form.
 - The dek is a sentence, not a list. End it with a period.

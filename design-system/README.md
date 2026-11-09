@@ -32,7 +32,7 @@ Rules for changing it:
 |---|---|
 | [`Masthead`](components/Masthead.md) | App title, issue meta, dek, nav. Once per screen. |
 | [`Tabs`](components/Tabs.md) | Top-level view navigation. |
-| [`SectionHead`](components/SectionHead.md) | Kicker + display title over a heavy rule, with an aside for controls and, once per view, the step's numeral block. |
+| [`SectionHead`](components/SectionHead.md) | Kicker + display title over a heavy rule, with an aside for controls and, once per view, the step's numeral block. `level={1}` is the view's page head (h1 + dek). |
 | [`Button`](components/Button.md) | Primary (one per view), secondary, ghost, danger. |
 | [`Kicker`](components/Kicker.md) | Small tracked uppercase label above a title. |
 | [`Tag`](components/Tag.md) | Owned, to buy, rotation flags, kept. |
@@ -136,7 +136,7 @@ Never set body copy in the display face below 14px; its hairlines break up. Neve
 
 No icon set. Labels are words, set as kickers or buttons. The one glyph is the "!" on a flag tag, set in the display face. If an icon is ever unavoidable (close, menu), use a 1.5px stroke, square caps, in `ink`, at 16px — and keep a text label for screen readers.
 
-There is no logo: the wordmark is the word "Rotation" (or the wardrobe's own title) set in `masthead`.
+There is no logo: the wordmark is the word "Rotation" set in `masthead`.
 
 ## Motion
 

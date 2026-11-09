@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Button, Field, LookCard, Notice, SectionHead } from "../design-system/index.ts";
 import { clone, EMPTY_LOOK, same, shuffleLook, uniqueId } from "../lib/model.ts";
 import type { Item, Look, Outfit, WardrobeData } from "../lib/types.ts";
-import { lookPieces, OutfitFigure } from "./common.tsx";
+import { lookPieces, OutfitFigure, PageHead } from "./common.tsx";
 import { LookEditor } from "./LookEditor.tsx";
 
 /** Saved outfit library plus a mix-and-match workspace. */
@@ -50,14 +50,8 @@ export function OutfitsView({ data, setData }: { data: WardrobeData; setData: (d
 
   return (
     <div className="view">
-      <section aria-labelledby="mm-h">
-        <SectionHead
-          id="mm-h"
-          number={2}
-          kicker={base ? <>Editing {base.name}</> : "Workspace"}
-          title="Mix and match"
-          aside={<span className="lede">{base ? "Change the pieces, then save." : "Build a look, then save it to your outfits."}</span>}
-        />
+      <section aria-label="Mix and match">
+        <PageHead view="outfits" aside={base ? <span className="lede">Editing <b>{base.name}</b>. Change the pieces, then save.</span> : null} />
         {items.length ? null : (
           <Notice tone="neutral">
             No pieces yet. Start in <a href="#wardrobe">Wardrobe</a>.

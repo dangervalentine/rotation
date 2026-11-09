@@ -6,4 +6,4 @@ One wardrobe item as a catalogue plate: a 4:5 field of the garment's colour (or 
 
 - Name the garment the way a shop credit would: colour + cut + type ("Charcoal flannel trousers"); put the brand in `brand`, not the name.
 - Use a grid of cards for browsing; use the Wardrobe table for scanning and ticking off what you own.
-- Photos: cut-outs or flat-lays on a plain ground. No lifestyle shots in the plate.
+- Photos: cut-outs or flat-lays on a plain ground. No lifestyle shots in the plate. With a photo the plate is the neutral `--garment-ground`, not the garment colour, so a transparent cut-out of dark cloth stays visible.

@@ -13,6 +13,7 @@ export function head(p: Paint, part: "back" | "front") {
   let s = `<path d="M54 16 L66 16 L66 30 L54 30 Z" fill="${skin}" ${st}/>`;
   s += `<ellipse cx="60" cy="4" rx="20" ry="21" fill="${skin}" ${st}/>`;
   s += hairFront(style, hair, st);
+  if (p.figure?.show === "faceless") return s;
   // Face
   s += `<circle cx="53" cy="5" r="2" fill="${p.ink}"/><circle cx="67" cy="5" r="2" fill="${p.ink}"/>`;
   s += `<circle cx="53.7" cy="4.3" r="0.6" fill="#fff"/><circle cx="67.7" cy="4.3" r="0.6" fill="#fff"/>`;

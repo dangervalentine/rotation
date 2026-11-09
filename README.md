@@ -18,8 +18,9 @@ npm run dev        # http://localhost:5173
 | **Local** | `npm run dev` | `data/wardrobe.json`, through a small dev-server API (`server/devApi.ts`) |
 | **Published** | `npm run build`, then host `dist/` anywhere static | This browser's `localStorage`, seeded from the bundled `data/wardrobe.json` |
 
-Both modes have the same save bar. Unsaved edits are kept as a draft in the browser until you save or discard them.
-If the saved wardrobe changes underneath a draft (you edit `data/wardrobe.json` by hand, a script updates it, or another tab saves), the app notices: on load, when you come back to the tab, as soon as the file changes in local mode, and again right before saving. With no unsaved edits it just loads the newer version; with unsaved edits it asks whether to keep them or load the newer version, so nothing is overwritten silently.
+Both modes save every change automatically, half a second after you make it; the masthead says *Saved*, *Saving…* or *Couldn't save* (with Retry). Until a change is written it is also kept as a draft in the browser, so a failed save or a closed tab doesn't lose it.
+If the saved wardrobe changes elsewhere (you edit `data/wardrobe.json` by hand, a script updates it, or another tab saves), the app notices: on load, when you come back to the tab, as soon as the file changes in local mode, and again right before saving. With nothing waiting to save it just loads the newer version; otherwise it asks whether to keep yours (saving over it) or load the newer version, so nothing is overwritten silently.
+Replacing the whole wardrobe (Import JSON, Load sample wardrobe, Start empty) asks first, since it saves at once.
 
 The masthead has an **Auto / Light / Dark** theme switch. Auto follows the OS; the choice is remembered in this browser. Print is always light.
 On the Wardrobe tab, **Export / Import JSON** moves data between modes and devices. Files in the original single-file format import too.
