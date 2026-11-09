@@ -6,7 +6,7 @@ A gear button at the end of the masthead bar that opens a small panel of prefere
 
 `Setting` takes `label` (shown as a kicker over the control), `children` (the control, usually a `Segmented`) and an optional `note` (one or two short sentences in `ink-muted`).
 
-- The panel opens under the gear with its right edge lined up with the gear's. Clicking outside or pressing Escape closes it and returns focus to the gear. It is a native popover, so it sits above everything, sheets included.
+- The panel opens under the gear with its right edge lined up with the gear's. Clicking outside or pressing Escape closes it and returns focus to the gear. It is a native popover, so it sits above everything, sheets included. It fades in while dropping a few pixels from the gear, and fades back out on close (`motion-quick`); with reduced motion or Animation off it simply appears and disappears.
 - Settings change at once. There is no Save button; each choice is remembered per browser.
 - Rules, not boxes: a hairline border and a heavy rule under the title, no shadow.
 - Keep it short. A preference belongs here when it changes how the whole app looks or moves, not when it belongs to one step.

@@ -37,8 +37,12 @@ export const DEFAULT_FIGURE: Figure = { skin: "#f1c7a3", hair: "#4a3426", hairSt
 export const clone = <T>(v: T): T => JSON.parse(JSON.stringify(v));
 export const same = (a: unknown, b: unknown) => JSON.stringify(a) === JSON.stringify(b);
 
-export const money = (n: number) =>
-  "$" + Number(n || 0).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+/** A price as the style guide writes it: "$49.90", but no cents above $100 ("$399", "$2,749"). */
+export const money = (n: number) => {
+  const v = Number(n || 0);
+  const cents = Math.abs(v) < 100 ? 2 : 0;
+  return "$" + v.toLocaleString("en-US", { minimumFractionDigits: cents, maximumFractionDigits: cents });
+};
 
 export const findItem = (items: Item[], id: string | null | undefined) =>
   (id && items.find((i) => i.id === id)) || null;

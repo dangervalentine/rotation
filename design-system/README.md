@@ -22,7 +22,7 @@ Rules for changing it:
 
 - **New value?** Add a token to `tokens.json` with a `usage` note, run `npm run tokens`, then use `var(--name)`. App CSS (`src/styles.css`) and components never hard-code colours, spacing or radii.
 - `npm test` fails if `tokens.css` is stale, if two tokens share a name, or if any text pair promised below drops under 4.5:1 in either theme.
-- **Themes:** Newsprint (light) is the default. Evening (dark) follows the OS setting on screen; set `data-theme="light"` or `"dark"` on `<html>` to force one (the app's Auto / Light / Dark switch in the masthead does this and remembers the choice per browser). Forced themes apply on screen only: print always uses Newsprint.
+- **Themes:** Newsprint (light) is the default. Dark follows the OS setting on screen; set `data-theme="light"` or `"dark"` on `<html>` to force one (the app's Auto / Light / Dark switch in the settings panel does this and remembers the choice per browser). Forced themes apply on screen only: print always uses Newsprint.
 - **Fonts** load from Google Fonts in `index.html`. Keep that link in step with `type.families` in `tokens.json`.
 - A browsable copy of this system (cover, token tables, live component previews) lives as a claude.ai Design System artifact. The repo wins if they disagree.
 
@@ -80,7 +80,7 @@ Write like a good style editor: confident, specific, brief. Second person, prese
 
 ## Colour
 
-Two themes: **Newsprint** (light, default) and **Evening** (dark). Every text pair below holds 4.5:1 or better in both.
+Two themes: **Newsprint** (light, default) and **Dark**, set on the Night Owl navy of the sibling NextQuest app, with its blue as the action accent and its coral, yellow and green for the steps and statuses. Every text pair below holds 4.5:1 or better in both.
 
 | Role | Token | On |
 |---|---|---|
@@ -89,7 +89,7 @@ Two themes: **Newsprint** (light, default) and **Evening** (dark). Every text pa
 | Wells, empty slots, selected day | `paper-sunk` | — |
 | Text | `ink` | any paper |
 | Secondary text, captions, specs | `ink-muted` | any paper |
-| Primary action, active, focus | `oxblood` · label `on-oxblood` | any paper, `oxblood-soft` |
+| Primary action, active, focus | `oxblood` as text and rules; `oxblood-fill` for solid fills, label `on-oxblood` | any paper, `oxblood-soft` |
 | Owned, saved | `loden` | paper, `loden-soft` |
 | To buy, repeat flags | `tobacco` | paper, `camel-soft` |
 | Editorial blocks only | `camel` (text: `on-camel`), `navy` (text: `on-navy`) | — |

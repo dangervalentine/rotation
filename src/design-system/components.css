@@ -83,8 +83,8 @@ a:hover {
 }
 
 .rt-btn-primary {
-    background: var(--oxblood);
-    border-color: var(--oxblood);
+    background: var(--oxblood-fill);
+    border-color: var(--oxblood-fill);
     color: var(--on-oxblood);
 }
 
@@ -113,8 +113,8 @@ a:hover {
 }
 
 .rt-btn-danger:hover:not(:disabled) {
-    background: var(--oxblood);
-    border-color: var(--oxblood);
+    background: var(--oxblood-fill);
+    border-color: var(--oxblood-fill);
     color: var(--on-oxblood);
 }
 
@@ -317,7 +317,7 @@ a:hover {
     flex: none;
     width: 28px;
     height: 28px;
-    background: var(--oxblood);
+    background: var(--oxblood-fill);
     color: var(--on-oxblood);
     font: 600 22px/28px var(--font-display);
     text-align: center;
@@ -377,11 +377,30 @@ a:hover {
     border-radius: var(--radius-none);
     background: var(--paper-raised);
     color: var(--ink);
+    /* Closed state: faded and tucked up toward the gear. display and overlay switch discretely, so the panel
+       stays in the top layer until it has faded out. */
+    opacity: 0;
+    transform: translateY(calc(-1 * var(--space-2)));
+    transition:
+        opacity var(--motion-quick-duration) var(--motion-quick-ease),
+        transform var(--motion-quick-duration) var(--motion-quick-ease),
+        display var(--motion-quick-duration) allow-discrete,
+        overlay var(--motion-quick-duration) allow-discrete;
 }
 
 .rt-popover:popover-open {
     display: grid;
     gap: var(--space-5);
+    opacity: 1;
+    transform: none;
+}
+
+/* Where it opens from: the same closed state, so it drops in under the gear. */
+@starting-style {
+    .rt-popover:popover-open {
+        opacity: 0;
+        transform: translateY(calc(-1 * var(--space-2)));
+    }
 }
 
 .rt-popover-title {
@@ -932,6 +951,8 @@ a.rt-garment:hover {
     width: 100%;
     height: 100%;
     object-fit: cover;
+    /* The plate's ground is light in every theme, so a shop photo's white backdrop always melts into it. */
+    mix-blend-mode: multiply;
 }
 
 .rt-garment-plate .rt-tag {
@@ -1447,6 +1468,7 @@ a.rt-garment:hover {
     color: inherit;
     display: inline-grid;
     place-items: center;
+    vertical-align: middle;
     cursor: pointer;
 }
 

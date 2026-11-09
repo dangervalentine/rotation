@@ -14,21 +14,23 @@ const decl = (name, value) => `  --${name}: ${ref(value)};`;
 const kebab = (s) => s.replace(/[A-Z]/g, (c) => "-" + c.toLowerCase());
 
 export function buildTokensCss(tokens) {
-  const themes = tokens.color.themes.map((t) => t.id);
-  const [first, ...rest] = themes;
-  const themed = [...tokens.color.tokens, ...(tokens.shadow?.tokens ?? [])];
-  const block = (theme) => themed.map((t) => decl(t.name, pick(t.value, theme, first))).join("\n");
+  const [first, ...rest] = tokens.color.themes;
+  const themed = [...tokens.color.tokens, ...(tokens.shadow?.tokens ?? []), ...(tokens.blend?.tokens ?? [])];
+  const block = (theme) => themed.map((t) => decl(t.name, pick(t.value, theme, first.id))).join("\n");
   const out = [`/* ${tokens.name} — generated from design-system/tokens.json by scripts/build-tokens.mjs. Do not edit. */`];
 
-  out.push(`:root,\n[data-theme="${first}"] {\n  color-scheme: light;\n${block(first)}\n}`);
+  out.push(`:root,\n[data-theme="${first.id}"] {\n  color-scheme: ${first.scheme ?? "light"};\n${block(first.id)}\n}`);
   for (const theme of rest) {
     // Forced themes are for the screen; print always uses the first (Newsprint).
-    out.push(`@media screen {\n  [data-theme="${theme}"] {\n    color-scheme: dark;\n${block(theme).replace(/^/gm, "  ")}\n  }\n}`);
-    out.push(`@media screen and (prefers-color-scheme: dark) {\n  :root:not([data-theme="${first}"]) {\n    color-scheme: dark;\n${block(theme).replace(/^/gm, "  ")}\n  }\n}`);
+    out.push(`@media screen {\n  [data-theme="${theme.id}"] {\n    color-scheme: ${theme.scheme ?? "dark"};\n${block(theme.id).replace(/^/gm, "  ")}\n  }\n}`);
+  }
+  // Only the theme marked followsOs answers the device's dark setting, and only while no theme is forced.
+  for (const theme of rest.filter((t) => t.followsOs)) {
+    out.push(`@media screen and (prefers-color-scheme: dark) {\n  :root:not([data-theme]) {\n    color-scheme: ${theme.scheme ?? "dark"};\n${block(theme.id).replace(/^/gm, "  ")}\n  }\n}`);
   }
 
   const flat = Object.entries(tokens)
-    .filter(([k, v]) => !["name", "version", "color", "type", "shadow"].includes(k) && v && Array.isArray(v.tokens))
+    .filter(([k, v]) => !["name", "version", "color", "type", "shadow", "blend"].includes(k) && v && Array.isArray(v.tokens))
     .flatMap(([, v]) => v.tokens.map((t) => decl(t.name, t.value)));
   const fonts = Object.entries(tokens.type.families).map(([k, v]) => `  --font-${k}: ${v};`);
   out.push(`:root {\n${[...flat, ...fonts].join("\n")}\n}`);

@@ -50,7 +50,7 @@ main {
 
 .view {
     display: grid;
-    gap: var(--space-8)
+    gap: var(--space-7)
 }
 
 /* The step head sits over the page: as close as a section's own head on most steps, a view's gap on Wardrobe. */
@@ -60,7 +60,7 @@ main {
 }
 
 .rt-step-1 main>.rt-shead-page {
-    margin-bottom: var(--space-8)
+    margin-bottom: var(--space-7)
 }
 
 .lede {
@@ -100,11 +100,11 @@ main {
     }
 
     .view {
-        gap: var(--space-7)
+        gap: var(--space-6)
     }
 
     .rt-step-1 main>.rt-shead-page {
-        margin-bottom: var(--space-7)
+        margin-bottom: var(--space-6)
     }
 }
 
@@ -743,7 +743,9 @@ form.edit .actions {
     width: 80px;
     aspect-ratio: 4/5;
     object-fit: cover;
-    border: var(--rule-hair) solid var(--rule)
+    border: var(--rule-hair) solid var(--rule);
+    background: var(--photo-ground);
+    mix-blend-mode: var(--photo-blend)
 }
 
 .colors {
@@ -848,6 +850,8 @@ tbody tr:not(.cat):not(.tot):hover td {
     height: 35px;
     object-fit: cover;
     border: var(--rule-hair) solid var(--rule);
+    background: var(--photo-ground);
+    mix-blend-mode: var(--photo-blend);
     flex: none
 }
 

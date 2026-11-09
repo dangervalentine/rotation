@@ -379,7 +379,7 @@ export function WardrobeView({ data, setData, backend, item }: { data: WardrobeD
               <thead>
                 <tr>
                   <th>Item</th><th>Style</th><th className="num">Price</th><th className="num">Qty</th><th className="num">Days worn</th><th>Owned</th>
-                  <th><span className="sr-only">Shop link</span></th>
+                  <th className="num">Shop</th>
                 </tr>
               </thead>
               <tbody>
