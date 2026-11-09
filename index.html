@@ -27,6 +27,8 @@
         var t = localStorage.getItem("wardrobe-rotation:theme");
         if (t === "light" || t === "dark")
           document.documentElement.dataset.theme = t;
+        if (localStorage.getItem("wardrobe-rotation:motion") === "off")
+          document.documentElement.dataset.motion = "reduce";
       } catch (e) {}
     </script>
     <link rel="preconnect" href="https://fonts.googleapis.com" />

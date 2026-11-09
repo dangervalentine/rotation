@@ -27,11 +27,17 @@ a:hover {
     outline-offset: 2px;
 }
 
+/* No motion when the device asks for less, or when the person turns animation off in Settings (data-motion on <html>). */
 @media (prefers-reduced-motion: reduce) {
     * {
         transition: none !important;
         animation: none !important;
     }
+}
+
+:root[data-motion="reduce"] * {
+    transition: none !important;
+    animation: none !important;
 }
 
 /* ---------- Kicker ---------- */
@@ -178,6 +184,36 @@ a:hover {
     letter-spacing: 0;
 }
 
+/* ---------- OverflowText and its tooltip ---------- */
+.rt-overflow {
+    display: block;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+/* Placed by script (fixed, against the window) so a card's clipping can't cut it off. Ink on paper flips with the theme. */
+.rt-tip {
+    position: fixed;
+    z-index: 60;
+    max-width: min(280px, calc(100vw - 16px));
+    padding: var(--space-1) var(--space-2);
+    border-radius: var(--radius-xs);
+    background: var(--ink);
+    color: var(--paper);
+    box-shadow: var(--shadow-float);
+    font: 500 12px/18px var(--font-sans);
+    overflow-wrap: anywhere;
+    animation: rt-tip-in .12s ease-out;
+}
+
+@keyframes rt-tip-in {
+    from {
+        opacity: 0;
+        transform: translateY(2px);
+    }
+}
+
 /* ---------- Swatch ---------- */
 .rt-sw {
     display: inline-block;
@@ -201,7 +237,8 @@ a:hover {
 }
 
 /* ---------- Masthead ---------- */
-/* Tabs and tools share one bar that sticks to the top of the page; the tabs' own rule moves to the bar. */
+/* The brand, the tabs and the tools share one bar that sticks to the top of the page: the brand on the left,
+   the tabs and tools on the right. The tabs' own rule moves to the bar. */
 .rt-mast-bar {
     position: sticky;
     top: 0;
@@ -213,9 +250,14 @@ a:hover {
     border-bottom: var(--rule-hair) solid var(--rule);
 }
 
+.rt-mast-brand {
+    flex: none;
+}
+
 .rt-mast-nav {
-    flex: 1 1 auto;
+    flex: 0 1 auto;
     min-width: 0;
+    margin-left: auto;
 }
 
 .rt-mast-bar .rt-tabs {
@@ -229,20 +271,136 @@ a:hover {
     gap: var(--space-2) var(--space-4);
 }
 
-/* On phones the tabs need the full width; the tools drop to a second line. */
+/* On phones the brand keeps its mark but drops its name, and the tabs scroll sideways between it and the tools.
+   A status (a save error) takes its own line under the bar. */
 @media (max-width: 720px) {
     .rt-mast-bar {
         flex-wrap: wrap;
-        padding-bottom: var(--space-2);
+        gap: var(--space-2) var(--space-3);
     }
 
     .rt-mast-nav {
+        flex: 1 1 0;
+    }
+
+    .rt-mast-meta {
+        order: 1;
         flex-basis: 100%;
+        padding-bottom: var(--space-2);
+    }
+
+    /* An empty status stays in the page (it is a live region) but takes no room. */
+    .rt-mast-meta:not(:has(> :not(:empty))) {
+        position: absolute;
+        padding: 0;
     }
 
     .rt-mast-end {
-        margin-left: auto;
+        display: contents;
     }
+}
+
+/* The wordmark: the app's mark (the favicon's square) and its name. */
+.rt-brand {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-3);
+    color: var(--ink);
+    text-decoration: none;
+}
+
+.rt-brand:hover {
+    color: var(--ink);
+}
+
+.rt-brand-mark {
+    flex: none;
+    width: 28px;
+    height: 28px;
+    background: var(--oxblood);
+    color: var(--on-oxblood);
+    font: 600 22px/28px var(--font-display);
+    text-align: center;
+}
+
+.rt-brand-name {
+    font: 600 22px/1 var(--font-display);
+    letter-spacing: -.005em;
+}
+
+/* On phones the name is hidden from sight only: it stays the link's accessible name. */
+@media (max-width: 720px) {
+    .rt-brand-name {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        overflow: hidden;
+        clip-path: inset(50%);
+        white-space: nowrap;
+    }
+}
+
+/* ---------- Icon button and settings panel ---------- */
+/* A square button holding one 16px line icon. Always has an aria-label. */
+.rt-icon-btn {
+    appearance: none;
+    flex: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    padding: 0;
+    border: var(--rule-hair) solid transparent;
+    border-radius: var(--radius-none);
+    background: transparent;
+    color: var(--ink);
+    cursor: pointer;
+    transition: border-color var(--motion-quick-duration) var(--motion-quick-ease), color var(--motion-quick-duration) var(--motion-quick-ease);
+}
+
+.rt-icon-btn:hover,
+.rt-icon-btn[aria-expanded="true"] {
+    border-color: var(--rule-strong);
+}
+
+/* Opens under its button, right edges lined up (Settings sets top and left; this shifts it back by its width).
+   Light-dismiss and Escape come from the popover. */
+.rt-popover {
+    position: fixed;
+    inset: auto;
+    margin: 0;
+    translate: -100% 0;
+    width: min(300px, calc(100vw - 2 * var(--space-4)));
+    padding: var(--space-5);
+    border: var(--rule-hair) solid var(--rule-strong);
+    border-radius: var(--radius-none);
+    background: var(--paper-raised);
+    color: var(--ink);
+}
+
+.rt-popover:popover-open {
+    display: grid;
+    gap: var(--space-5);
+}
+
+.rt-popover-title {
+    margin: 0;
+    padding-bottom: var(--space-3);
+    border-bottom: var(--rule-heavy) solid var(--rule-strong);
+    font: 600 22px/1.1 var(--font-display);
+}
+
+.rt-setting {
+    display: grid;
+    gap: var(--space-2);
+    justify-items: start;
+}
+
+.rt-setting-note {
+    margin: 0;
+    font: 400 12px/18px var(--font-sans);
+    color: var(--ink-muted);
 }
 
 .rt-mast-meta {
@@ -447,7 +605,7 @@ a:hover {
     color: var(--on-step, var(--paper));
 }
 
-.rt-shead-num span {
+.rt-shead-num>span {
     position: absolute;
     left: -2px;
     top: -30px;
@@ -462,7 +620,7 @@ a:hover {
         height: 72px;
     }
 
-    .rt-shead-num span {
+    .rt-shead-num>span {
         font-size: 98px;
         top: -19px;
     }
@@ -517,12 +675,181 @@ a:hover {
 }
 
 @media (max-width: 720px) {
+
+    /* Scales down on the narrowest phones so the longest step name ("Wardrobe") still fits beside the numeral. */
     .rt-shead-title-lg {
-        font-size: 56px;
+        font-size: min(56px, 11.5vw);
     }
 
     .rt-shead-dek {
         font-size: 18px;
+    }
+}
+
+/* ---------- Step head ---------- */
+/* The one page head over every step (StepHead). It stays put while the step changes: the numeral, title and dek
+   roll to the new step (up going forward, down going back) and the step colour blends. Under reduced motion the
+   global rule above removes all of it. */
+.rt-shead-page {
+    transition: border-bottom-color var(--motion-step-duration) var(--motion-step-ease);
+}
+
+.rt-shead-page .rt-shead-num {
+    transition: background-color var(--motion-step-duration) var(--motion-step-ease), color var(--motion-step-duration) var(--motion-step-ease);
+}
+
+/* An empty slot (a page with no actions) takes no room. */
+.rt-shead-aside:empty {
+    display: none;
+}
+
+/* RollText: the leaving and arriving values share one cell, so the box never jumps in size mid-roll. */
+.rt-roll {
+    --roll-d: .35em;
+    --roll-o: 0;
+    display: inline-grid;
+}
+
+.rt-roll-l {
+    grid-area: 1 / 1;
+}
+
+.rt-roll-out {
+    pointer-events: none;
+}
+
+/* The numeral rolls a full glyph height and its block clips it, so it doesn't fade. */
+.rt-shead-num .rt-roll {
+    --roll-d: 100%;
+    --roll-o: 1;
+}
+
+.rt-roll[data-dir="forward"] .rt-roll-in {
+    animation: rt-roll-in-up var(--motion-step-duration) var(--motion-step-ease) both;
+}
+
+.rt-roll[data-dir="forward"] .rt-roll-out {
+    animation: rt-roll-out-up var(--motion-step-duration) var(--motion-step-ease) both;
+}
+
+.rt-roll[data-dir="back"] .rt-roll-in {
+    animation: rt-roll-in-down var(--motion-step-duration) var(--motion-step-ease) both;
+}
+
+.rt-roll[data-dir="back"] .rt-roll-out {
+    animation: rt-roll-out-down var(--motion-step-duration) var(--motion-step-ease) both;
+}
+
+@keyframes rt-roll-in-up {
+    from {
+        transform: translateY(var(--roll-d));
+        opacity: var(--roll-o);
+    }
+}
+
+@keyframes rt-roll-out-up {
+    to {
+        transform: translateY(calc(-1 * var(--roll-d)));
+        opacity: var(--roll-o);
+    }
+}
+
+@keyframes rt-roll-in-down {
+    from {
+        transform: translateY(calc(-1 * var(--roll-d)));
+        opacity: var(--roll-o);
+    }
+}
+
+@keyframes rt-roll-out-down {
+    to {
+        transform: translateY(var(--roll-d));
+        opacity: var(--roll-o);
+    }
+}
+
+/* The page below the head moves with it (App runs a view transition for each step change). This is the one place
+   the design system slides: a short move in the order of the work, never on other changes, never under reduced motion.
+   Only the old and new pictures move; their groups don't, so a page left scrolled far down doesn't fly up the screen.
+   The old page is gone before the new one shows much, so the two never sit on top of each other half-faded. */
+.rt-shead-page .rt-shead-aside {
+    view-transition-name: step-aside;
+}
+
+::view-transition-old(root) {
+    display: none;
+}
+
+::view-transition-new(root) {
+    animation: none;
+}
+
+::view-transition-group(step-page),
+::view-transition-group(step-aside) {
+    animation: none;
+}
+
+::view-transition-old(step-page),
+::view-transition-old(step-aside) {
+    animation: rt-step-out var(--motion-step-duration) var(--motion-step-ease) both;
+}
+
+::view-transition-new(step-page),
+::view-transition-new(step-aside) {
+    animation: rt-step-in var(--motion-step-duration) var(--motion-step-ease) both;
+}
+
+:root[data-step-dir="back"]::view-transition-old(step-page),
+:root[data-step-dir="back"]::view-transition-old(step-aside) {
+    animation-name: rt-step-out-back;
+}
+
+:root[data-step-dir="back"]::view-transition-new(step-page),
+:root[data-step-dir="back"]::view-transition-new(step-aside) {
+    animation-name: rt-step-in-back;
+}
+
+@keyframes rt-step-out {
+    60% {
+        opacity: 0;
+    }
+
+    to {
+        transform: translateX(-24px);
+        opacity: 0;
+    }
+}
+
+@keyframes rt-step-in {
+    from {
+        transform: translateX(24px);
+        opacity: 0;
+    }
+
+    35% {
+        opacity: 0;
+    }
+}
+
+@keyframes rt-step-out-back {
+    60% {
+        opacity: 0;
+    }
+
+    to {
+        transform: translateX(24px);
+        opacity: 0;
+    }
+}
+
+@keyframes rt-step-in-back {
+    from {
+        transform: translateX(-24px);
+        opacity: 0;
+    }
+
+    35% {
+        opacity: 0;
     }
 }
 
@@ -740,7 +1067,7 @@ a.rt-garment:hover {
 
 .rt-look-strip {
     display: flex;
-    height: 8px;
+    height: 16px;
     margin-top: var(--space-3);
 }
 
@@ -770,7 +1097,9 @@ a.rt-garment:hover {
 
 .rt-piece {
     display: grid;
-    grid-template-columns: 52px 14px 1fr auto;
+    grid-template-columns: 80px 14px 1fr auto;
+    /* a fixed one-line row (tall enough for a Sketch tag) so all look cards come out the same height */
+    grid-template-rows: 20px;
     gap: var(--space-2);
     align-items: center;
     padding: 5px 0;
@@ -786,6 +1115,10 @@ a.rt-garment:hover {
 .rt-piece .rt-kicker {
     font-size: 10px;
     letter-spacing: .14em;
+}
+
+.rt-piece-name {
+    min-width: 0;
 }
 
 .rt-piece-empty {
@@ -1170,15 +1503,30 @@ a.rt-garment:hover {
 
 /* ---------- Segmented ---------- */
 .rt-seg {
+    position: relative;
+    isolation: isolate;
     display: inline-flex;
     flex-wrap: wrap;
     border: var(--rule-hair) solid var(--rule-strong);
 }
 
+/* The chosen option's dark fill, as one piece that slides between options (placed by Segmented). */
+.rt-seg-thumb {
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: -1;
+    background: var(--ink);
+    pointer-events: none;
+}
+
+.rt-seg[data-ready] .rt-seg-thumb {
+    transition: transform var(--motion-step-duration) var(--motion-step-ease), width var(--motion-step-duration) var(--motion-step-ease), height var(--motion-step-duration) var(--motion-step-ease);
+}
+
 .rt-seg-item {
     appearance: none;
     border: 0;
-    border-left: var(--rule-hair) solid var(--rule);
     background: transparent;
     color: var(--ink-muted);
     font: 600 10px/16px var(--font-sans);
@@ -1186,10 +1534,7 @@ a.rt-garment:hover {
     text-transform: uppercase;
     padding: 7px var(--space-3);
     cursor: pointer;
-}
-
-.rt-seg-item:first-child {
-    border-left: 0;
+    transition: color var(--motion-step-duration) var(--motion-step-ease);
 }
 
 .rt-seg-item:hover {
@@ -1197,7 +1542,6 @@ a.rt-garment:hover {
 }
 
 .rt-seg-item[data-state="on"] {
-    background: var(--ink);
     color: var(--paper);
 }
 
@@ -1256,19 +1600,16 @@ a.rt-garment:hover {
 }
 
 /* ---------- Sheet ---------- */
-/* Docked on wide screens: the page gives up the panel's width, so nothing sits underneath it. */
-html[data-sheet="side"] body {
-    padding-right: var(--sheet-width);
-}
-
+/* Fixed over the page, never beside it: opening or closing it doesn't move anything behind the scrim.
+   On wide screens it always leaves a strip of scrim to click.
+   Layers: masthead 20 < sheet scrim 39, sheet 40 < confirm 44, 45 < select menus 50 < tips 60. */
 .rt-sheet {
     position: fixed;
-    z-index: 20;
+    z-index: 40;
     top: 0;
     right: 0;
     bottom: 0;
-    width: var(--sheet-width);
-    max-width: 100vw;
+    width: min(var(--sheet-width), calc(100vw - var(--space-8)));
     display: flex;
     flex-direction: column;
     background: var(--paper-raised);
@@ -1293,7 +1634,7 @@ html[data-sheet="side"] body {
 .rt-sheet-overlay {
     position: fixed;
     inset: 0;
-    z-index: 19;
+    z-index: 39;
     background: var(--scrim);
 }
 
@@ -1360,11 +1701,13 @@ html[data-sheet="side"] body {
     color: var(--ink-muted);
 }
 
+/* --sheet-pad is exposed so sticky content can pin flush to the top of the scroll area (top: calc(-1 * var(--sheet-pad))). */
 .rt-sheet-body {
+    --sheet-pad: var(--space-5);
     flex: 1;
     min-height: 0;
     overflow-y: auto;
-    padding: var(--space-5);
+    padding: var(--sheet-pad);
     overscroll-behavior: contain;
 }
 
@@ -1443,10 +1786,15 @@ html[data-sheet="side"] body {
 @media (max-width: 720px) {
 
     .rt-sheet-head,
-    .rt-sheet-body,
     .rt-sheet-foot {
         padding-left: var(--space-4);
         padding-right: var(--space-4);
+    }
+
+    .rt-sheet-body {
+        --sheet-pad: var(--space-4);
+        padding-left: var(--sheet-pad);
+        padding-right: var(--sheet-pad);
     }
 
     .rt-sheet-title {
@@ -1458,13 +1806,13 @@ html[data-sheet="side"] body {
 .rt-confirm-overlay {
     position: fixed;
     inset: 0;
-    z-index: 29;
+    z-index: 44;
     background: var(--scrim);
 }
 
 .rt-confirm {
     position: fixed;
-    z-index: 30;
+    z-index: 45;
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
@@ -1506,10 +1854,6 @@ html[data-sheet="side"] body {
     .rt-confirm,
     .rt-confirm-overlay {
         display: none !important;
-    }
-
-    html[data-sheet] body {
-        padding-right: 0;
     }
 }
 

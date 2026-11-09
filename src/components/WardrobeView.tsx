@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import { Button, Checkbox, ConfirmDialog, Field, GarmentCard, Kicker, Notice, Segmented, SectionHead, Select, Stat, Tag, TextArea } from "../design-system/index.ts";
+import { Button, Checkbox, ConfirmDialog, Field, GarmentCard, Kicker, Notice, Segmented, SectionHead, Select, Stat, StepAside, Tag, TextArea } from "../design-system/index.ts";
 import { CATEGORIES, clone, daysWorn, EMPTY_LOOK, isSlot, migrate, money, shortName, SLOTS, STYLES, uniqueId, wardrobeTotals } from "../lib/model.ts";
 import type { ProductGuess } from "../lib/productParse.ts";
 import { itemHash } from "../lib/route.ts";
@@ -8,7 +8,7 @@ import type { Backend } from "../lib/storage.ts";
 import { downloadJson, sampleData } from "../lib/storage.ts";
 import { cleanDetails, DETAIL_KEYS, detailOptions, detailsOf } from "../lib/styles.ts";
 import type { Category, Item, Look, WardrobeData } from "../lib/types.ts";
-import { ItemArt, PageHead, Swatch } from "./common.tsx";
+import { ItemArt, Swatch } from "./common.tsx";
 import { DetailFields } from "./DetailFields.tsx";
 
 /** Whole dollars for headline figures ("$2,885"). */
@@ -124,7 +124,6 @@ function ItemDetail({ it, data, onSave, onDelete, promoteButtons }: { it: Item; 
   const label = CATEGORIES.find(([c]) => c === it.cat)?.[1] ?? it.cat;
   return (
     <div className="view">
-      <PageHead view="wardrobe" />
       <a className="backlink" href="#wardrobe">← Wardrobe</a>
       <section className="detail" aria-labelledby="i-h">
         <GarmentCard
@@ -294,15 +293,10 @@ export function WardrobeView({ data, setData, backend, item }: { data: WardrobeD
   const plural = (n: number, one: string, many: string) => `${n} ${n === 1 ? one : many}`;
   return (
     <div className="view">
-      <PageHead
-        view="wardrobe"
-        aside={
-          <>
-            <Segmented label="Show as" options={[["table", "Table"], ["cards", "Cards"]]} value={layout} onChange={setLayout} />
-            <Button variant="primary" onClick={() => { setNote(""); setEditing({ isNew: true, item: BLANK }); }}>Add an item</Button>
-          </>
-        }
-      />
+      <StepAside>
+        <Segmented label="Show as" options={[["table", "Table"], ["cards", "Cards"]]} value={layout} onChange={setLayout} />
+        <Button variant="primary" onClick={() => { setNote(""); setEditing({ isNew: true, item: BLANK }); }}>Add an item</Button>
+      </StepAside>
       <div className="stats">
         <Stat value={real} label="In the collection" note={sketches.length ? `Plus ${plural(sketches.length, "sketch", "sketches")}` : undefined} />
         <Stat value={owned} label="Owned" note={real - owned ? `${real - owned} still to buy` : "Nothing left to buy"} />

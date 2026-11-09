@@ -1,8 +1,8 @@
 import { useState } from "react";
-import { Button, Check, Kicker, Select } from "../design-system/index.ts";
+import { Button, Check, Kicker, Select, StepAside } from "../design-system/index.ts";
 import { findItem, shortName } from "../lib/model.ts";
 import type { FigureShow, HairStyle, WardrobeData } from "../lib/types.ts";
-import { OutfitFigure, PageHead, PieceIcon } from "./common.tsx";
+import { OutfitFigure, PieceIcon } from "./common.tsx";
 
 const HAIR: HairStyle[] = ["short", "long", "bun", "curly", "none"];
 const SHOW: { value: FigureShow; label: string }[] = [
@@ -31,7 +31,7 @@ export function PrintView({ data, setData }: { data: WardrobeData; setData: (d: 
   return (
     <div className="view">
       <section className="no-print" aria-label="Print settings">
-        <PageHead view="print" aside={<Button variant="primary" onClick={() => window.print()}>Print</Button>} />
+        <StepAside><Button variant="primary" onClick={() => window.print()}>Print</Button></StepAside>
         <div className="print-controls">
           <Select className="f-show" id="figure-show" label="Figure" value={show} options={SHOW} onChange={(v) => setFig({ show: v as FigureShow })} />
           {person ? (

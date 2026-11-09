@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import seed from "../data/wardrobe.json";
-import { daysWorn, normalizeLook, dayWarnings, generateRotation, matchingBelt, migrate, resizeRotation, shuffleLook, sortForPicker, canShuffle, uniqueId, variations, wardrobeTotals } from "../src/lib/model.ts";
+import { daysWorn, EMPTY_LOOK, isEmptyLook, normalizeLook, dayWarnings, generateRotation, matchingBelt, migrate, resizeRotation, shuffleLook, sortForPicker, canShuffle, uniqueId, variations, wardrobeTotals } from "../src/lib/model.ts";
 import { makeSketch } from "../src/lib/sketch.ts";
 import type { Item, Slot } from "../src/lib/types.ts";
 import { figureSvg, pieceSvg } from "../src/lib/figure.ts";
@@ -65,6 +65,28 @@ describe("rotation rules", () => {
     expect(looks).toHaveLength(10);
     looks.forEach((_, i) => expect(dayWarnings(d.items, rot, i)).toEqual([]));
     expect(looks.every((l) => l.shirt && l.pants && l.shoes)).toBe(true);
+  });
+  it("fills only the empty days, leaving the ones already set exactly as they are", () => {
+    const keep = d.rotation.looks.map((l, i) => (i % 2 ? { ...EMPTY_LOOK } : l));
+    const looks = generateRotation(d.items, d.rotation.days, d.rotation.weeks, rng(7), 0.4, keep);
+    looks.forEach((l, i) => {
+      if (i % 2) expect(l.shirt && l.pants && l.shoes).toBeTruthy();
+      else expect(l).toEqual(d.rotation.looks[i]);
+    });
+  });
+  it("leaves a full rotation untouched", () => {
+    expect(generateRotation(d.items, d.rotation.days, d.rotation.weeks, rng(7), 0.4, d.rotation.looks)).toEqual(d.rotation.looks);
+  });
+  it("avoids repeating the kept day after a filled one", () => {
+    for (let s = 1; s < 20; s++) {
+      const keep = d.rotation.looks.map((l, i) => (i === 1 ? l : { ...EMPTY_LOOK }));
+      const looks = generateRotation(d.items, d.rotation.days, d.rotation.weeks, rng(s), 0.4, keep);
+      expect(dayWarnings(d.items, { ...d.rotation, looks }, 1)).toEqual([]);
+    }
+  });
+  it("treats a day with only accessories as empty", () => {
+    expect(isEmptyLook({ ...EMPTY_LOOK, acc: ["tie"] })).toBe(true);
+    expect(isEmptyLook({ ...EMPTY_LOOK, layer: "x" })).toBe(false);
   });
   it("resizes, keeping existing days", () => {
     const r = resizeRotation(d.rotation, ["Mon", "Wed"], 3);

@@ -30,9 +30,12 @@ Rules for changing it:
 
 | Component | Use |
 |---|---|
-| [`Masthead`](components/Masthead.md) | App title, issue meta, dek, nav. Once per screen. |
+| [`Masthead`](components/Masthead.md) | The sticky bar: wordmark on the left, nav and tools on the right. Once per screen. |
+| [`Wordmark`](components/Masthead.md#wordmark) | The app's mark and name, at the start of the bar. |
+| [`Settings`, `Setting`](components/Settings.md) | Gear button and its panel: theme, animation. |
 | [`Tabs`](components/Tabs.md) | Top-level view navigation. |
-| [`SectionHead`](components/SectionHead.md) | Kicker + display title over a heavy rule, with an aside for controls and, once per view, the step's numeral block. `level={1}` is the view's page head (h1 + dek). |
+| [`StepHead`, `StepAside`](components/StepHead.md) | The one page head over every step: numeral block, the step's name as the h1, dek. Rolls to the next step. A view puts its own actions beside it with `StepAside`. |
+| [`SectionHead`](components/SectionHead.md) | Kicker + display title over a heavy rule, with an aside for that section's controls. |
 | [`Button`](components/Button.md) | Primary (one per view), secondary, ghost, danger. |
 | [`Kicker`](components/Kicker.md) | Small tracked uppercase label above a title. |
 | [`Tag`](components/Tag.md) | Owned, to buy, rotation flags, kept. |
@@ -47,7 +50,7 @@ Rules for changing it:
 | [`Segmented`](components/Segmented.md) | Pick one of a few (Table / Cards, Try every…). |
 | `Tiles` | Pick one of several shown as pictures: style silhouettes, a colour palette. See [`SketchCreator`](components/SketchCreator.md). |
 | [`Notice`](components/Notice.md) | One-line status or warning under an action. |
-| [`Sheet`](components/Sheet.md) | Editing panel for one item: docked right on wide screens, bottom sheet on phones. |
+| [`Sheet`](components/Sheet.md) | Editing panel for one item, over a scrim: a side panel on wide screens, a bottom sheet on phones. |
 | [`ConfirmDialog`](components/ConfirmDialog.md) | "Apply or discard?" before an action would drop unapplied changes. |
 | [`SaveBar`](components/SaveBar.md) | Sticky unsaved-changes bar. |
 | [`SketchCreator`](components/SketchCreator.md) | App-level: the outfit builder's in-place piece creator, built from `Tiles`, `Field` and `Check`. |
@@ -122,7 +125,7 @@ Never set body copy in the display face below 14px; its hairlines break up. Neve
 
 - Spacing steps `space-1` (4) through `space-8` (72). Cards pad `space-4`, or `space-5` on wide screens; panels sit `space-6` apart; sections break at `space-7`.
 - A 12-column grid, max width 1180px, gutters `space-5` (`space-4` on phones).
-- Text measure: deks and body at most 60ch.
+- Text measure: deks and body at most 60ch. A `.lede` is exempt: it's a sentence or two of helper text that should sit on one line where it fits rather than break early. Anything longer is body copy and takes the measure.
 - The masthead closes with a double rule (`rule-double`); every view below it opens with a kicker and a `headline`.
 - Rotation grid: one row per week, a kicker ("Week 01") at the start of each, days as `RotationDay` cells.
 
@@ -136,9 +139,15 @@ Never set body copy in the display face below 14px; its hairlines break up. Neve
 
 No icon set. Labels are words, set as kickers or buttons. The one glyph is the "!" on a flag tag, set in the display face. If an icon is ever unavoidable (close, menu), use a 1.5px stroke, square caps, in `ink`, at 16px — and keep a text label for screen readers.
 
-There is no logo: the wordmark is the word "Rotation" set in `masthead`.
+The mark is the favicon's square: an oxblood block with the "R" in the display face. The `Wordmark` sets it beside the name "Rotation" at the start of the bar; on phones only the mark shows.
+
+The one other icon is the **gear** that opens Settings. It follows the rule above (16px, 1.5px stroke, square caps, `ink`) and carries the label "Settings" for screen readers and as a tooltip.
 
 ## Motion
 
 Minimal and print-like: colour and background swaps at 150ms ease; no slides, bounces or parallax. Respect `prefers-reduced-motion` by removing transitions entirely.
+
+One exception: **step changes.** Moving between the four steps rolls the `StepHead` (numeral, title, dek) and slides the page below it 24px, forward for a later step and back for an earlier one, over `motion-step-duration` (320ms) with `motion-step-ease`. The step colour blends over the same time. Nothing bounces or overshoots, moves within a step don't animate, and reduced motion removes all of it. Don't use slides anywhere else.
+
+People can also turn animation off themselves: **Settings → Animation → Off** sets `data-motion="reduce"` on `<html>`, which the stylesheet treats exactly like `prefers-reduced-motion: reduce`. Code that decides whether to animate calls `motionReduced()`, which checks both.
 

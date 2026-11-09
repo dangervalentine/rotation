@@ -1,188 +1,1172 @@
 /* App layout. Tokens and component styles come from src/design-system (imported first, via App.tsx).
    Use tokens only here: no raw colours, sizes off the spacing scale, or radii. */
 
-*{box-sizing:border-box}
-html,body{margin:0}
-.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+* {
+    box-sizing: border-box
+}
+
+html,
+body {
+    margin: 0
+}
+
+/* Always keep room for the scrollbar, so a step short enough not to scroll is as wide as the rest and the head never shifts. */
+html {
+    scrollbar-gutter: stable
+}
+
+/* The gutter already holds the scrollbar's room, so menus and sheets that lock scrolling (react-remove-scroll) must not add it again as body margin: that shifted the page whenever a select opened. */
+html body[data-scroll-locked] {
+    margin-right: 0 !important
+}
+
+.sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap
+}
 
 /* ---------- Page ---------- */
-.wrap{max-width:1180px;margin:0 auto;padding:var(--space-5) var(--space-5) var(--space-8);display:grid;gap:var(--space-7)}
-main,.wrap>*{min-width:0}
-main{display:grid;gap:var(--space-7)}
-.view{display:grid;gap:var(--space-8)}
-.lede{margin:0;max-width:60ch;font:400 13px/20px var(--font-sans);color:var(--ink-muted)}
-.lede b{color:var(--ink);font-weight:600}
-.actions{display:flex;flex-wrap:wrap;gap:var(--space-3);align-items:flex-end;margin-top:var(--space-5)}
-.empty{margin:0;padding:var(--space-7) var(--space-5);text-align:center;border-top:var(--rule-hair) solid var(--rule);border-bottom:var(--rule-hair) solid var(--rule);font:italic 400 20px/1.4 var(--font-display);color:var(--ink-muted)}
-@media (max-width:720px){.wrap{padding:var(--space-4) var(--space-4) var(--space-8);gap:var(--space-6)}.view{gap:var(--space-7)}}
+.wrap {
+    max-width: 1180px;
+    margin: 0 auto;
+    padding: var(--space-5) var(--space-5) var(--space-8);
+    display: grid;
+    gap: var(--space-7)
+}
+
+main,
+main>*,
+.wrap>* {
+    min-width: 0
+}
+
+main {
+    display: grid
+}
+
+.view {
+    display: grid;
+    gap: var(--space-8)
+}
+
+/* The step head sits over the page: as close as a section's own head on most steps, a view's gap on Wardrobe. */
+.step-page {
+    min-width: 0;
+    view-transition-name: step-page
+}
+
+.rt-step-1 main>.rt-shead-page {
+    margin-bottom: var(--space-8)
+}
+
+.lede {
+    margin: 0;
+    font: 400 13px/20px var(--font-sans);
+    color: var(--ink-muted);
+    margin-bottom: var(--space-4);
+}
+
+.lede b {
+    color: var(--ink);
+    font-weight: 600
+}
+
+.actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-3);
+    align-items: flex-end;
+    margin-top: var(--space-5)
+}
+
+.empty {
+    margin: 0;
+    padding: var(--space-7) var(--space-5);
+    text-align: center;
+    border-top: var(--rule-hair) solid var(--rule);
+    border-bottom: var(--rule-hair) solid var(--rule);
+    font: italic 400 20px/1.4 var(--font-display);
+    color: var(--ink-muted)
+}
+
+@media (max-width:720px) {
+    .wrap {
+        padding: var(--space-4) var(--space-4) var(--space-8);
+        gap: var(--space-6)
+    }
+
+    .view {
+        gap: var(--space-7)
+    }
+
+    .rt-step-1 main>.rt-shead-page {
+        margin-bottom: var(--space-7)
+    }
+}
+
+/* GitHub attribution: a quiet pill fixed in the bottom-right corner, under any open sheet. Hairline, not a shadow. */
+.github-attribution {
+    position: fixed;
+    right: var(--space-4);
+    bottom: var(--space-3);
+    z-index: 10;
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    padding: var(--space-1) var(--space-3);
+    border: var(--rule-hair) solid var(--rule);
+    border-radius: var(--radius-full);
+    background: var(--paper-raised);
+    color: var(--ink-muted);
+    font: 500 12px/20px var(--font-sans);
+    text-decoration: none;
+    transition: color var(--motion-quick-duration) var(--motion-quick-ease), border-color var(--motion-quick-duration) var(--motion-quick-ease)
+}
+
+.github-attribution:hover {
+    color: var(--ink);
+    border-color: var(--rule-strong)
+}
+
+.github-attribution strong {
+    font-weight: 600;
+    color: var(--ink)
+}
+
+.github-attribution-icon {
+    flex: none
+}
+
+/* Room at the foot of the page so the pill never sits over the last line. */
+.wrap {
+    padding-bottom: calc(var(--space-8) + var(--space-7))
+}
 
 /* Save bar sticks to the bottom right of the page */
-.save-status.is-error{color:var(--oxblood)}
+.save-status.is-error {
+    color: var(--oxblood)
+}
 
 /* ---------- Rotation ---------- */
-.f-days{width:240px}
-.f-weeks{width:72px}
-.week{display:grid;grid-template-columns:88px repeat(var(--days,5),minmax(0,1fr));gap:var(--space-3);align-items:stretch}
-.week+.week{margin-top:var(--space-4);padding-top:var(--space-4);border-top:var(--rule-hair) solid var(--rule)}
-.wklabel{padding-top:var(--space-3)}
-.lede+.week{margin-top:var(--space-5)}
-/* The calendar responds to its own width, so it reflows cleanly beside the docked day panel. */
-.days{container-type:inline-size}
-@container (max-width:940px){.week{grid-template-columns:repeat(3,minmax(0,1fr))}.wklabel{grid-column:1/-1;padding-top:0}}
-@container (max-width:600px){.week{grid-template-columns:repeat(2,minmax(0,1fr))}}
-@container (max-width:380px){.week{grid-template-columns:1fr}}
-.wear-saved{max-width:320px;margin-bottom:var(--space-5)}
+.f-days {
+    width: 240px
+}
 
-/* Day panel (Sheet) contents */
-.rt-sheet .actions{margin-top:var(--space-5)}
-.rt-sheet[data-mode="bottom"] .rt-sheet-back{display:none}
-.sheet-nav{display:inline-flex;gap:var(--space-2);margin-left:auto}
+.f-weeks {
+    width: 72px
+}
+
+.week {
+    display: grid;
+    grid-template-columns: 88px repeat(var(--days, 5), minmax(0, 1fr));
+    gap: var(--space-3);
+    align-items: stretch
+}
+
+.week+.week {
+    margin-top: var(--space-4);
+    padding-top: var(--space-4);
+    border-top: var(--rule-hair) solid var(--rule)
+}
+
+.wklabel {
+    padding-top: var(--space-3)
+}
+
+.lede+.week {
+    margin-top: var(--space-5)
+}
+
+/* The calendar responds to its own width. */
+.days {
+    container-type: inline-size
+}
+
+@container (max-width:940px) {
+    .week {
+        grid-template-columns: repeat(3, minmax(0, 1fr))
+    }
+
+    .wklabel {
+        grid-column: 1/-1;
+        padding-top: 0
+    }
+}
+
+@container (max-width:600px) {
+    .week {
+        grid-template-columns: repeat(2, minmax(0, 1fr))
+    }
+}
+
+@container (max-width:380px) {
+    .week {
+        grid-template-columns: 1fr
+    }
+}
+
+.sheet-nav {
+    display: inline-flex;
+    gap: var(--space-2);
+    margin-left: auto
+}
+
+/* "Save as new outfit" sits in the editor's toolbar in the side panel, and in the footer of the bottom sheet,
+   where the buttons share the rows evenly and Prev / Next give way (close it and pick another day instead). */
+.rt-sheet[data-mode="side"] .save-outfit-foot,
+.rt-sheet[data-mode="bottom"] .save-outfit-top,
+.rt-sheet[data-mode="bottom"] .sheet-nav {
+    display: none
+}
+
+.rt-sheet[data-mode="bottom"] .rt-sheet-foot>.rt-btn {
+    flex: 1 1 auto
+}
 
 /* ---------- Look editor: the figure is the hero, the pieces read as a styled list ---------- */
-.builder-grid{display:grid;grid-template-columns:minmax(200px,260px) minmax(0,1fr);gap:var(--space-7);align-items:start}
-.builder-figure{position:sticky;top:var(--space-4);display:grid;justify-items:center;gap:var(--space-2);background:var(--paper-raised);border:var(--rule-hair) solid var(--rule);padding:var(--space-5) var(--space-4)}
-.builder-figure-art{width:100%}
-.builder-figure svg{display:block;width:100%;height:auto}
-.builder-side{display:grid;gap:var(--space-4);min-width:0}
-.piece-list{list-style:none;margin:0;padding:0;border-top:var(--rule-strong) solid var(--ink)}
-.piece-row{position:relative;padding:var(--space-3) 0}
-.piece-row .rt-select-trigger{font-family:var(--font-display);font-size:19px;line-height:26px;min-height:44px}
-.piece-row.is-kept .rt-field-label{color:var(--oxblood)}
-.piece-extra{display:inline-flex;align-items:center;gap:var(--space-3)}
-.piece-row.is-empty{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:var(--space-2) var(--space-4)}
-.piece-empty{display:grid;gap:var(--space-1)}
-.piece-pulse{position:absolute;left:0;right:0;bottom:calc(var(--space-3) - 1px);height:2px;background:var(--ink);opacity:0;transform-origin:left;pointer-events:none}
-.builder-tools{display:flex;flex-wrap:wrap;align-items:center;gap:var(--space-2)}
-.builder-status{margin:0 0 0 auto;min-height:20px;font:400 12px/20px var(--font-sans);color:var(--ink-muted)}
-.builder.is-compact .builder-grid{grid-template-columns:112px minmax(0,1fr);gap:var(--space-4)}
-.builder.is-compact .builder-figure{padding:var(--space-3);top:0}
-.builder.is-compact .piece-row .rt-select-trigger{font-size:16px;line-height:22px}
-@media (prefers-reduced-motion:no-preference){
-  .builder-figure-art{animation:builder-rise var(--motion-quick-duration) var(--motion-quick-ease)}
-  .piece-pulse{animation:builder-sweep calc(var(--motion-quick-duration) * 3) var(--motion-quick-ease)}
+.builder-grid {
+    display: grid;
+    grid-template-columns: minmax(200px, 260px) minmax(0, 1fr);
+    gap: var(--space-7);
+    align-items: start
 }
-@keyframes builder-rise{from{opacity:.35;transform:translateY(2px)}to{opacity:1;transform:none}}
-@keyframes builder-sweep{0%{opacity:1;transform:scaleX(0)}40%{opacity:1;transform:scaleX(1)}100%{opacity:0;transform:scaleX(1)}}
-@media (max-width:640px){
-  .builder-grid,.builder.is-compact .builder-grid{grid-template-columns:1fr;gap:var(--space-4)}
-  .builder-figure{top:0;z-index:2;padding:var(--space-2);background:var(--paper-raised)}
-  .builder-figure-art{width:120px}
-  .builder.is-compact .builder-figure-art{width:96px}
+
+.builder-stage {
+    position: sticky;
+    top: var(--space-4);
+    display: grid;
+    gap: var(--space-3)
 }
-.full{grid-column:1/-1}
-.try-head{display:flex;flex-wrap:wrap;align-items:center;gap:var(--space-3) var(--space-4);margin:var(--space-6) 0 var(--space-3);padding-top:var(--space-4);border-top:var(--rule-hair) solid var(--rule)}
-.try-empty{display:flex;flex-wrap:wrap;align-items:center;gap:var(--space-2)}
-.var-strip{display:flex;gap:var(--space-2);overflow-x:auto;overscroll-behavior-x:contain;scroll-snap-type:x proximity;padding:2px 2px var(--space-2)}
-.var{appearance:none;flex:none;width:96px;padding:var(--space-2);display:grid;gap:var(--space-1);justify-items:center;align-content:start;border:var(--rule-hair) solid var(--rule);background:var(--paper-raised);color:var(--ink);font:400 12px/16px var(--font-sans);text-align:center;cursor:pointer;scroll-snap-align:start;transition:border-color var(--motion-quick-duration) var(--motion-quick-ease)}
-.var:hover{border-color:var(--rule-strong)}
-.var[aria-pressed="true"]{border-color:var(--ink);box-shadow:inset 0 -3px 0 var(--ink)}
-.var span{color:var(--ink-muted)}
-.var[aria-pressed="true"] span{color:var(--ink);font-weight:600}
+
+.builder-figure {
+    display: grid;
+    justify-items: center;
+    gap: var(--space-2);
+    background: var(--paper-raised);
+    border: var(--rule-hair) solid var(--rule);
+    padding: var(--space-5) var(--space-4)
+}
+
+.builder-figure-art {
+    width: 100%
+}
+
+.builder-figure svg {
+    display: block;
+    width: 100%;
+    height: auto
+}
+
+/* Clip sideways so a view sliding in never adds a horizontal scrollbar; the margin keeps focus rings. */
+.builder-views {
+    display: grid;
+    align-items: start
+}
+
+.builder-view {
+    grid-area: 1/1;
+    min-width: 0
+}
+
+.builder-view.is-off {
+    visibility: hidden;
+    opacity: 0;
+    pointer-events: none
+}
+
+.piece-list.is-off {
+    transform: translateX(calc(-1 * var(--space-5)))
+}
+
+.gallery.is-off {
+    transform: translateX(var(--space-5))
+}
+
+.builder-side {
+    container: builder-side / inline-size;
+    display: grid;
+    gap: var(--space-4);
+    min-width: 0;
+    overflow-x: clip;
+    overflow-clip-margin: var(--space-1)
+}
+
+/* The host's name, the List / Gallery switch, then the host's save buttons. */
+.builder-top {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    gap: var(--space-3)
+}
+
+.builder-top .f-name {
+    flex: 1 1 160px;
+    min-width: 0
+}
+
+/* As tall as the Save button beside it. */
+.builder-top .rt-seg {
+    height: 40px
+}
+
+.piece-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    border-top: var(--rule-strong) solid var(--ink)
+}
+
+.piece-row {
+    position: relative;
+    padding: var(--space-3) 0
+}
+
+.piece-row .rt-select-trigger {
+    font-family: var(--font-display);
+    font-size: 19px;
+    line-height: 26px;
+    min-height: 44px
+}
+
+.piece-row.is-kept .rt-field-label {
+    color: var(--oxblood)
+}
+
+.piece-extra {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-3)
+}
+
+.piece-row.is-empty {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-2) var(--space-4)
+}
+
+.piece-empty {
+    display: grid;
+    gap: var(--space-1)
+}
+
+.piece-pulse {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: calc(var(--space-3) - 1px);
+    height: 2px;
+    background: var(--ink);
+    opacity: 0;
+    transform-origin: left;
+    pointer-events: none
+}
+
+/* Under the figure: Shuffle across the column, then Undo, Redo and the status line. */
+.builder-tools {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-2)
+}
+
+.builder-tools>.rt-btn:first-child {
+    flex: 1 1 100%
+}
+
+.builder-status {
+    margin: 0 0 0 auto;
+    min-height: 20px;
+    font: 400 12px/20px var(--font-sans);
+    color: var(--ink-muted)
+}
+
+/* The host's own controls for the whole look, under the tools (Rotation: wear a saved outfit, the save notice). */
+.builder-host-actions {
+    display: grid;
+    gap: var(--space-3);
+    padding-top: var(--space-4);
+    border-top: var(--rule-hair) solid var(--rule)
+}
+
+.builder-host-actions .rt-notice {
+    margin: 0
+}
+
+@media (prefers-reduced-motion:no-preference) {
+    .builder-figure-art {
+        animation: builder-rise var(--motion-quick-duration) var(--motion-quick-ease)
+    }
+
+    .piece-pulse {
+        animation: builder-sweep calc(var(--motion-quick-duration) * 3) var(--motion-quick-ease)
+    }
+
+    /* List / Gallery crossfade: the shown view slides in from its button's side; the hidden one fades out, then hides. */
+    .builder-view {
+        transition: opacity var(--motion-sheet-duration) var(--motion-sheet-ease), transform var(--motion-sheet-duration) var(--motion-sheet-ease), visibility 0s
+    }
+
+    .builder-view.is-off {
+        transition: opacity var(--motion-quick-duration) var(--motion-quick-ease), transform var(--motion-quick-duration) var(--motion-quick-ease), visibility 0s var(--motion-quick-duration)
+    }
+}
+
+@keyframes builder-rise {
+    from {
+        opacity: .35;
+        transform: translateY(2px)
+    }
+
+    to {
+        opacity: 1;
+        transform: none
+    }
+}
+
+@keyframes builder-sweep {
+    0% {
+        opacity: 1;
+        transform: scaleX(0)
+    }
+
+    40% {
+        opacity: 1;
+        transform: scaleX(1)
+    }
+
+    100% {
+        opacity: 0;
+        transform: scaleX(1)
+    }
+}
+
+@media (max-width:640px) {
+
+    .builder-grid {
+        grid-template-columns: 1fr;
+        gap: var(--space-4)
+    }
+
+    /* One column: only the figure sticks; the actions flow between it and the pieces. */
+    .builder-stage {
+        display: contents
+    }
+
+    .builder-figure {
+        position: sticky;
+        top: 0;
+        z-index: 2;
+        padding: var(--space-2);
+        background: var(--paper-raised)
+    }
+
+    .builder-tools>.rt-btn:first-child {
+        flex: none
+    }
+
+    .builder-figure-art {
+        width: 120px
+    }
+
+    /* The bottom sheet is shorter than the page: a smaller pinned figure leaves room for the pieces.
+       It pins flush to the top of the sheet's scroll area, not below its padding, so nothing shows above it. */
+    .rt-sheet .builder-figure-art {
+        width: 72px
+    }
+
+    .rt-sheet .builder-figure {
+        top: calc(-1 * var(--sheet-pad))
+    }
+}
+
+.full {
+    grid-column: 1/-1
+}
+
+/* Gallery: the alternative to the piece list. One slot varies across whole looks; the first card sketches a new piece. */
+.gallery {
+    display: grid;
+    gap: var(--space-3);
+    min-width: 0;
+    padding-top: var(--space-3);
+    border-top: var(--rule-strong) solid var(--ink)
+}
+
+/* The slot switch stays on one row while it fits; narrower, it becomes an even grid rather than wrapping raggedly. */
+.gallery .rt-seg {
+    flex-wrap: nowrap;
+    justify-self: start
+}
+
+@container builder-side (max-width: 460px) {
+    .gallery .rt-seg {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        justify-self: stretch
+    }
+
+    .gallery .rt-seg-item:nth-child(3n+1) {
+        border-left: 0
+    }
+
+    .gallery .rt-seg-item:nth-child(n+4) {
+        border-top: var(--rule-hair) solid var(--rule)
+    }
+}
+
+@container builder-side (max-width: 300px) {
+    .gallery .rt-seg {
+        grid-template-columns: repeat(2, minmax(0, 1fr))
+    }
+
+    .gallery .rt-seg-item:nth-child(n) {
+        border-left: var(--rule-hair) solid var(--rule);
+        border-top: 0
+    }
+
+    .gallery .rt-seg-item:nth-child(odd) {
+        border-left: 0
+    }
+
+    .gallery .rt-seg-item:nth-child(n+3) {
+        border-top: var(--rule-hair) solid var(--rule)
+    }
+}
+
+/* Every option at once: the cards wrap into even columns rather than scrolling sideways. */
+.var-strip {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(96px, 1fr));
+    gap: var(--space-2)
+}
+
+.var {
+    appearance: none;
+    min-width: 0;
+    padding: var(--space-2);
+    display: grid;
+    gap: var(--space-1);
+    justify-items: center;
+    align-content: start;
+    border: var(--rule-hair) solid var(--rule);
+    background: var(--paper-raised);
+    color: var(--ink);
+    font: 400 12px/16px var(--font-sans);
+    text-align: center;
+    cursor: pointer;
+    transition: border-color var(--motion-quick-duration) var(--motion-quick-ease)
+}
+
+.var:hover {
+    border-color: var(--rule-strong)
+}
+
+.var[aria-pressed="true"] {
+    border-color: var(--ink);
+    box-shadow: inset 0 -3px 0 var(--ink)
+}
+
+.var span {
+    color: var(--ink-muted)
+}
+
+.var[aria-pressed="true"] span {
+    color: var(--ink);
+    font-weight: 600
+}
+
+.var-create {
+    border-style: dashed;
+    color: var(--oxblood)
+}
+
+.var-create span {
+    color: var(--oxblood);
+    font-weight: 600
+}
+
+/* Blank stand-in, the size of a 64px-wide figure (viewBox 120×200). */
+.var-blank {
+    display: grid;
+    place-items: center;
+    width: 64px;
+    aspect-ratio: 120/200;
+    border: var(--rule-hair) dashed var(--rule-strong);
+    font: 400 24px/1 var(--font-display)
+}
 
 /* ---------- Outfits ---------- */
-.f-name{width:260px}
-.look-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:var(--space-5)}
+.f-name {
+    width: 260px
+}
+
+.look-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: var(--space-5)
+}
 
 /* ---------- Wardrobe ---------- */
-.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:var(--space-6)}
-.cat-note{margin-left:var(--space-3);font:400 13px/20px var(--font-sans);color:var(--ink-muted)}
-.row-actions{display:inline-flex;flex-wrap:wrap;justify-content:flex-end;gap:var(--space-1)}
-.sketch-card{display:grid;gap:var(--space-2);align-content:start}
-.sketch-card .actions{margin:0}
-.backlink{justify-self:start;font:500 13px/20px var(--font-sans);color:var(--ink-muted)}
-.backlink:hover{color:var(--oxblood)}
-.detail{display:grid;grid-template-columns:minmax(200px,280px) 1fr;gap:var(--space-6);align-items:start}
-.detail-body{display:grid;gap:var(--space-4);align-content:start;min-width:0}
-.detail-body .actions{margin:0}
-.facts{display:grid;grid-template-columns:max-content 1fr;gap:var(--space-2) var(--space-5);margin:0;font:400 14px/20px var(--font-sans)}
-.facts dt{font:600 10px/20px var(--font-sans);letter-spacing:.14em;text-transform:uppercase;color:var(--ink-muted)}
-.facts dd{margin:0}
-@media (max-width:640px){.detail{grid-template-columns:1fr}.detail .rt-garment{max-width:280px}}
-.urlbar{display:flex;flex-wrap:wrap;align-items:flex-end;gap:var(--space-3);margin-bottom:var(--space-6)}
-.urlbar .rt-field{flex:1;min-width:240px}
-form.edit{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:var(--space-5);align-items:start;margin-bottom:var(--space-6);padding:var(--space-5);background:var(--paper-raised);border:var(--rule-hair) solid var(--rule-strong);border-top:var(--rule-heavy) solid var(--oxblood)}
-form.edit .actions{margin-top:0}
-.edit-head{display:grid;gap:var(--space-1)}
-.preview{display:flex;gap:var(--space-4);align-items:center}
-.preview img{width:80px;aspect-ratio:4/5;object-fit:cover;border:var(--rule-hair) solid var(--rule)}
-.colors{display:flex;gap:var(--space-5)}
-.colors .rt-field{flex:1}
-.card-group{display:grid;gap:var(--space-3)}
-.card-group+.card-group{margin-top:var(--space-6)}
-.garment-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:var(--space-4)}
+.stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: var(--space-6)
+}
 
-.tablewrap{position:relative;overflow-x:auto}
-table{width:100%;border-collapse:collapse;font:400 14px/20px var(--font-sans)}
-th{font:600 10px/16px var(--font-sans);letter-spacing:.14em;text-transform:uppercase;color:var(--ink-muted);text-align:left;padding:var(--space-2);border-bottom:var(--rule-hair) solid var(--rule-strong);white-space:nowrap}
-td{padding:var(--space-2);border-bottom:var(--rule-hair) solid var(--rule);vertical-align:middle}
-td.num,th.num{text-align:right;font-family:var(--font-mono);font-size:13px;font-variant-numeric:tabular-nums}
-th.num{font-family:var(--font-sans);font-size:10px}
-tr.cat td{padding:var(--space-6) var(--space-2) var(--space-2);border-bottom:var(--rule-heavy) solid var(--rule-strong);font:600 22px/1.1 var(--font-display);letter-spacing:-.01em}
-tr.tot td{font-weight:600;border-bottom:0;padding-bottom:var(--space-3)}
-tr.tot td:first-child{font:italic 400 15px/20px var(--font-display)}
-td.muted{color:var(--ink-muted);font-weight:400}
-tbody tr:not(.cat):not(.tot):hover td{background:var(--paper-raised)}
-.namecell{display:inline-flex;align-items:center;gap:var(--space-2)}
-.thumb{width:28px;height:35px;object-fit:cover;border:var(--rule-hair) solid var(--rule);flex:none}
+.cat-note {
+    margin-left: var(--space-3);
+    font: 400 13px/20px var(--font-sans);
+    color: var(--ink-muted)
+}
+
+.row-actions {
+    display: inline-flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: var(--space-1)
+}
+
+.sketch-card {
+    display: grid;
+    gap: var(--space-2);
+    align-content: start
+}
+
+.sketch-card .actions {
+    margin: 0
+}
+
+.backlink {
+    justify-self: start;
+    font: 500 13px/20px var(--font-sans);
+    color: var(--ink-muted)
+}
+
+.backlink:hover {
+    color: var(--oxblood)
+}
+
+.detail {
+    display: grid;
+    grid-template-columns: minmax(200px, 280px) 1fr;
+    gap: var(--space-6);
+    align-items: start
+}
+
+.detail-body {
+    display: grid;
+    gap: var(--space-4);
+    align-content: start;
+    min-width: 0
+}
+
+.detail-body .actions {
+    margin: 0
+}
+
+.facts {
+    display: grid;
+    grid-template-columns: max-content 1fr;
+    gap: var(--space-2) var(--space-5);
+    margin: 0;
+    font: 400 14px/20px var(--font-sans)
+}
+
+.facts dt {
+    font: 600 10px/20px var(--font-sans);
+    letter-spacing: .14em;
+    text-transform: uppercase;
+    color: var(--ink-muted)
+}
+
+.facts dd {
+    margin: 0
+}
+
+@media (max-width:640px) {
+    .detail {
+        grid-template-columns: 1fr
+    }
+
+    .detail .rt-garment {
+        max-width: 280px
+    }
+}
+
+.urlbar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    gap: var(--space-3);
+    margin-bottom: var(--space-6)
+}
+
+.urlbar .rt-field {
+    flex: 1;
+    min-width: 240px
+}
+
+form.edit {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: var(--space-5);
+    align-items: start;
+    margin-bottom: var(--space-6);
+    padding: var(--space-5);
+    background: var(--paper-raised);
+    border: var(--rule-hair) solid var(--rule-strong);
+    border-top: var(--rule-heavy) solid var(--oxblood)
+}
+
+form.edit .actions {
+    margin-top: 0
+}
+
+.edit-head {
+    display: grid;
+    gap: var(--space-1)
+}
+
+.preview {
+    display: flex;
+    gap: var(--space-4);
+    align-items: center
+}
+
+.preview img {
+    width: 80px;
+    aspect-ratio: 4/5;
+    object-fit: cover;
+    border: var(--rule-hair) solid var(--rule)
+}
+
+.colors {
+    display: flex;
+    gap: var(--space-5)
+}
+
+.colors .rt-field {
+    flex: 1
+}
+
+.card-group {
+    display: grid;
+    gap: var(--space-3)
+}
+
+.card-group+.card-group {
+    margin-top: var(--space-6)
+}
+
+.garment-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+    gap: var(--space-4)
+}
+
+.tablewrap {
+    position: relative;
+    overflow-x: auto
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    font: 400 14px/20px var(--font-sans)
+}
+
+th {
+    font: 600 10px/16px var(--font-sans);
+    letter-spacing: .14em;
+    text-transform: uppercase;
+    color: var(--ink-muted);
+    text-align: left;
+    padding: var(--space-2);
+    border-bottom: var(--rule-hair) solid var(--rule-strong);
+    white-space: nowrap
+}
+
+td {
+    padding: var(--space-2);
+    border-bottom: var(--rule-hair) solid var(--rule);
+    vertical-align: middle
+}
+
+td.num,
+th.num {
+    text-align: right;
+    font-family: var(--font-mono);
+    font-size: 13px;
+    font-variant-numeric: tabular-nums
+}
+
+th.num {
+    font-family: var(--font-sans);
+    font-size: 10px
+}
+
+tr.cat td {
+    padding: var(--space-6) var(--space-2) var(--space-2);
+    border-bottom: var(--rule-heavy) solid var(--rule-strong);
+    font: 600 22px/1.1 var(--font-display);
+    letter-spacing: -.01em
+}
+
+tr.tot td {
+    font-weight: 600;
+    border-bottom: 0;
+    padding-bottom: var(--space-3)
+}
+
+tr.tot td:first-child {
+    font: italic 400 15px/20px var(--font-display)
+}
+
+td.muted {
+    color: var(--ink-muted);
+    font-weight: 400
+}
+
+tbody tr:not(.cat):not(.tot):hover td {
+    background: var(--paper-raised)
+}
+
+.namecell {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2)
+}
+
+.thumb {
+    width: 28px;
+    height: 35px;
+    object-fit: cover;
+    border: var(--rule-hair) solid var(--rule);
+    flex: none
+}
 
 /* ---------- Print ---------- */
-.print-controls,.rot-controls{display:flex;flex-wrap:wrap;gap:var(--space-5) var(--space-6);align-items:flex-end;margin-bottom:var(--space-4)}
-.skin-row{display:flex;gap:var(--space-2);align-items:center;height:40px}
-.skin{appearance:none;width:24px;height:24px;padding:0;border:0;border-radius:var(--radius-full);box-shadow:inset 0 0 0 1px rgba(128,124,116,.6);cursor:pointer}
-.skin[aria-pressed="true"]{outline:2px solid var(--oxblood);outline-offset:2px}
-.f-hair{width:150px}
-.f-show{width:160px}
-
-.sheet{display:grid;gap:var(--space-8)}
-.cpage{display:grid;gap:var(--space-5);background:var(--paper-raised);border:var(--rule-hair) solid var(--rule);padding:var(--space-6)}
-.cweek{display:grid;gap:var(--space-2);break-inside:avoid}
-.cweek+.cweek{padding-top:var(--space-4);border-top:var(--rule-hair) solid var(--rule-strong)}
-.sheet-mark{display:flex;align-items:center;gap:var(--space-2);padding-top:var(--space-2);border-top:var(--rule-hair) solid var(--rule)}
-.cdays{display:grid;grid-template-columns:repeat(var(--days,5),minmax(0,1fr));gap:0}
-.cday{display:grid;justify-items:center;align-content:start;gap:var(--space-2);padding:var(--space-2) var(--space-3) var(--space-3);border-left:var(--rule-hair) solid var(--rule);break-inside:avoid}
-.cday:first-child{border-left:0}
-.cday .dname{justify-self:stretch;padding-bottom:var(--space-2);border-bottom:var(--rule-hair) solid var(--rule);font:600 24px/1 var(--font-display);text-align:center}
-.cday ul{max-width:100%;margin:0;padding:0;list-style:none;font:400 12px/17px var(--font-sans);color:var(--ink-muted)}
-.cday li{display:flex;align-items:center;gap:4px;min-width:0}
-.cday li span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.cpiece{flex:none;width:1.5em;height:1.5em}
-@media (max-width:900px){.cdays{grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--space-4) 0}.cday:nth-child(odd){border-left:0}}
-
-@media print{
-  @page{size:landscape;margin:10mm}
-  :root{color-scheme:light}
-  body{background:#fff}
-  .wrap{padding:0;max-width:none;gap:0}
-  .no-print{display:none!important}
-  .view{gap:0}
-  .sheet{gap:0}
-  /* Sized for the shorter of A4 and Letter landscape: ~190mm of height inside the margins. */
-  .cpage{border:0;padding:0;background:#fff;display:flex;flex-direction:column;gap:3mm;height:188mm;break-after:page;break-inside:avoid}
-  .sheet-mark{margin-top:auto;padding-top:0;border-top:0}
-  .cpage:last-child{break-after:auto}
-  .cweek{gap:1mm}
-  .cweek:first-child{padding-top:0}
-  .cweek+.cweek{padding-top:2mm}
-  .cdays{grid-template-columns:repeat(var(--days,5),minmax(0,1fr))!important;gap:0!important}
-  .cday{gap:1mm;padding:1mm 2mm 0;-webkit-print-color-adjust:exact;print-color-adjust:exact}
-  .cday:nth-child(odd){border-left:var(--rule-hair) solid var(--rule)}
-  .cday:first-child{border-left:0}
-  .cday .dname{padding-bottom:1mm;font-size:14px}
-  /* The figure is sized by height so each row of weeks shares the page: the page less the footer mark, split by rows, minus the day name and labels. */
-  .cday>svg{width:auto;max-width:100%;height:calc((176mm - (var(--rows,2) - 1) * 4mm) / var(--rows,2) - 28mm)}
-  .cday ul{justify-self:stretch;font-size:9px;line-height:12px}
+.print-controls,
+.rot-controls {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-5) var(--space-6);
+    align-items: flex-end;
+    margin-bottom: var(--space-4)
 }
-.view>*{min-width:0}
+
+.skin-row {
+    display: flex;
+    gap: var(--space-2);
+    align-items: center;
+    height: 40px
+}
+
+.skin {
+    appearance: none;
+    width: 24px;
+    height: 24px;
+    padding: 0;
+    border: 0;
+    border-radius: var(--radius-full);
+    box-shadow: inset 0 0 0 1px rgba(128, 124, 116, .6);
+    cursor: pointer
+}
+
+.skin[aria-pressed="true"] {
+    outline: 2px solid var(--oxblood);
+    outline-offset: 2px
+}
+
+.f-hair {
+    width: 150px
+}
+
+.f-show {
+    width: 160px
+}
+
+.sheet {
+    display: grid;
+    gap: var(--space-8)
+}
+
+.cpage {
+    display: grid;
+    gap: var(--space-5);
+    background: var(--paper-raised);
+    border: var(--rule-hair) solid var(--rule);
+    padding: var(--space-6)
+}
+
+.cweek {
+    display: grid;
+    gap: var(--space-2);
+    break-inside: avoid
+}
+
+.cweek+.cweek {
+    padding-top: var(--space-4);
+    border-top: var(--rule-hair) solid var(--rule-strong)
+}
+
+.sheet-mark {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    padding-top: var(--space-2);
+    border-top: var(--rule-hair) solid var(--rule)
+}
+
+.cdays {
+    display: grid;
+    grid-template-columns: repeat(var(--days, 5), minmax(0, 1fr));
+    gap: 0
+}
+
+.cday {
+    display: grid;
+    justify-items: center;
+    align-content: start;
+    gap: var(--space-2);
+    padding: var(--space-2) var(--space-3) var(--space-3);
+    border-left: var(--rule-hair) solid var(--rule);
+    break-inside: avoid
+}
+
+.cday:first-child {
+    border-left: 0
+}
+
+.cday .dname {
+    justify-self: stretch;
+    padding-bottom: var(--space-2);
+    border-bottom: var(--rule-hair) solid var(--rule);
+    font: 600 24px/1 var(--font-display);
+    text-align: center
+}
+
+.cday ul {
+    max-width: 100%;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    font: 400 12px/17px var(--font-sans);
+    color: var(--ink-muted)
+}
+
+.cday li {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    min-width: 0
+}
+
+.cday li span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap
+}
+
+.cpiece {
+    flex: none;
+    width: 1.5em;
+    height: 1.5em
+}
+
+@media (max-width:900px) {
+    .cdays {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: var(--space-4) 0
+    }
+
+    .cday:nth-child(odd) {
+        border-left: 0
+    }
+}
+
+@media print {
+    @page {
+        size: landscape;
+        margin: 10mm
+    }
+
+    :root {
+        color-scheme: light
+    }
+
+    body {
+        background: #fff
+    }
+
+    .wrap {
+        padding: 0;
+        max-width: none;
+        gap: 0
+    }
+
+    .no-print {
+        display: none !important
+    }
+
+    .view {
+        gap: 0
+    }
+
+    .rt-step-1 main>.rt-shead-page {
+        margin-bottom: 0
+    }
+
+    .sheet {
+        gap: 0
+    }
+
+    /* Sized for the shorter of A4 and Letter landscape: ~190mm of height inside the margins. */
+    .cpage {
+        border: 0;
+        padding: 0;
+        background: #fff;
+        display: flex;
+        flex-direction: column;
+        gap: 3mm;
+        height: 188mm;
+        break-after: page;
+        break-inside: avoid
+    }
+
+    .sheet-mark {
+        margin-top: auto;
+        padding-top: 0;
+        border-top: 0
+    }
+
+    .cpage:last-child {
+        break-after: auto
+    }
+
+    .cweek {
+        gap: 1mm
+    }
+
+    .cweek:first-child {
+        padding-top: 0
+    }
+
+    .cweek+.cweek {
+        padding-top: 2mm
+    }
+
+    .cdays {
+        grid-template-columns: repeat(var(--days, 5), minmax(0, 1fr)) !important;
+        gap: 0 !important
+    }
+
+    .cday {
+        gap: 1mm;
+        padding: 1mm 2mm 0;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact
+    }
+
+    .cday:nth-child(odd) {
+        border-left: var(--rule-hair) solid var(--rule)
+    }
+
+    .cday:first-child {
+        border-left: 0
+    }
+
+    .cday .dname {
+        padding-bottom: 1mm;
+        font-size: 14px
+    }
+
+    /* The figure is sized by height so each row of weeks shares the page: the page less the footer mark, split by rows, minus the day name and labels. */
+    .cday>svg {
+        width: auto;
+        max-width: 100%;
+        height: calc((176mm - (var(--rows, 2) - 1) * 4mm) / var(--rows, 2) - 28mm)
+    }
+
+    .cday ul {
+        justify-self: stretch;
+        font-size: 9px;
+        line-height: 12px
+    }
+}
+
+.view>* {
+    min-width: 0
+}
+
 /* A page head straight in the view (not inside its first section) is spaced by the view's gap. */
-.view>.rt-shead{margin-bottom:0}
+.view>.rt-shead {
+    margin-bottom: 0
+}
 
 /* Accessories row in the outfit builder: chips for what's on, then a picker to add more. */
-.piece-row.is-acc{display:grid;gap:var(--space-2)}
-.piece-row.is-acc.is-empty{display:flex}
-.acc-chips{list-style:none;margin:0;padding:0;display:flex;flex-wrap:wrap;gap:var(--space-2)}
-.acc-chip{display:inline-flex;align-items:center;gap:var(--space-2);min-height:44px;padding:0 0 0 var(--space-3);border:var(--rule-hair) solid var(--rule-strong);font:400 14px/20px var(--font-sans);color:var(--ink)}
-.acc-remove{appearance:none;display:grid;place-items:center;width:44px;height:44px;border:0;background:none;color:var(--ink-muted);cursor:pointer}
-.acc-remove:hover{color:var(--ink)}
-.acc-remove:focus-visible{outline:2px solid var(--focus);outline-offset:-2px}
+.piece-row.is-acc {
+    display: grid;
+    gap: var(--space-2)
+}
+
+.piece-row.is-acc.is-empty {
+    display: flex
+}
+
+.acc-chips {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2)
+}
+
+.acc-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    min-height: 44px;
+    padding: 0 0 0 var(--space-3);
+    border: var(--rule-hair) solid var(--rule-strong);
+    font: 400 14px/20px var(--font-sans);
+    color: var(--ink)
+}
+
+.acc-remove {
+    appearance: none;
+    display: grid;
+    place-items: center;
+    width: 44px;
+    height: 44px;
+    border: 0;
+    background: none;
+    color: var(--ink-muted);
+    cursor: pointer
+}
+
+.acc-remove:hover {
+    color: var(--ink)
+}
+
+.acc-remove:focus-visible {
+    outline: 2px solid var(--focus);
+    outline-offset: -2px
+}
+
 /* Socks & underwear icons stand in for the swatch in the wardrobe table. */
-.item-icon{display:inline-block;width:24px;height:24px;vertical-align:middle;border-radius:2px;background:var(--garment-ground)}
+.item-icon {
+    display: inline-block;
+    width: 24px;
+    height: 24px;
+    vertical-align: middle;
+    border-radius: 2px;
+    background: var(--garment-ground)
+}

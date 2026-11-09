@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "savedAt": 1794234854828,
+  "savedAt": 1794241427924,
   "title": "Workweek Wardrobe",
   "subtitle": "",
   "items": [
@@ -307,6 +307,30 @@
         "pants": "stone",
         "shoes": "sneakers"
       }
+    },
+    {
+      "id": "outfit-4",
+      "name": "Outfit 4",
+      "look": {
+        "layer": "blazer",
+        "shirt": "pink-ox",
+        "undershirt": null,
+        "belt": "belt-brown",
+        "pants": "navy-chino",
+        "shoes": "sneakers"
+      }
+    },
+    {
+      "id": "week-1-mon",
+      "name": "Week 1, Mon",
+      "look": {
+        "layer": null,
+        "shirt": "chambray",
+        "undershirt": "undershirt",
+        "belt": "belt-black",
+        "pants": "navy-chino",
+        "shoes": "beckman"
+      }
     }
   ],
   "rotation": {
@@ -321,83 +345,83 @@
     "looks": [
       {
         "layer": null,
-        "shirt": "white-ox",
-        "undershirt": null,
-        "belt": "belt-brown",
-        "pants": "jeans",
-        "shoes": "iron-ranger"
-      },
-      {
-        "layer": "sweater",
         "shirt": "chambray",
-        "undershirt": null,
-        "belt": "belt-brown",
-        "pants": "stone",
-        "shoes": "sneakers"
-      },
-      {
-        "layer": null,
-        "shirt": "blue-ox",
-        "undershirt": null,
+        "undershirt": "undershirt",
         "belt": "belt-black",
-        "pants": "wool",
-        "shoes": "beckman"
-      },
-      {
-        "layer": "sweater",
-        "shirt": "pink-ox",
-        "undershirt": null,
-        "belt": "belt-brown",
         "pants": "navy-chino",
-        "shoes": "iron-ranger"
+        "shoes": "beckman"
       },
       {
         "layer": null,
         "shirt": "polo",
-        "undershirt": null,
-        "belt": "belt-brown",
-        "pants": "olive",
-        "shoes": "sneakers"
-      },
-      {
-        "layer": "sweater",
-        "shirt": "bstripe-ox",
-        "undershirt": null,
-        "belt": "belt-black",
-        "pants": "jeans",
-        "shoes": "beckman"
-      },
-      {
-        "layer": null,
-        "shirt": "white-ox",
-        "undershirt": null,
+        "undershirt": "undershirt",
         "belt": "belt-brown",
         "pants": "stone",
         "shoes": "iron-ranger"
       },
       {
         "layer": "sweater",
+        "shirt": "blue-ox",
+        "undershirt": "undershirt",
+        "belt": "belt-brown",
+        "pants": "jeans",
+        "shoes": "sneakers"
+      },
+      {
+        "layer": "blazer",
         "shirt": "pink-ox",
-        "undershirt": null,
+        "undershirt": "undershirt",
+        "belt": "belt-brown",
+        "pants": "olive",
+        "shoes": "iron-ranger"
+      },
+      {
+        "layer": "sweater",
+        "shirt": "white-ox",
+        "undershirt": "undershirt",
         "belt": "belt-black",
         "pants": "wool",
         "shoes": "beckman"
       },
       {
         "layer": null,
-        "shirt": "chambray",
-        "undershirt": null,
+        "shirt": "bstripe-ox",
+        "undershirt": "undershirt",
         "belt": "belt-brown",
-        "pants": "navy-chino",
+        "pants": "wool",
+        "shoes": "sneakers"
+      },
+      {
+        "layer": "blazer",
+        "shirt": "pink-ox",
+        "undershirt": "undershirt",
+        "belt": "belt-brown",
+        "pants": "olive",
         "shoes": "iron-ranger"
+      },
+      {
+        "layer": "blazer",
+        "shirt": "chambray",
+        "undershirt": "undershirt",
+        "belt": "belt-black",
+        "pants": "stone",
+        "shoes": "beckman"
       },
       {
         "layer": null,
         "shirt": "blue-ox",
-        "undershirt": null,
+        "undershirt": "undershirt",
         "belt": "belt-brown",
-        "pants": "olive",
+        "pants": "navy-chino",
         "shoes": "sneakers"
+      },
+      {
+        "layer": null,
+        "shirt": "polo",
+        "undershirt": "undershirt",
+        "belt": "belt-brown",
+        "pants": "jeans",
+        "shoes": "iron-ranger"
       }
     ]
   },

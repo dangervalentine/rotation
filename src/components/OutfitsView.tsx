@@ -1,8 +1,8 @@
 import { useState } from "react";
-import { Button, Field, LookCard, Notice, SectionHead } from "../design-system/index.ts";
+import { Button, Field, LookCard, motionReduced, Notice, SectionHead } from "../design-system/index.ts";
 import { clone, EMPTY_LOOK, same, shuffleLook, uniqueId } from "../lib/model.ts";
 import type { Item, Look, Outfit, WardrobeData } from "../lib/types.ts";
-import { lookPieces, OutfitFigure, PageHead } from "./common.tsx";
+import { lookPieces, OutfitFigure } from "./common.tsx";
 import { LookEditor } from "./LookEditor.tsx";
 
 /** Saved outfit library plus a mix-and-match workspace. */
@@ -19,7 +19,7 @@ export function OutfitsView({ data, setData }: { data: WardrobeData; setData: (d
     setEditing(o.id);
     setLook(clone(o.look));
     setName(o.name);
-    window.scrollTo({ top: 0, behavior: "smooth" });
+    window.scrollTo({ top: 0, behavior: motionReduced() ? "auto" : "smooth" });
   }
   function createItem(it: Omit<Item, "id">) {
     const id = uniqueId(it.name, items);
@@ -50,24 +50,38 @@ export function OutfitsView({ data, setData }: { data: WardrobeData; setData: (d
 
   return (
     <div className="view">
-      <section aria-label="Mix and match">
-        <PageHead view="outfits" aside={base ? <span className="lede">Editing <b>{base.name}</b>. Change the pieces, then save.</span> : null} />
+      <section aria-labelledby="mix-h">
+        <SectionHead
+          id="mix-h"
+          kicker={base ? "Editing" : "New look"}
+          title="Mix and match"
+          aside={<span className="lede">{base ? <>Change the pieces in <b>{base.name}</b>, then save.</> : "Pick a piece for each slot, or compare every option side by side."}</span>}
+        />
         {items.length ? null : (
           <Notice tone="neutral">
             No pieces yet. Start in <a href="#wardrobe">Wardrobe</a>.
           </Notice>
         )}
-        <LookEditor items={items} look={look} onChange={setLook} onCreateItem={createItem} historyKey={editing ?? "new"} onCreatingChange={setCreating} />
-        <div className="actions">
-          <Field className="f-name" label="Name" value={name} placeholder="Rainy Monday" onChange={(e) => setName(e.target.value)} />
-          {base ? (
-            <Button variant={creating ? "secondary" : "primary"} onClick={saveExisting} disabled={!dirty}>Save changes to {base.name}</Button>
-          ) : null}
-          <Button variant={base || creating ? "secondary" : "primary"} onClick={saveNew}>Save as new outfit</Button>
-          {base ? (
-            <Button variant="ghost" onClick={() => { setEditing(null); setName(""); }}>Stop editing</Button>
-          ) : null}
-        </div>
+        <LookEditor
+          items={items}
+          look={look}
+          onChange={setLook}
+          onCreateItem={createItem}
+          historyKey={editing ?? "new"}
+          onCreatingChange={setCreating}
+          toolbarStart={<Field className="f-name" label="Name" value={name} placeholder="Rainy Monday" onChange={(e) => setName(e.target.value)} />}
+          toolbarEnd={
+            <>
+              {base ? (
+                <Button variant={creating ? "secondary" : "primary"} onClick={saveExisting} disabled={!dirty}>Save changes to {base.name}</Button>
+              ) : null}
+              <Button variant={base || creating ? "secondary" : "primary"} onClick={saveNew}>Save as new outfit</Button>
+              {base ? (
+                <Button variant="ghost" onClick={() => { setEditing(null); setName(""); }}>Stop editing</Button>
+              ) : null}
+            </>
+          }
+        />
       </section>
 
       <section aria-labelledby="lib-h">

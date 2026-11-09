@@ -1,24 +1,20 @@
-import type { ReactNode } from "react";
 import { basicsIconSvg, figureSvg, pieceSvg, VIEWBOX } from "../lib/figure.ts";
 import { findItem, shortName, SLOTS } from "../lib/model.ts";
 import { itemStatus, STATUS_LABEL } from "../lib/sketch.ts";
 import { detailsOf, styleSpec } from "../lib/styles.ts";
 import type { Figure, Item, Look, Slot } from "../lib/types.ts";
-import { VIEW_ORDER, type ViewId } from "../lib/route.ts";
-import { SectionHead, Swatch as DsSwatch, type Piece, type SelectOption } from "../design-system/index.ts";
+import { itemHash, VIEW_ORDER, type ViewId } from "../lib/route.ts";
+import { Swatch as DsSwatch, type Piece, type SelectOption } from "../design-system/index.ts";
 
-/** The dek says what each step is for. */
-const DEKS: Record<ViewId, string> = {
-  wardrobe: "Everything you own or mean to buy.",
-  outfits: "Put pieces together into looks, and keep the ones you like.",
-  rotation: "Plan what to wear each day, for as many days and weeks as you like.",
-  print: "Your plan on paper, to pin up by the closet.",
-};
-
-/** The head of every view: its step numeral, the app's name as the page's h1, and the step's dek. */
-export function PageHead({ view, aside }: { view: ViewId; aside?: ReactNode }) {
-  return <SectionHead level={1} number={VIEW_ORDER.indexOf(view) + 1} title="Rotation" dek={DEKS[view]} aside={aside} />;
-}
+/** Each step's head: its numeral, its name as the page's h1, and the dek, which says what the step is for. */
+export const STEP_HEADS = Object.fromEntries(
+  ([
+    ["wardrobe", "Wardrobe", "Everything you own or mean to buy."],
+    ["outfits", "Outfits", "Put pieces together into looks, and keep the ones you like."],
+    ["rotation", "Rotation", "Plan what to wear each day, for as many days and weeks as you like."],
+    ["print", "Print", "Your plan on paper, to pin up by the closet."],
+  ] as const).map(([view, title, dek]) => [view, { number: (VIEW_ORDER.indexOf(view) + 1) as 1 | 2 | 3 | 4, title, dek }]),
+) as Record<ViewId, { number: 1 | 2 | 3 | 4; title: string; dek: string }>;
 
 export function OutfitFigure({ items, look, width, cartoon, figure }: { items: Item[]; look: Look; width?: number | string; cartoon?: boolean; figure?: Figure }) {
   const label = [look.layer, look.shirt, look.undershirt, look.pants, look.shoes, ...(look.acc ?? [])]
@@ -65,7 +61,7 @@ export function Swatch({ it }: { it: Item | null }) {
 /** A look as design-system pieces: one per slot, then one per accessory. */
 export function lookPieces(items: Item[], look: Look): Piece[] {
   const piece = (slot: Piece["slot"], it: Item | null, id?: string): Piece =>
-    ({ slot, id, name: it ? shortName(it) : null, color: it?.color ?? null, stripe: it?.stripe, pattern: it ? detailsOf(it).pattern : undefined, status: it ? itemStatus(it) : undefined });
+    ({ slot, id, name: it ? shortName(it) : null, color: it?.color ?? null, stripe: it?.stripe, pattern: it ? detailsOf(it).pattern : undefined, status: it ? itemStatus(it) : undefined, href: it ? itemHash(it.id) : undefined });
   const acc = (look.acc ?? []).map((id) => findItem(items, id)).filter((it): it is Item => !!it);
   return [...SLOTS.map(([slot]) => piece(slot, findItem(items, look[slot]))), ...acc.map((it) => piece("acc", it, it.id))];
 }

@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { Button, Check, Kicker, Segmented, Select, Tag } from "../design-system/index.ts";
 import { canRedo, canUndo, initHistory, push, redo, undo, type History } from "../lib/history.ts";
 import { canShuffle, findItem, OPTIONAL_SLOTS, same, shortName, shuffleLook, SLOTS, sortForPicker, variations } from "../lib/model.ts";
@@ -11,6 +11,10 @@ const NONE = "__none";
 const CREATE = "__create";
 const DRAFT = "__draft";
 const cx = (...c: (string | false | null | undefined)[]) => c.filter(Boolean).join(" ");
+
+/** How pieces are shown: a list with a dropdown per slot, or a gallery of whole looks that vary one slot. */
+type Mode = "list" | "gallery";
+const MODES: [Mode, string][] = [["list", "List"], ["gallery", "Gallery"]];
 
 /** The look with an accessory added (once), or taken off. */
 const withAcc = (l: Look, id: string): Look => ({ ...l, acc: [...(l.acc ?? []).filter((a) => a !== id), id] });
@@ -32,15 +36,18 @@ export interface LookEditorProps {
   historyKey: string;
   /** True while the piece creator is open, so the host can demote its own primary button. */
   onCreatingChange?: (creating: boolean) => void;
-  /** Narrow layout for the Rotation day panel. */
-  compact?: boolean;
+  /** The host's own controls for the whole look, under Shuffle (Rotation: wear a saved outfit). */
+  stageActions?: ReactNode;
+  /** The host's own controls around the List / Gallery switch: before it (a name), after it (save). */
+  toolbarStart?: ReactNode;
+  toolbarEnd?: ReactNode;
 }
 
 const isTextField = (t: EventTarget | null) =>
   t instanceof HTMLElement && (t.isContentEditable || t.tagName === "TEXTAREA" || (t.tagName === "INPUT" && !["checkbox", "radio", "button", "color", "file"].includes((t as HTMLInputElement).type)));
 
 /** Figure + a styled list of pieces, with sketching, shuffle (respecting keeps), undo/redo and one-slot variations. */
-export function LookEditor({ items, look, onChange, onCreateItem, historyKey, onCreatingChange, compact }: LookEditorProps) {
+export function LookEditor({ items, look, onChange, onCreateItem, historyKey, onCreatingChange, stageActions, toolbarStart, toolbarEnd }: LookEditorProps) {
   // History follows the host's look: a new key starts over; any other outside change (wear an outfit,
   // copy the previous day) is recorded so it can be undone too.
   const [hist, setHist] = useState<{ key: string; h: History<Look> }>(() => ({ key: historyKey, h: initHistory(look) }));
@@ -55,6 +62,7 @@ export function LookEditor({ items, look, onChange, onCreateItem, historyKey, on
   const present = h.present;
 
   const [locked, setLocked] = useState<Partial<Record<Slot, boolean>>>({});
+  const [mode, setMode] = useState<Mode>("list");
   const [vary, setVary] = useState<Slot>("shirt");
   const [preview, setPreview] = useState<{ slot: SketchPart; id: string | null } | null>(null);
   const [creating, setCreating] = useState<{ slot: SketchPart; draft: Omit<Item, "id"> | null } | null>(null);
@@ -88,7 +96,7 @@ export function LookEditor({ items, look, onChange, onCreateItem, historyKey, on
     if (!canShuffle(items, locked)) return setStatus("Nothing left to shuffle");
     commit(shuffleLook(items, present, locked), "Shuffled");
   }
-  const focusSlot = (slot: SketchPart) => requestAnimationFrame(() => document.getElementById("slot-" + slot)?.focus());
+  const focusSlot = (slot: SketchPart) => requestAnimationFrame(() => document.getElementById(mode === "gallery" && slot !== "acc" ? "vary-create" : "slot-" + slot)?.focus());
   function openCreator(slot: SketchPart) {
     setPreview(null);
     setCreating({ slot, draft: null });
@@ -124,7 +132,7 @@ export function LookEditor({ items, look, onChange, onCreateItem, historyKey, on
   return (
     <div
       ref={rootRef}
-      className={cx("builder", compact && "is-compact", isCreating && "is-creating")}
+      className={cx("builder", isCreating && "is-creating")}
       onKeyDown={(e) => {
         if (isCreating || !(e.ctrlKey || e.metaKey) || isTextField(e.target)) return;
         const k = e.key.toLowerCase();
@@ -133,12 +141,24 @@ export function LookEditor({ items, look, onChange, onCreateItem, historyKey, on
       }}
     >
       <div className="builder-grid">
-        <div className="builder-figure">
-          {/* Keyed on the committed look, so a real change replays the entrance; previews swap instantly. */}
-          <div className="builder-figure-art" key={JSON.stringify(present)}>
-            <OutfitFigure items={figItems} look={figLook} />
+        {/* The figure with the actions on the whole look under it; they stick together as the pieces scroll. */}
+        <div className="builder-stage">
+          <div className="builder-figure">
+            {/* Keyed on the committed look, so a real change replays the entrance; previews swap instantly. */}
+            <div className="builder-figure-art" key={JSON.stringify(present)}>
+              <OutfitFigure items={figItems} look={figLook} />
+            </div>
+            {creating ? <Kicker tone="accent" className="builder-figure-note">Preview</Kicker> : null}
           </div>
-          {creating ? <Kicker tone="accent" className="builder-figure-note">Preview</Kicker> : null}
+          {creating ? null : (
+            <div className="builder-tools">
+              <Button onClick={shuffle}>Shuffle unkept pieces</Button>
+              <Button variant="ghost" size="sm" onClick={() => step("undo")} aria-disabled={!canUndo(h)} aria-keyshortcuts="Control+Z Meta+Z">Undo</Button>
+              <Button variant="ghost" size="sm" onClick={() => step("redo")} aria-disabled={!canRedo(h)} aria-keyshortcuts="Control+Shift+Z Meta+Shift+Z Control+Y">Redo</Button>
+              <p className="builder-status" role="status">{status}</p>
+            </div>
+          )}
+          {creating || !stageActions ? null : <div className="builder-host-actions">{stageActions}</div>}
         </div>
 
         {creating ? (
@@ -152,134 +172,130 @@ export function LookEditor({ items, look, onChange, onCreateItem, historyKey, on
           />
         ) : (
           <div className="builder-side">
-            <ul className="piece-list" aria-label="Pieces">
-              {SLOTS.map(([slot, label]) => {
-                const own = sortForPicker(items.filter((i) => i.cat === slot));
-                const cur = findItem(items, present[slot]);
-                const st = cur ? itemStatus(cur) : null;
-                const pulse = changed.slots.includes(slot) ? <span key={changed.seq} className="piece-pulse" aria-hidden="true" /> : null;
-                const keep = (
-                  <Check
-                    className="rt-check-sm"
-                    label={<>Keep<span className="sr-only"> {label.toLowerCase()}</span></>}
-                    title="Keep this piece when shuffling"
-                    checked={!!locked[slot]}
-                    onCheckedChange={(v) => setLocked({ ...locked, [slot]: v })}
-                  />
-                );
-                if (!own.length) {
+            <div className="builder-top">
+              {toolbarStart}
+              <Segmented label="Show pieces as" options={MODES} value={mode} onChange={setMode} />
+              {toolbarEnd}
+            </div>
+            {/* Both views stay laid out in one cell, so the editor is as tall as the taller one and switching
+                never moves what's below it. The hidden one is inert. */}
+            <div className="builder-views">
+              <div className={cx("gallery", "builder-view", mode !== "gallery" && "is-off")} inert={mode !== "gallery"}>
+                <Segmented label="Piece to vary" options={SLOTS} value={vary} onChange={setVary} />
+                <div className="var-strip" role="group" aria-label={"Every " + varyLabel.toLowerCase()}>
+                  <button id="vary-create" type="button" className="var var-create" onClick={() => openCreator(vary)}>
+                    <span className="var-blank" aria-hidden="true">+</span>
+                    <span>Create a piece</span>
+                  </button>
+                  {items.some((i) => i.cat === vary)
+                    ? vars.map((v) => {
+                        const it = findItem(items, v.id);
+                        return (
+                          <button key={v.id || NONE} type="button" className="var" aria-pressed={present[vary] === v.id} onClick={() => commit(v.look)}>
+                            <OutfitFigure items={items} look={v.look} width={64} />
+                            <span>{it ? shortName(it) : "None"}</span>
+                            {it?.sketch ? <Tag tone="sketch">Sketch</Tag> : null}
+                          </button>
+                        );
+                      })
+                    : null}
+                </div>
+              </div>
+              <ul className={cx("piece-list", "builder-view", mode !== "list" && "is-off")} inert={mode !== "list"} aria-label="Pieces">
+                {SLOTS.map(([slot, label]) => {
+                  const own = sortForPicker(items.filter((i) => i.cat === slot));
+                  const cur = findItem(items, present[slot]);
+                  const st = cur ? itemStatus(cur) : null;
+                  const pulse = changed.slots.includes(slot) ? <span key={changed.seq} className="piece-pulse" aria-hidden="true" /> : null;
+                  const keep = (
+                    <Check
+                      className="rt-check-sm"
+                      label={<>Keep<span className="sr-only"> {label.toLowerCase()}</span></>}
+                      title="Keep this piece when shuffling"
+                      checked={!!locked[slot]}
+                      onCheckedChange={(v) => setLocked({ ...locked, [slot]: v })}
+                    />
+                  );
+                  if (!own.length) {
+                    return (
+                      <li key={slot} className="piece-row is-empty">
+                        <div className="piece-empty">
+                          <Kicker>{label}</Kicker>
+                          <span className="lede">No {label.toLowerCase()} in your wardrobe yet.</span>
+                        </div>
+                        <Button id={"slot-" + slot} size="sm" onClick={() => openCreator(slot)}>Create a piece</Button>
+                        {pulse}
+                      </li>
+                    );
+                  }
+                  const opts = own.map(itemOption);
+                  if (OPTIONAL_SLOTS[slot]) opts.unshift({ value: NONE, label: "None", swatch: null });
+                  opts.unshift({ value: CREATE, label: "Create a piece…", action: true });
                   return (
-                    <li key={slot} className="piece-row is-empty">
-                      <div className="piece-empty">
-                        <Kicker>{label}</Kicker>
-                        <span className="lede">No {label.toLowerCase()} in your wardrobe yet.</span>
-                      </div>
-                      <Button id={"slot-" + slot} size="sm" onClick={() => openCreator(slot)}>Create a piece</Button>
+                    <li key={slot} className={cx("piece-row", locked[slot] && "is-kept")}>
+                      <Select
+                        id={"slot-" + slot}
+                        label={label}
+                        value={present[slot] || NONE}
+                        options={opts}
+                        onChange={(v) => commit({ ...present, [slot]: v === NONE ? null : v })}
+                        onHighlight={(v) => setPreview(v === null ? null : { slot, id: v === NONE ? null : v })}
+                        onAction={() => openCreator(slot)}
+                        extra={
+                          <span className="piece-extra">
+                            {st && st !== "owned" ? <Tag tone={st}>{STATUS_LABEL[st]}</Tag> : null}
+                            {keep}
+                          </span>
+                        }
+                      />
                       {pulse}
                     </li>
                   );
-                }
-                const opts = own.map(itemOption);
-                if (OPTIONAL_SLOTS[slot]) opts.unshift({ value: NONE, label: "None", swatch: null });
-                opts.push({ value: CREATE, label: "Create a piece…", action: true });
-                return (
-                  <li key={slot} className={cx("piece-row", locked[slot] && "is-kept")}>
-                    <Select
-                      id={"slot-" + slot}
-                      label={label}
-                      value={present[slot] || NONE}
-                      options={opts}
-                      onChange={(v) => commit({ ...present, [slot]: v === NONE ? null : v })}
-                      onHighlight={(v) => setPreview(v === null ? null : { slot, id: v === NONE ? null : v })}
-                      onAction={() => openCreator(slot)}
-                      extra={
-                        <span className="piece-extra">
-                          {st && st !== "owned" ? <Tag tone={st}>{STATUS_LABEL[st]}</Tag> : null}
-                          {keep}
-                        </span>
-                      }
-                    />
-                    {pulse}
-                  </li>
-                );
-              })}
-              <li className={cx("piece-row", "is-acc", !accessories.length && !accChoices.length && "is-empty")}>
-                {accessories.length || accChoices.length ? (
-                  <>
-                    <Select
-                      id="slot-acc"
-                      label="Accessories"
-                      value=""
-                      placeholder={accChoices.length ? "Add an accessory…" : "All your accessories are on"}
-                      options={[...accChoices.map(itemOption), { value: CREATE, label: "Create a piece…", action: true }]}
-                      onChange={(v) => { const it = findItem(items, v); commit(withAcc(present, v), it ? `Added ${shortName(it)}` : ""); }}
-                      onHighlight={(v) => setPreview(v === null ? null : { slot: "acc", id: v })}
-                      onAction={() => openCreator("acc")}
-                    />
-                    {accessories.length ? (
-                      <ul className="acc-chips" aria-label="Accessories in this look">
-                        {accessories.map((a) => (
-                          <li key={a.id} className="acc-chip">
-                            <Swatch it={a} />
-                            <span>{shortName(a)}</span>
-                            {a.sketch ? <Tag tone="sketch">Sketch</Tag> : null}
-                            <button type="button" className="acc-remove" aria-label={`Remove ${shortName(a)}`} title="Remove" onClick={() => commit(withoutAcc(present, a.id), `Removed ${shortName(a)}`)}>
-                              <svg width="10" height="10" viewBox="0 0 10 10" aria-hidden="true"><path d="M1.5 1.5l7 7M8.5 1.5l-7 7" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" /></svg>
-                            </button>
-                          </li>
-                        ))}
-                      </ul>
-                    ) : null}
-                  </>
-                ) : (
-                  <>
-                    <div className="piece-empty">
-                      <Kicker>Accessories</Kicker>
-                      <span className="lede">Add glasses, a watch or a tie.</span>
-                    </div>
-                    <Button id="slot-acc" size="sm" onClick={() => openCreator("acc")}>Create a piece</Button>
-                  </>
-                )}
-                {changed.slots.includes("acc") ? <span key={changed.seq} className="piece-pulse" aria-hidden="true" /> : null}
-              </li>
-            </ul>
-            <div className="builder-tools">
-              <Button onClick={shuffle}>Shuffle unkept pieces</Button>
-              <Button variant="ghost" size="sm" onClick={() => step("undo")} aria-disabled={!canUndo(h)} aria-keyshortcuts="Control+Z Meta+Z">Undo</Button>
-              <Button variant="ghost" size="sm" onClick={() => step("redo")} aria-disabled={!canRedo(h)} aria-keyshortcuts="Control+Shift+Z Meta+Shift+Z Control+Y">Redo</Button>
-              <p className="builder-status" role="status">{status}</p>
+                })}
+                <li className={cx("piece-row", "is-acc", !accessories.length && !accChoices.length && "is-empty")}>
+                  {accessories.length || accChoices.length ? (
+                    <>
+                      <Select
+                        id="slot-acc"
+                        label="Accessories"
+                        value=""
+                        placeholder={accChoices.length ? "Add an accessory…" : "All your accessories are on"}
+                        options={[{ value: CREATE, label: "Create a piece…", action: true }, ...accChoices.map(itemOption)]}
+                        onChange={(v) => { const it = findItem(items, v); commit(withAcc(present, v), it ? `Added ${shortName(it)}` : ""); }}
+                        onHighlight={(v) => setPreview(v === null ? null : { slot: "acc", id: v })}
+                        onAction={() => openCreator("acc")}
+                      />
+                      {accessories.length ? (
+                        <ul className="acc-chips" aria-label="Accessories in this look">
+                          {accessories.map((a) => (
+                            <li key={a.id} className="acc-chip">
+                              <Swatch it={a} />
+                              <span>{shortName(a)}</span>
+                              {a.sketch ? <Tag tone="sketch">Sketch</Tag> : null}
+                              <button type="button" className="acc-remove" aria-label={`Remove ${shortName(a)}`} title="Remove" onClick={() => commit(withoutAcc(present, a.id), `Removed ${shortName(a)}`)}>
+                                <svg width="10" height="10" viewBox="0 0 10 10" aria-hidden="true"><path d="M1.5 1.5l7 7M8.5 1.5l-7 7" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" /></svg>
+                              </button>
+                            </li>
+                          ))}
+                        </ul>
+                      ) : null}
+                    </>
+                  ) : (
+                    <>
+                      <div className="piece-empty">
+                        <Kicker>Accessories</Kicker>
+                        <span className="lede">Add glasses, a watch or a tie.</span>
+                      </div>
+                      <Button id="slot-acc" size="sm" onClick={() => openCreator("acc")}>Create a piece</Button>
+                    </>
+                  )}
+                  {changed.slots.includes("acc") ? <span key={changed.seq} className="piece-pulse" aria-hidden="true" /> : null}
+                </li>
+              </ul>
             </div>
           </div>
         )}
       </div>
-
-      {creating ? null : (
-        <>
-          <div className="try-head">
-            <Kicker tone="ink">Try every</Kicker>
-            <Segmented label="Piece to vary" options={SLOTS} value={vary} onChange={setVary} />
-          </div>
-          {items.some((i) => i.cat === vary) ? (
-            <div className="var-strip" role="group" aria-label={"Try every " + varyLabel.toLowerCase()}>
-              {vars.map((v) => {
-                const it = findItem(items, v.id);
-                return (
-                  <button key={v.id || NONE} type="button" className="var" aria-pressed={present[vary] === v.id} onClick={() => commit(v.look)}>
-                    <OutfitFigure items={items} look={v.look} width={64} />
-                    <span>{it ? shortName(it) : "None"}</span>
-                    {it?.sketch ? <Tag tone="sketch">Sketch</Tag> : null}
-                  </button>
-                );
-              })}
-            </div>
-          ) : (
-            <p className="lede try-empty">
-              No {varyLabel.toLowerCase()} to try yet.{" "}
-              <Button variant="ghost" size="sm" onClick={() => openCreator(vary)}>Create a piece</Button>
-            </p>
-          )}
-        </>
-      )}
     </div>
   );
 }

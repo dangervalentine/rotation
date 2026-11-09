@@ -1,6 +1,6 @@
 # Segmented
 
-A row of joined square buttons for picking one of two to six options; the chosen one is inverted (ink fill, paper text).
+A row of joined square buttons (one outer rule, no dividers between them) for picking one of two to six options; the chosen one is inverted (ink fill, paper text). The ink fill slides from the old option to the new one (`motion-step`), and stays put when animation is off.
 
 **Consumer provides:** `options` (`[value, label][]`), `value`, `onChange(value)`, `label` (for screen readers).
 

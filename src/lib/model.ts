@@ -226,18 +226,27 @@ export function variations(items: Item[], look: Look, slot: Slot): { id: string 
   });
 }
 
+/** Whether a day has no garments on it yet (accessories alone don't count). */
+export const isEmptyLook = (look: Look | undefined) => !look || SLOTS.every(([s]) => !look[s]);
+
 /**
- * Fill a whole rotation, spreading wear evenly and avoiding the day-to-day
- * repeats that dayWarnings flags. Leather shoes and pants never repeat on
- * consecutive days when there's an alternative.
+ * Fill the empty days of a rotation, spreading wear evenly and avoiding the
+ * day-to-day repeats that dayWarnings flags. Leather shoes and pants never
+ * repeat on consecutive days when there's an alternative. Days in `keep` that
+ * already have garments are left exactly as they are, and count toward both.
  */
 export function generateRotation(all: Item[], days: string[], weeks: number, rng: Rng = Math.random, layerChance = 0.4, keep: Look[] = []): Look[] {
   // Sketches are only placed by hand, never generated (including through belt matching).
   const items = all.filter((i) => !i.sketch);
   const per = days.length;
   const total = per * weeks;
+  const kept = (d: number) => (isEmptyLook(keep[d]) ? null : keep[d]);
   const used = new Map<string, number>();
   const bump = (id: string | null) => id && used.set(id, (used.get(id) || 0) + 1);
+  for (let d = 0; d < total; d++) {
+    const look = kept(d);
+    if (look) for (const [s] of SLOTS) bump(look[s]);
+  }
   const choose = (cat: Slot, avoid: (string | null)[]) => {
     const pool = items.filter((i) => i.cat === cat);
     if (!pool.length) return null;
@@ -246,16 +255,25 @@ export function generateRotation(all: Item[], days: string[], weeks: number, rng
     const min = Math.min(...cands.map((i) => used.get(i.id) || 0));
     return pick(cands.filter((i) => (used.get(i.id) || 0) === min), rng).id;
   };
+  const leather = (look: Look | null) => {
+    const shoes = look && findItem(items, look.shoes);
+    return shoes && shoes.style !== "sneakers" ? shoes.id : null;
+  };
   const looks: Look[] = [];
   for (let d = 0; d < total; d++) {
-    const prev = d % per === 0 ? null : looks[d - 1];
-    const prevShoes = prev && findItem(items, prev.shoes);
+    const own = kept(d);
+    if (own) {
+      looks.push(clone(own));
+      continue;
+    }
+    // Neighbours within the week: the day before, and the day after when it's kept.
+    const near = [d % per === 0 ? null : looks[d - 1], d % per === per - 1 ? null : kept(d + 1)].filter((l): l is Look => !!l);
     const look: Look = {
       layer: rng() < layerChance ? choose("layer", []) : null,
-      shirt: choose("shirt", prev ? [prev.shirt] : []),
+      shirt: choose("shirt", near.map((l) => l.shirt)),
       undershirt: choose("undershirt", []),
-      pants: choose("pants", prev ? [prev.pants] : []),
-      shoes: choose("shoes", prevShoes && prevShoes.style !== "sneakers" ? [prevShoes.id] : []),
+      pants: choose("pants", near.map((l) => l.pants)),
+      shoes: choose("shoes", near.map(leather)),
       belt: null,
     };
     look.belt = matchingBelt(items, look.shoes);

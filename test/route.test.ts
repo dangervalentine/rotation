@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { formatHash, parseHash, VIEW_ORDER } from "../src/lib/route.ts";
+import { formatHash, parseHash, stepChange, VIEW_ORDER } from "../src/lib/route.ts";
 
 describe("routes", () => {
   it("defaults to the wardrobe view", () => {
@@ -54,5 +54,25 @@ describe("item routes", () => {
     for (const id of ["white-oxford", "a b/c", "été"]) {
       expect(parseHash(formatHash({ view: "wardrobe", day: null, item: id }), 10)).toEqual({ view: "wardrobe", day: null, item: id });
     }
+  });
+});
+
+describe("stepChange", () => {
+  it("is null within a view", () => {
+    for (const v of VIEW_ORDER) expect(stepChange(v, v)).toBeNull();
+  });
+
+  it("moves forward to a later step and back to an earlier one", () => {
+    for (const a of VIEW_ORDER) {
+      for (const b of VIEW_ORDER) {
+        if (a === b) continue;
+        expect(stepChange(a, b)).toBe(VIEW_ORDER.indexOf(b) > VIEW_ORDER.indexOf(a) ? "forward" : "back");
+      }
+    }
+  });
+
+  it("treats a jump of several steps as one move", () => {
+    expect(stepChange("wardrobe", "print")).toBe("forward");
+    expect(stepChange("print", "wardrobe")).toBe("back");
   });
 });

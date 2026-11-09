@@ -34,3 +34,11 @@ export function formatHash(route: Route): string {
 
 /** Link to an item's detail page. */
 export const itemHash = (id: string) => "#wardrobe/item/" + encodeURIComponent(id);
+
+export type StepDir = "forward" | "back";
+
+/** Which way a move between views animates; moves within a view (item detail, a day) are null. */
+export function stepChange(prev: ViewId, next: ViewId): StepDir | null {
+  if (prev === next) return null;
+  return VIEW_ORDER.indexOf(next) > VIEW_ORDER.indexOf(prev) ? "forward" : "back";
+}
